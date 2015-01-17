@@ -1,0 +1,15 @@
+[submodule "refactor"]
+	path = refactor
+	url = https://github.com/edisonm/refactor.git
+[submodule "assertions"]
+	path = assertions
+	url = https://github.com/edisonm/assertions.git
+[submodule "rtchecks"]
+	path = rtchecks
+	url = https://github.com/edisonm/rtchecks.git
+[submodule "xlibrary"]
+	path = xlibrary
+	url = https://github.com/edisonm/xlibrary.git
+[submodule "xtools"]
+	path = xtools
+	url = https://github.com/edisonm/xtools.git
