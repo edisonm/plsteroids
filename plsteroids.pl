@@ -17,6 +17,7 @@ file_search_path(pltool,  plroot(refactor)).
 :- use_module(library(dialect)).
 :- use_module(library(dialect/ciao), []).
 
+:- use_module(library(record_locations)).
 % load tools
 :- use_module(library(swi/assertions)).
 :- use_module(library(swi/rtchecks)).

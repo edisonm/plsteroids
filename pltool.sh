@@ -21,6 +21,9 @@ case $* in
     check)
 	./plsteroids.sh -q -s loadall.pl -g 'checkall(_,[dir(pltool(prolog))])'
 	;;
+    checkc)
+	./plsteroids.sh -q -s loadall.pl -g 'checkallc(_,[dir(pltool(prolog))])'
+	;;
     *)
 	forallpacks $*
 	;;
