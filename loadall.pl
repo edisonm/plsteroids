@@ -17,10 +17,12 @@
 :- [library(dict_utils)].
 :- [library(pe)].
 :- [library(termdiff)].
+
+:- [library(audit/check_abstract_domains)].
 :- [library(audit/domains/abstract_domain_fail)].
 :- [library(audit/domains/abstract_domain_product)].
 :- [library(audit/domains/abstract_domain_sideff)].
-% :- [library(audit/check_abstract_domains)].
+
 :- [library(i18n/i18n_refactor)].
 :- [library(i18n/i18n_expansion)].
 :- [library(list_intervals)].
