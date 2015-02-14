@@ -24,9 +24,21 @@ file_search_path(pltool,  plroot(refactor)).
 :- use_module(library(refactor)).
 :- use_module(library(audits)).
 :- use_module(library(ws_cover)).
+
 /*
-user:prolog_exception_hook(Error, _, _, _) :-
+:- use_module(library(prolog_stack)).
+:- multifile
+	user:prolog_exception_hook/4.
+:- dynamic
+	user:prolog_exception_hook/4.
+
+skip_error(missing(undecided_call)).
+
+  user:prolog_exception_hook(Error, _, _, _) :-
+    \+ skip_error(Error),
     format(user_error, '~q~n', [Error]),
     backtrace(20),
     fail.
 */
+
+% user:prolog_trace_interception(Port, Frame, PC, continue).
