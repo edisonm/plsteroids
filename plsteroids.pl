@@ -1,8 +1,9 @@
 % set directories
 set_plroot :-
-    working_directory(WD, WD),
+    source_location(File, _),
+    directory_file_path(Dir, _, File),
     retractall(user:file_search_path(plroot, _)),
-    assertz(user:file_search_path(plroot, WD)).
+    assertz(user:file_search_path(plroot, Dir)).
 
 file_search_path(library, pltool(prolog)).
 file_search_path(pltool,  plroot(assertions)).

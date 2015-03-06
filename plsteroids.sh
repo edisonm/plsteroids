@@ -1,3 +1,3 @@
 #!/bin/bash
 
-swipl -s plsteroids $*
+swipl -s `dirname $0`/plsteroids $*
