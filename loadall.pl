@@ -1,3 +1,6 @@
+:- expects_dialect(ciao).
+:- use_package(library(rtchecks)).
+:- expects_dialect(swi).
 
 :- [library(swi/plprops)].
 :- [library(swi/assertions)].
@@ -13,6 +16,10 @@
 :- [library(swi/rtchecks_lib)].
 :- [library(call_in_module_file)].
 :- [library(clambda)].
+:- [library(tabling)].
+:- [library(called_by_body)].
+:- [library(scc)].
+:- [library(mapargs)].
 :- [library(context_values)].
 :- [library(dict_utils)].
 :- [library(pe)].
