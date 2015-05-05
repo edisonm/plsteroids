@@ -22,6 +22,7 @@ file_search_path(pltool,  plroot(refactor)).
 % load tools
 :- use_module(library(swi/assertions)).
 :- use_module(library(swi/rtchecks)).
+:- use_module(rtchecks(rtchecks_trace)).
 :- use_module(library(assrt_meta)).
 :- use_module(library(refactor)).
 :- use_module(library(audits)).

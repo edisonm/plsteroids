@@ -45,6 +45,7 @@
 :- [library(defer)].
 :- [library(nitrace)].
 :- [library(tabulator)].
+:- [library(file_to_module)].
 
 :- set_prolog_flag(autoload,true).
 
