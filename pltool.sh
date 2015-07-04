@@ -27,6 +27,10 @@ case $* in
     loadall)
 	./plsteroids.sh -q -s loadall.pl
 	;;
+    build)
+	echo -e "qsave_program(plsteroids,[]).\nhalt.\n" | \
+	    ./plsteroids.sh -q -s loadall.pl
+	;;	
     *)
 	forallpacks $*
 	;;
