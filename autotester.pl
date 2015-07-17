@@ -1,6 +1,7 @@
 :- module(autotester, [cover_tests/0]).
 
 :- [xlibrary/tests/i18n/'i18n.plt'].
+:- [xtools/tests/'assrt_meta.plt'].
 :- [assertions/tests/'assertions.plt'].
 :- [assertions/tests/foreign/'foreign.plt'].
 :- [refactor/tests/'gcb.plt'].
