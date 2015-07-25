@@ -27,6 +27,8 @@
 :- [library(dict_utils)].
 :- [library(pe)].
 :- [library(termdiff)].
+:- [library(trim_utils)].
+:- [library(included_files)].
 
 :- [library(audit/check_abstract_domains)].
 :- [library(audit/domains/abstract_domain_fail)].
