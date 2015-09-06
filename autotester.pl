@@ -5,7 +5,6 @@
 :- [assertions/tests/'assertions.plt'].
 :- [assertions/tests/foreign/'foreign.plt'].
 :- [refactor/tests/'gcb.plt'].
-:- [rtchecks/tests/'ctchecks.plt'].
 :- [rtchecks/tests/'rtchecks.plt'].
 :- [refactor/tests/'refactor.plt'].
 :- [library(gcover)].
