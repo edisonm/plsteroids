@@ -13,9 +13,10 @@
 :- [library(foreign/foreign_generator)].
 :- [library(foreign/foreign_props)].
 :- [library(assertions/examples/assrt_example)].
-:- [library(swi/ctchecks)].
+:- [library(assrt_interface)].
 :- [library(swi/rtchecks)].
 :- [library(swi/rtchecks_lib)].
+:- [library(swi/libprops)].
 :- [library(call_in_module_file)].
 :- [library(file_includes)].
 :- [library(clambda)].
@@ -26,6 +27,7 @@
 :- [library(context_values)].
 :- [library(dict_utils)].
 :- [library(pe)].
+:- [library(near)].
 :- [library(termdiff)].
 :- [library(trim_utils)].
 :- [library(included_files)].

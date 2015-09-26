@@ -37,7 +37,7 @@ file_search_path(pltool,  plroot(refactor)).
 
 skip_error(missing(undecided_call)).
 
-  user:prolog_exception_hook(Error, _, _, _) :-
+user:prolog_exception_hook(Error, _, _, _) :-
     \+ skip_error(Error),
     format(user_error, '~q~n', [Error]),
     backtrace(20),
