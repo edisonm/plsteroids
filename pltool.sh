@@ -11,9 +11,12 @@ forallpacks () {
     done
 }
 
-case $* in
+case $1 in
     tests)
-	./plsteroids.sh -q -l autotester.pl -g 'ignore(run_tests),halt'
+	./plsteroids.sh -l autotester.pl -g 'ignore(run_tests),halt'
+	;;
+    rtc)
+	./plsteroids.sh -q -l autotester.pl -g 'trace_rtc(run_tests),halt'
 	;;
     cover)
 	./plsteroids.sh -q -l autotester.pl -g 'ignore(autotester:cover_tests),browse_server(5000)'
@@ -30,7 +33,10 @@ case $* in
     build)
 	echo -e "qsave_program(plsteroids,[]).\nhalt.\n" | \
 	    ./plsteroids.sh -q -s loadall.pl
-	;;	
+	;;
+    test)
+	./plsteroids.sh -l $2 -g 'ignore(run_tests),halt'
+	;;
     *)
 	forallpacks $*
 	;;

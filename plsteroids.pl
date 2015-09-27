@@ -23,7 +23,7 @@ file_search_path(pltool,  plroot(refactor)).
 :- use_module(library(swi/assertions)).
 :- use_module(library(swi/rtchecks)).
 :- use_module(library(rtchecks_tracer)).
-:- use_module(library(assrt_meta)).
+% :- use_module(library(assrt_meta)).
 :- use_module(library(refactor)).
 :- use_module(library(audits)).
 :- use_module(library(ws_cover)).
