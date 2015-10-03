@@ -1,22 +1,17 @@
-:- expects_dialect(ciao).
-:- use_package(library(rtchecks)).
-:- expects_dialect(swi).
 
-:- set_prolog_flag(autoload,false).
+:- set_prolog_flag(autoload, false).
 
-:- [library(swi/plprops)].
-:- [library(swi/assertions)].
-:- [library(swi/nativeprops)].
-:- [library(swi/termtyping)].
-:- [library(swi/basicprops)].
-:- [library(foreign/foreign_interface)].
-:- [library(foreign/foreign_generator)].
-:- [library(foreign/foreign_props)].
-:- [library(assertions/examples/assrt_example)].
+:- [library(assertions)].
+:- [assertions(plprops)].
+:- [assertions(nativeprops)].
+:- [assertions(termtyping)].
+:- [assertions(basicprops)].
+:- [assertions(foreign/foreign_interface)].
+:- [assertions(foreign/foreign_generator)].
+:- [assertions(foreign/foreign_props)].
+:- [assertions(libprops)].
 :- [library(assrt_interface)].
-:- [library(swi/rtchecks)].
-:- [library(swi/rtchecks_lib)].
-:- [library(swi/libprops)].
+:- [library(rtchecks)].
 :- [library(call_in_module_file)].
 :- [library(file_includes)].
 :- [library(clambda)].
@@ -37,6 +32,7 @@
 :- [library(audit/domains/abstract_domain_product)].
 :- [library(audit/domains/abstract_domain_sideff)].
 
+:- [library(refactor)].
 :- [library(i18n/i18n_refactor)].
 :- [library(i18n/i18n_expansion)].
 :- [library(list_intervals)].

@@ -5,23 +5,23 @@ set_plroot :-
     retractall(user:file_search_path(plroot, _)),
     assertz(user:file_search_path(plroot, Dir)).
 
-file_search_path(library, pltool(prolog)).
-file_search_path(pltool,  plroot(assertions)).
-file_search_path(pltool,  plroot(rtchecks)).
-file_search_path(pltool,  plroot(xlibrary)).
-file_search_path(pltool,  plroot(xtools)).
-file_search_path(pltool,  plroot(refactor)).
+file_search_path(library,    pltool(prolog)).
+file_search_path(pltool,     plroot(assertions)).
+file_search_path(pltool,     plroot(rtchecks)).
+file_search_path(pltool,     plroot(xlibrary)).
+file_search_path(pltool,     plroot(xtools)).
+file_search_path(pltool,     plroot(refactor)).
+file_search_path(assertions, plroot(assertions/prolog)).
+file_search_path(rtchecks,   plroot(rtchecks/prolog)).
+file_search_path(xlibrary,   plroot(xlibrary/prolog)).
+file_search_path(xtools,     plroot(xtools/prolog)).
+file_search_path(refactor,   plroot(refactor/prolog)).
 
 :- set_plroot.
 
-% Warning: this should be after set_plroot to let ciao:push_ciao_library works:
-:- use_module(library(dialect)).
-:- use_module(library(dialect/ciao), []).
-
 :- use_module(library(record_locations), []).
 % load tools
-:- use_module(library(swi/assertions)).
-:- use_module(library(swi/rtchecks)).
+:- use_module(library(assertions)).
 :- use_module(library(rtchecks_tracer)).
 % :- use_module(library(assrt_meta)).
 :- use_module(library(refactor)).
