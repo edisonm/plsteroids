@@ -13,10 +13,10 @@ forallpacks () {
 
 case $1 in
     tests)
-	./plsteroids.sh -l autotester.pl -g 'ignore(run_tests),halt'
+	./plsteroids.sh -l autotester.pl -g 'run_tests' -t halt
 	;;
     rtc)
-	./plsteroids.sh -q -l autotester.pl -g 'trace_rtc(run_tests),halt'
+	./plsteroids.sh -q -l autotester.pl -g 'trace_rtc(run_tests)' -t halt
 	;;
     cover)
 	./plsteroids.sh -q -l autotester.pl -g 'ignore(autotester:cover_tests),browse_server(5000)'
@@ -35,7 +35,16 @@ case $1 in
 	    ./plsteroids.sh -q -s loadall.pl
 	;;
     test)
-	./plsteroids.sh -l $2 -g 'ignore(run_tests),halt'
+	./plsteroids.sh -l $2 -g 'ignore(run_tests)' -t halt
+	;;
+    testt)
+	./plsteroids.sh -l $2 -g 'time(run_tests)' -t halt
+	;;
+    testrtc)
+	./plsteroids.sh -l $2 -g 'trace_rtc(run_tests)' -t halt
+	;;
+    testrtct)
+	./plsteroids.sh -l $2 -g 'time(trace_rtc(run_tests))' -t halt
 	;;
     *)
 	forallpacks $*
