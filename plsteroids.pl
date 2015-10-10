@@ -21,12 +21,12 @@ file_search_path(refactor,   plroot(refactor/prolog)).
 
 :- use_module(library(record_locations), []).
 % load tools
-:- use_module(library(assertions)).
-:- use_module(library(rtchecks_tracer)).
-% :- use_module(library(assrt_meta)).
-:- use_module(library(refactor)).
-:- use_module(library(audits)).
-:- use_module(library(ws_cover)).
+:- use_module(assertions(assertions)).
+:- use_module(refactor(refactor)).
+:- use_module(rtchecks(rtchecks_tracer)).
+:- use_module(xtools(assrt_meta)).
+:- use_module(xtools(checkers)).
+:- use_module(xtools(ws_cover)).
 
 /*
 :- use_module(library(prolog_stack)).

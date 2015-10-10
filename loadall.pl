@@ -28,10 +28,10 @@
 :- [library(trim_utils)].
 :- [library(included_files)].
 
-:- [library(audit/check_abstract_domains)].
-:- [library(audit/domains/abstract_domain_fail)].
-:- [library(audit/domains/abstract_domain_product)].
-:- [library(audit/domains/abstract_domain_sideff)].
+:- [library(checkers/check_abstract_domains)].
+:- [library(checkers/domains/abstract_domain_fail)].
+:- [library(checkers/domains/abstract_domain_product)].
+:- [library(checkers/domains/abstract_domain_sideff)].
 
 :- [library(refactor)].
 :- [library(i18n/i18n_refactor)].
