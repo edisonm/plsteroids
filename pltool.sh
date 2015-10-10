@@ -22,7 +22,11 @@ case $1 in
 	./plsteroids.sh -q -l autotester.pl -g 'ignore(autotester:cover_tests),browse_server(5000)'
 	;;
     check)
-	./plsteroids.sh -q -s loadall.pl -g 'checkall([dir(pltool(prolog))])'
+	if [ "$#" == "2" ] ; then
+	    ./plsteroids.sh -q -s loadall.pl -g "showcheck($2,[dir(pltool(prolog))])"
+	else
+	    ./plsteroids.sh -q -s loadall.pl -g 'checkall([dir(pltool(prolog))])'
+	fi
 	;;
     checkc)
 	./plsteroids.sh -q -s loadall.pl -g 'checkallc([dir(pltool(prolog))])'

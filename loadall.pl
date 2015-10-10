@@ -10,6 +10,7 @@
 :- [assertions(foreign/foreign_generator)].
 :- [assertions(foreign/foreign_props)].
 :- [assertions(libprops)].
+:- [library(assrt_meta)].
 :- [library(assrt_interface)].
 :- [library(rtchecks)].
 :- [library(call_in_module_file)].
