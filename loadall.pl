@@ -1,7 +1,7 @@
 
 :- set_prolog_flag(autoload, false).
 
-:- [library(assertions)].
+:- [assertions(assertions)].
 :- [assertions(plprops)].
 :- [assertions(nativeprops)].
 :- [assertions(termtyping)].
@@ -10,44 +10,46 @@
 :- [assertions(foreign/foreign_generator)].
 :- [assertions(foreign/foreign_props)].
 :- [assertions(libprops)].
-:- [library(assrt_meta)].
-:- [library(assrt_interface)].
-:- [library(rtchecks)].
-:- [library(call_in_module_file)].
-:- [library(file_includes)].
-:- [library(clambda)].
-:- [library(tabling)].
-:- [library(called_by_body)].
-:- [library(scc)].
-:- [library(mapargs)].
-:- [library(context_values)].
-:- [library(dict_utils)].
-:- [library(pe)].
-:- [library(near)].
-:- [library(termdiff)].
-:- [library(trim_utils)].
-:- [library(included_files)].
+:- [xlibrary(compact_list)].
+:- [xtools(assrt_meta)].
+:- [assertions(assrt_interface)].
+:- [rtchecks(rtchecks)].
+:- [xlibrary(call_in_module_file)].
+:- [xtools(file_includes)].
+:- [xlibrary(clambda)].
+:- [xlibrary(tabling)].
+:- [xtools(called_by_body)].
+:- [xtools(scc)].
+:- [refactor(mapargs)].
+:- [xlibrary(context_values)].
+:- [xlibrary(dict_utils)].
+:- [xlibrary(pe)].
+:- [xlibrary(near)].
+:- [xlibrary(termdiff)].
+:- [xlibrary(trim_utils)].
+:- [xtools(included_files)].
 
-:- [library(checkers/check_abstract_domains)].
-:- [library(checkers/domains/abstract_domain_fail)].
-:- [library(checkers/domains/abstract_domain_product)].
-:- [library(checkers/domains/abstract_domain_sideff)].
+:- [checkers(check_abstract_domains)].
+:- [domains(abstract_domain_fail)].
+:- [domains(abstract_domain_product)].
+:- [domains(abstract_domain_sideff)].
 
-:- [library(refactor)].
-:- [library(i18n/i18n_refactor)].
-:- [library(i18n/i18n_expansion)].
-:- [library(list_intervals)].
+:- [refactor(refactor)].
+:- [xlibrary(i18n/i18n_op)].
+:- [refactor(i18n/i18n_refactor)].
+:- [xlibrary(i18n/i18n_expansion)].
+:- [xlibrary(list_intervals)].
 
-:- [library(mapeach)].
-:- [library(ntabling)].
-:- [library(called_from)].
-:- [library(implemented_in)].
-:- [library(comment_data)].
-:- [library(defer)].
-:- [library(nitrace)].
-:- [library(tabulator)].
-:- [library(file_to_module)].
+:- [xlibrary(mapeach)].
+:- [xlibrary(ntabling)].
+:- [xtools(called_from)].
+:- [xtools(implemented_in)].
+:- [xtools(comment_data)].
+:- [xtools(defer)].
+:- [xtools(nitrace)].
+:- [xtools(tabulator)].
+:- [refactor(file_to_module)].
 
 :- set_prolog_flag(autoload,true).
 
-:- [library(ws_source)].
+:- [xtools(ws_source)].
