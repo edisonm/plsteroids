@@ -1,6 +1,7 @@
 
 :- set_prolog_flag(autoload, false).
 
+:- use_module(library(apply_macros)). % Load it proactively
 :- [assertions(assertions)].
 :- [assertions(plprops)].
 :- [assertions(nativeprops)].
@@ -14,10 +15,13 @@
 :- [xtools(assrt_meta)].
 :- [assertions(assrt_interface)].
 :- [rtchecks(rtchecks)].
-:- [xlibrary(call_in_module_file)].
+:- [xlibrary(call_in_dir)].
 :- [xtools(file_includes)].
 :- [xlibrary(clambda)].
 :- [xlibrary(tabling)].
+:- [xlibrary(abstract_slicer)].
+:- [xlibrary(atomics_atom)].
+:- [xlibrary(atomics_string)].
 :- [xtools(called_by_body)].
 :- [xtools(scc)].
 :- [refactor(mapargs)].
