@@ -11,22 +11,24 @@ file_search_path(pltool,     plroot(rtchecks)).
 file_search_path(pltool,     plroot(xlibrary)).
 file_search_path(pltool,     plroot(xtools)).
 file_search_path(pltool,     plroot(refactor)).
+/*
 file_search_path(assertions, plroot(assertions/prolog)).
 file_search_path(rtchecks,   plroot(rtchecks/prolog)).
 file_search_path(xlibrary,   plroot(xlibrary/prolog)).
 file_search_path(xtools,     plroot(xtools/prolog)).
 file_search_path(refactor,   plroot(refactor/prolog)).
+*/
 
 :- set_plroot.
 
 :- use_module(library(record_locations), []).
 % load tools
-:- use_module(assertions(assertions)).
-:- use_module(refactor(refactor)).
-:- use_module(rtchecks(rtchecks_tracer)).
-:- use_module(xtools(assrt_meta)).
-:- use_module(xtools(checkers)).
-:- use_module(xtools(ws_cover)).
+:- use_module(library(assertions)).
+:- use_module(library(refactor)).
+:- use_module(library(rtchecks_tracer)).
+:- use_module(library(assrt_meta)).
+:- use_module(library(checkers)).
+:- use_module(library(ws_cover)).
 
 /*
 :- use_module(library(prolog_stack)).
@@ -43,5 +45,4 @@ user:prolog_exception_hook(Error, _, _, _) :-
     backtrace(20),
     fail.
 */
-
 % user:prolog_trace_interception(Port, Frame, PC, continue).
