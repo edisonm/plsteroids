@@ -12,13 +12,16 @@ forallpacks () {
 }
 
 case $1 in
-    patchs)
+    patches)
 	forallpacks git format-patch origin
 	find . -name "*.patch"|tar -cvzf patches.tgz -T -
 	find . -name "*.patch" -delete
 	;;
     tests)
 	./plsteroids.sh -l autotester.pl -g 'run_tests' -t halt
+	;;
+    testst)
+	./plsteroids.sh -l autotester.pl -g 'time(run_tests)' -t halt
 	;;
     rtc)
 	./plsteroids.sh -q -l autotester.pl -g 'trace_rtc(run_tests)' -t halt
