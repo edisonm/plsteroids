@@ -36,7 +36,7 @@
 (display-time)
 
 (defun tiny-size ()
-  "Change to small font size"
+  "Change to tiny font size"
   (interactive)
   (progn
     (set-default-font "5x7")
@@ -50,14 +50,14 @@
     )
   )
 (defun mini-size ()
-  "Change to small font size"
+  "Change to mini font size"
   (interactive)
   (progn
     (set-default-font "8x13")
     )
   )
 (defun normal-size ()
-  "Change to small font size"
+  "Change to normal font size"
   (interactive)
   (progn
     (set-default-font "9x15")

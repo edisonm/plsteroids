@@ -36,6 +36,13 @@ case $1 in
 	    ./plsteroids.sh -q -s loadall.pl -g 'checkall([dir(pltool(prolog))])'
 	fi
 	;;
+    checkt)
+	if [ "$#" == "2" ] ; then
+	    ./plsteroids.sh -q -s loadall.pl -g "time(showcheck($2,[dir(pltool(prolog))]))"
+	else
+	    ./plsteroids.sh -q -s loadall.pl -g 'time(checkall([dir(pltool(prolog))]))'
+	fi
+	;;
     checkc)
 	./plsteroids.sh -q -s loadall.pl -g 'checkallc([dir(pltool(prolog))])'
 	;;

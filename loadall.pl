@@ -8,6 +8,9 @@
 :- [library(nativeprops)].
 :- [library(termtyping)].
 :- [library(basicprops)].
+:- [library(codes_html)].
+:- [library(goalstub)].
+:- [library(safe_prolog_cut_to)].
 :- [library(foreign/foreign_interface)].
 :- [library(foreign/foreign_generator)].
 :- [library(foreign/foreign_props)].
@@ -55,6 +58,7 @@
 :- [library(nitrace)].
 :- [library(tabulator)].
 :- [library(file_to_module)].
+:- [library(deref_reexport)].
 
 :- set_prolog_flag(autoload,true).
 
