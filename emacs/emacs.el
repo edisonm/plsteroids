@@ -12,17 +12,18 @@
 ;;       ; (set-face-foreground 'font-lock-comment-face "red")
 ;;       )
 ;;   )
-(if window-system
+(if (display-graphic-p)
     (progn
 ;;       (setq baud-rate 153600) ;; Seems to speed up things?
 ;       (set-foreground-color "black")
 ;       (set-background-color "white")
-      (set-default-font "6x10")
+;      (set-default-font "6x10")
       (set-border-color "green")
       (set-cursor-color "red")
       (set-mouse-color "NavyBlue")
+      (add-to-list 'default-frame-alist '(width . 166))
+      (add-to-list 'default-frame-alist '(height . 77))
       (split-window-horizontally)
-      (set-frame-size (selected-frame) 166 58)
       )
   (mwheel-install)
   )
@@ -34,51 +35,6 @@
 (auto-fill-mode -1)
 (server-start)
 (display-time)
-
-(defun tiny-size ()
-  "Change to tiny font size"
-  (interactive)
-  (progn
-    (set-default-font "5x7")
-    )
-  )
-(defun small-size ()
-  "Change to small font size"
-  (interactive)
-  (progn
-    (set-default-font "6x10")
-    )
-  )
-(defun mini-size ()
-  "Change to mini font size"
-  (interactive)
-  (progn
-    (set-default-font "8x13")
-    )
-  )
-(defun normal-size ()
-  "Change to normal font size"
-  (interactive)
-  (progn
-    (set-default-font "9x15")
-    )
-  )
-(defun big-size ()
-  "Change to big font size"
-  (interactive)
-  (progn
-    (set-default-font "10x20")
-;    (set-frame-size (selected-frame) 80 35)
-    )
-  )
-(defun huge-size ()
-  "Change to huge font size"
-  (interactive)
-  (progn
-    (set-default-font "12x24")
-;    (set-frame-size (selected-frame) 80 35)
-    )
-  )
 
 (defun goto-previous-window ()
   "Select the window above or to the left of the window now selected.
