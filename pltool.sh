@@ -11,6 +11,17 @@ forallpacks () {
     done
 }
 
+if [ "$#" == "2" ] ; then
+    to_load=`find . -name $2.plt`
+    run_tests="run_tests($2)"
+elif [ "$#" == "3" ] ; then
+    to_load=`find . -name $2.plt`
+    run_tests="run_tests($2:$3)"
+else
+    to_load="autotester.pl"
+    run_tests="run_tests"
+fi
+
 case $1 in
     patches)
 	forallpacks git format-patch origin
@@ -18,13 +29,16 @@ case $1 in
 	find . -name "*.patch" -delete
 	;;
     tests)
-	./plsteroids.sh -l autotester.pl -g 'run_tests' -t halt
+	./plsteroids.sh -l $to_load -g "ignore($run_tests)" -t halt
 	;;
     testst)
-	./plsteroids.sh -l autotester.pl -g 'time(run_tests)' -t halt
+	./plsteroids.sh -l $to_load -g "time($run_tests)" -t halt
 	;;
-    rtc)
-	./plsteroids.sh -q -l autotester.pl -g 'trace_rtc(run_tests)' -t halt
+    testrtc)
+	./plsteroids.sh -q -l $to_load -g "trace_rtc($run_tests)" -t halt
+	;;
+    teststrtc)
+	./plsteroids.sh -l $to_load -g "time(trace_rtc($run_tests))" -t halt
 	;;
     cover)
 	./plsteroids.sh -q -l autotester.pl -g 'ignore(autotester:cover_tests),browse_server(5000)'
@@ -52,18 +66,6 @@ case $1 in
     build)
 	echo -e "qsave_program(plsteroids,[]).\nhalt.\n" | \
 	    ./plsteroids.sh -q -s loadall.pl
-	;;
-    test)
-	./plsteroids.sh -l $2 -g 'ignore(run_tests)' -t halt
-	;;
-    testt)
-	./plsteroids.sh -l $2 -g 'time(run_tests)' -t halt
-	;;
-    testrtc)
-	./plsteroids.sh -l $2 -g 'trace_rtc(run_tests)' -t halt
-	;;
-    testrtct)
-	./plsteroids.sh -l $2 -g 'time(trace_rtc(run_tests))' -t halt
 	;;
     *)
 	forallpacks $*

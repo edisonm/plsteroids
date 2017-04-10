@@ -10,6 +10,7 @@
 :- [library(basicprops)].
 :- [library(codes_html)].
 :- [library(goalstub)].
+:- [library(on_retry)].
 :- [library(safe_prolog_cut_to)].
 :- [library(foreign/foreign_interface)].
 :- [library(foreign/foreign_generator)].
