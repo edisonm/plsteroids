@@ -1,4 +1,4 @@
-# pl-tests
+# plsteroids
 Scripts to facilitate testing and development of the Prolog libraries published here.
 
 Installation:
