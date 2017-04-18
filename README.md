@@ -1,23 +1,25 @@
 # plsteroids
 Scripts to facilitate testing and development of the Prolog libraries published here.
 
-Installation:
-Simply execute the next commands:
+* Installation:
+  
+  Simply execute the next commands:
 
-git clone https://github.com/edisonm/assertions.git
-git submodule init
-git submodule update
+  git clone https://github.com/edisonm/plsteroids.git
 
-Script to execute common commands:
+  git submodule init
 
-./pltool.sh option [args]
+  git submodule update
 
-Where option is one of:
-  patches tests testst testrtc teststrtc cover check checkt checkc loadall build
+* Script to execute common commands:
 
-If it is not one of them, it will execute it as a command in each submodule
+  ./pltool.sh option [args]
 
-Useful git commands to keep in mind, since this project contain submodules:
+  Where option is one of:
+    patches tests testst testrtc teststrtc cover check checkt checkc loadall build
 
-git pull --recurse-submodules
-git submodule update --recursive --remote
+  If it is not one of them, it will execute it as a command in each submodule
+
+* Useful git commands to keep in mind, since this project contain submodules:
+
+  git pull --recurse-submodules
