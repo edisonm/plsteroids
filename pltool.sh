@@ -58,7 +58,11 @@ case $1 in
 	fi
 	;;
     checkc)
-	./plsteroids.sh -q -s loadall.pl -g 'checkallc([dir(pltool(prolog))])'
+	if [ "$#" == "2" ] ; then
+	    ./plsteroids.sh -q -s loadall.pl -g "showcheck($2,[dir(pltool(prolog))])"
+	else
+	    ./plsteroids.sh -q -s loadall.pl -g 'checkallc([dir(pltool(prolog))])'
+	fi
 	;;
     loadall)
 	./plsteroids.sh -q -s loadall.pl
