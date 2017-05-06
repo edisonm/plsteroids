@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/edisonm/assertions.git
+	branch = master
+	commit = ba31abc18b2f58419a78627876bbb2021c1b5aca
+	parent = 68f98d3939322f1e16512150909c63f0ba4687fc
+	cmdver = 0.3.1
