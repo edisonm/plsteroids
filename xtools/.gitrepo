@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/edisonm/xtools.git
+	branch = master
+	commit = bd2a384939571e474b462870a3c9d93916ae4ff9
+	parent = 6560ad353baaf60c995cf164e16b3849cc8dd755
+	cmdver = 0.3.1
