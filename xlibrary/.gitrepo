@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/edisonm/xlibrary.git
+	branch = master
+	commit = 84c30196c43ad515c486694370fbc7c8f4ce5732
+	parent = 0ac04e3f86c7e4e67ec2eb3f8a752a7df93ddc04
+	cmdver = 0.3.1
