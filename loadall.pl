@@ -2,6 +2,7 @@
 :- set_prolog_flag(autoload, false).
 
 :- use_module(library(apply_macros)). % Load it proactively
+:- [library(countsols)].
 :- [library(record_locations)].
 :- [library(assertions)].
 :- [library(plprops)].
