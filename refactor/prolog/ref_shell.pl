@@ -1,0 +1,100 @@
+/*  Part of Refactoring Tools for SWI-Prolog
+
+    Author:        Edison Mera Menendez
+    E-mail:        efmera@gmail.com
+    WWW:           https://github.com/edisonm/refactor
+    Copyright (C): 2013, Process Design Center, Breda, The Netherlands.
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+
+    1. Redistributions of source code must retain the above copyright
+       notice, this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in
+       the documentation and/or other materials provided with the
+       distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+    FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+    COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+    BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+    ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+*/
+
+:- module(ref_shell,
+          [ref_commit/0,
+           rshow/0,
+           rdiff/0,
+           rdiff/1,
+           rdiff/2,
+           rsave/1
+          ]).
+
+:- use_module(library(file_changes)).
+:- use_module(library(ref_changes)).
+
+ref_commit :-
+    once(pending_change(Index)),
+    rdiff(save, 0, Index),
+    reset_changes.
+
+rshow :-
+    once(pending_change(Index)),
+    rdiff(show, 0, Index).
+
+rsave(Diff):-
+    tell(Diff),
+    rshow,
+    told.
+
+rdiff :-
+    once(rdiff(_)).
+
+rdiff(Index) :-
+    pending_change(Index),
+    succ(Index0, Index),
+    rdiff(show, Index0, Index).
+
+rdiff(Index0, Index) :-
+    rdiff(show, Index0, Index).
+
+rdiff(Action, Index0, Index) :-
+    findall(File, (pending_change(IdxI, File, _), IdxI=<Index), FileU),
+    sort(FileU, FileL),
+    forall(member(File, FileL),
+           apply_diff(Action, Index0, File)).
+
+apply_diff(Action, Index0, File) :-
+    once(pending_change(_, File, Content)), % Take the last one
+    ( pending_change(Idx1, File, Content0 ),
+      Idx1 =< Index0
+    ->setup_call_cleanup(tmp_file_stream(text, File0, Stream),
+                         format(Stream, '~s', [Content0 ]),
+                         close(Stream)),
+      TmpFile = true
+    ; File0 = File,
+      TmpFile = fail,
+      ( access_file(File, read)
+      ->read_file_to_string(File, Content0, [])
+      ; Content0 = []
+      )
+    ),
+    ( Content0 \= Content
+    ->do_file_change(Action, File0, File, Content)
+    ; true
+    ),
+    ( TmpFile = true
+    ->delete_file(File0 )
+    ; true
+    ).

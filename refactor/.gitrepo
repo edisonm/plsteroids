@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/edisonm/refactor.git
+	branch = master
+	commit = c721815863ead71b4732ce74d99008756114c8c2
+	parent = 728723809f5f23c92bd198b7863d09a787d4f978
+	cmdver = 0.3.1
