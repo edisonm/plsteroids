@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/edisonm/rtchecks.git
+	branch = master
+	commit = 38883ce8a8b0b22c3b0e70cc513e715622195b25
+	parent = 5f820d3d2ff25012bd40785b2ac7aeadd33621b1
+	cmdver = 0.3.1
