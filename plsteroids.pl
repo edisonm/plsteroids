@@ -23,6 +23,8 @@ file_search_path(refactor,   plroot(refactor/prolog)).
 
 :- use_module(library(record_locations), []).
 % load tools
+:- use_module(library(comment_data)).
+:- use_module(library(prolog_xref)).
 :- use_module(library(assertions)).
 :- use_module(library(refactor)).
 :- use_module(library(rtchecks_tracer)).
