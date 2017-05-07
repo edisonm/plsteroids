@@ -6,6 +6,7 @@
 :- [library(record_locations)].
 :- [library(assertions)].
 :- [library(plprops)].
+:- [library(assrt_comment)].
 :- [library(nativeprops)].
 :- [library(termtyping)].
 :- [library(basicprops)].
