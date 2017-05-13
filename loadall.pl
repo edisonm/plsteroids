@@ -8,9 +8,6 @@
 :- [library(assertions)].
 :- [library(plprops)].
 :- [library(assrt_comment)].
-:- [library(nativeprops)].
-:- [library(termtyping)].
-:- [library(basicprops)].
 :- [library(codes_html)].
 :- [library(goalstub)].
 :- [library(on_retry)].
