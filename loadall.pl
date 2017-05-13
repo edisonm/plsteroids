@@ -4,6 +4,7 @@
 :- use_module(library(apply_macros)). % Load it proactively
 :- [library(countsols)].
 :- [library(record_locations)].
+:- [library(neck)].
 :- [library(assertions)].
 :- [library(plprops)].
 :- [library(assrt_comment)].
