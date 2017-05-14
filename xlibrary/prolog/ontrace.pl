@@ -1,4 +1,4 @@
-/*  Part of Extended Tools for SWI-Prolog
+/*  Part of Extended Libraries for SWI-Prolog
 
     Author:        Edison Mera Menendez
     E-mail:        efmera@gmail.com

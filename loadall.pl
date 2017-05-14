@@ -1,66 +1,7 @@
-
-:- set_prolog_flag(autoload, false).
-
+:- [plsteroids].
 :- use_module(library(apply_macros)). % Load it proactively
-:- [library(countsols)].
-:- [library(record_locations)].
-:- [library(neck)].
-:- [library(assertions)].
-:- [library(plprops)].
-:- [library(assrt_comment)].
-:- [library(codes_html)].
-:- [library(goalstub)].
-:- [library(on_retry)].
-:- [library(safe_prolog_cut_to)].
-:- [library(foreign/foreign_interface)].
-:- [library(foreign/foreign_generator)].
-:- [library(foreign/foreign_props)].
-:- [library(libprops)].
-:- [library(compact_list)].
-:- [library(assrt_meta)].
-:- [library(argument_chains)].
-:- [library(assrt_interface)].
-:- [library(rtchecks)].
-:- [library(call_in_dir)].
-:- [library(file_includes)].
-:- [library(clambda)].
-:- [library(tabling)].
-:- [library(abstract_slicer)].
-:- [library(atomics_atom)].
-:- [library(atomics_string)].
-:- [library(called_by_body)].
-:- [library(scc)].
-:- [library(mapargs)].
-:- [library(context_values)].
-:- [library(dict_utils)].
-:- [library(pe)].
-:- [library(near)].
-:- [library(termdiff)].
-:- [library(trim_utils)].
-:- [library(included_files)].
-
+:- use_module(pldoc(doc_modes)).
+:- [library(checkers)].
 :- [checkers(check_abstract_domains)].
-:- [domains(abstract_domain_fail)].
-:- [domains(abstract_domain_product)].
-:- [domains(abstract_domain_sideff)].
-
-:- [library(refactor)].
-:- [library(i18n/i18n_op)].
-:- [library(i18n/i18n_refactor)].
-:- [library(i18n/i18n_expansion)].
-:- [library(list_intervals)].
-
-:- [library(mapeach)].
-:- [library(ntabling)].
-:- [library(called_from)].
-:- [library(implemented_in)].
-:- [library(comment_data)].
-:- [library(defer)].
-:- [library(nitrace)].
-:- [library(tabulator)].
-:- [library(file_to_module)].
-:- [library(deref_reexport)].
-
-:- set_prolog_flag(autoload,true).
-
+:- [loadpacks].
 :- [library(ws_source)].

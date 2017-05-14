@@ -1,8 +1,8 @@
-/*  Part of Extended Tools for SWI-Prolog
+/*  Part of Extended Libraries for Prolog
 
     Author:        Edison Mera Menendez
     E-mail:        efmera@gmail.com
-    WWW:           https://github.com/edisonm/xtools
+    WWW:           https://github.com/edisonm/xlibrary
     Copyright (C): 2015, Process Design Center, Breda, The Netherlands.
     All rights reserved.
 
@@ -32,15 +32,11 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(static_strip_module, [static_strip_module/4]).
+:- module(predicate_from,
+          [predicate_from/2]).
 
-%!  static_strip_module(+Call, +ContextModule, -Head, -Module) is det.
-%
-%   Like strip_module/4, but assume as Module the ContextModule if Call is
-%   uninstantiated
-%
-static_strip_module(T, M, T, M) :-
-    var(T), !.
-static_strip_module(Module:RT, _, T, M) :- !,
-    static_strip_module(RT, Module, T, M).
-static_strip_module(T, M, T, M).
+:- meta_predicate predicate_from(:,-).
+
+predicate_from(P, file(File, Line, -1, 0)) :-
+        predicate_property(P, file(File)),
+        predicate_property(P, line_count(Line)).

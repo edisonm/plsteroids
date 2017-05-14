@@ -1,5 +1,6 @@
 :- module(autotester, [cover_tests/0]).
 
+:- user:[plsteroids].
 :- [assertions/tests/'assertions.plt'].
 :- [assertions/tests/foreign/'foreign.plt'].
 :- [refactor/tests/'gcb.plt'].

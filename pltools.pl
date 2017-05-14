@@ -1,0 +1,28 @@
+
+:- use_module(library(record_locations), []).
+% load tools
+:- use_module(library(comment_data)).
+:- use_module(library(prolog_xref)). % Be careful: this after comment_data
+:- use_module(library(assertions)).
+:- use_module(library(refactor)).
+:- use_module(library(rtchecks_tracer)).
+:- use_module(library(assrt_meta)).
+:- use_module(library(checkers)).
+:- use_module(library(ws_cover)).
+
+/*
+:- use_module(library(prolog_stack)).
+:- multifile
+	user:prolog_exception_hook/4.
+:- dynamic
+	user:prolog_exception_hook/4.
+
+skip_error(missing(undecided_call)).
+
+user:prolog_exception_hook(Error, _, _, _) :-
+    \+ skip_error(Error),
+    format(user_error, '~q~n', [Error]),
+    backtrace(20),
+    fail.
+*/
+% user:prolog_trace_interception(Port, Frame, PC, continue).
