@@ -68,6 +68,9 @@ case $1 in
             done
         fi
         ;;
+    doc)
+        swipl -s plsdoc.pl
+        ;;
     checkc)
 	if [ "$#" == "2" ] ; then
 	    swipl -q -s loadall.pl -g "showcheck($2,[dir(pltool(prolog))])"
