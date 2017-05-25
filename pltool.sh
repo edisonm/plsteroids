@@ -41,7 +41,7 @@ case $1 in
 	swipl -l $to_load -g "time(trace_rtc($run_tests))" -t halt
 	;;
     cover)
-	swipl -q -l autotester.pl -g 'ignore(autotester:cover_tests),browse_server(5000)'
+	swipl -q -l autotester.pl -g 'ignore(autotester:cover_tests),browse_server(5000),www_open_url('"'"'http://localhost:5000'"'"')'
 	;;
     check)
 	if [ "$#" == "2" ] ; then

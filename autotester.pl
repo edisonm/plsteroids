@@ -14,5 +14,14 @@
 :- [library(ws_cover)].
 
 cover_tests :-
+    setup_call_cleanup(
+        plunit:setup_trap_assertions(Ref),
+        cover_current_units,
+        plunit:report_and_cleanup(Ref)).
+
+cover_current_units :-
     working_directory(W,W),
-    gcover(run_tests, [file(directory_file_path(W,_))]).
+    forall(plunit:current_test_set(Set),
+           gcover(plunit:run_unit(Set), [tag(Set),
+                                         file(directory_file_path(W,_))])),
+    plunit:check_for_test_errors.
