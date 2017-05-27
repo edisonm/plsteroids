@@ -13,9 +13,11 @@ forallpacks () {
 
 if [ "$#" == "2" ] ; then
     to_load=`find . -name $2.plt`
+    extra_opt="-g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs]"
     run_tests="run_tests($2)"
 elif [ "$#" == "3" ] ; then
     to_load=`find . -name $2.plt`
+    extra_opt="-g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs]"
     run_tests="run_tests($2:$3)"
 else
     to_load="autotester.pl"
@@ -29,19 +31,20 @@ case $1 in
 	find . -name "*.patch" -delete
 	;;
     tests)
-	swipl -l $to_load -g "ignore($run_tests)" -t halt
+	swipl $extra_opt -g "['$to_load'],ignore($run_tests)" -t halt
 	;;
     testst)
-	swipl -l $to_load -g "time($run_tests)" -t halt
+	swipl $extra_opt -g "['$to_load'],time($run_tests)" -t halt
 	;;
     testrtc)
-	swipl -q -l $to_load -g "trace_rtc($run_tests)" -t halt
+	swipl $extra_opt -g "['$to_load'],trace_rtc($run_tests)" -t halt
 	;;
     teststrtc)
-	swipl -l $to_load -g "time(trace_rtc($run_tests))" -t halt
+	swipl $extra_opt -g "['$to_load'],time(trace_rtc($run_tests))" -t halt
 	;;
     cover)
-	swipl -q -l autotester.pl -g 'ignore(autotester:cover_tests),browse_server(5000),www_open_url('"'"'http://localhost:5000'"'"')'
+        swipl -g "assertz(package(xtools))" $extra_opt \
+              -g "[library(assertions)],[library(checkers)],['$to_load'],[library(gcover_unit),library(ws_cover)],browse_server(5000),cov_${run_tests},www_open_url('http://localhost:5000')"
 	;;
     check)
 	if [ "$#" == "2" ] ; then
@@ -59,12 +62,12 @@ case $1 in
 	;;
     checkload)
         if [ "$#" == "2" ] ; then
-            swipl -q -s plsconfig.pl -g "assertz(packages([$2])),[checkload],halt"
+            swipl -q -s plsconfig.pl -g "assertz(package($2)),[checkload],halt"
         else
             for i in `find . -name pack.pl`; do
                 pack=`basename ${i%/pack.pl}`
                 echo "checking stand alone load of $pack"
-                swipl -q -s plsconfig.pl -g "assertz(packages([$pack])),[checkload],halt"
+                swipl -q -s plsconfig.pl -g "assertz(package($pack)),[checkload],halt"
             done
         fi
         ;;

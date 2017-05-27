@@ -1,7 +1,8 @@
-packages([xlibrary,
-          assertions,
-          xtools,
-          rtchecks,
-          refactor]).
+package(xlibrary).
+package(assertions).
+package(xtools).
+package(rtchecks).
+package(refactor).
+
 :- [plsdirs].
 :- [pltools].

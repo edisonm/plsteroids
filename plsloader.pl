@@ -1,7 +1,9 @@
-:- module(plsloader, [scanpacks/2,
-                      pack_set_path/1,
-                      pack_load_files/2,
-                      pack_load/2]).
+:- module(plsloader,
+          [packages/1,
+           scanpacks/2,
+           pack_set_path/1,
+           pack_load_files/2,
+           pack_load/2]).
 
 :- use_module(library(apply)).
 :- use_module(library(lists)).
@@ -9,6 +11,8 @@
 :- use_module(library(prolog_source)).
 
 :- meta_predicate scanpacks(+, 1).
+
+packages(Packages) :- findall(Package, package(Package), Packages).
 
 scanpacks(PackL, Action) :-
     scanpacks(PackL, Action, [], _).
