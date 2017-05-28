@@ -143,4 +143,4 @@
   )
 
 (set-foreground-color "white")
-(set-default-font "-adobe-courier-bold-r-normal--25-*-100-100-m-150-iso8859-1")
+(set-default-font "-adobe-courier-medium-r-normal--20-*-100-100-m-150-iso8859-1")
