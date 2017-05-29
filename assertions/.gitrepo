@@ -6,6 +6,6 @@
 [subrepo]
 	remote = https://github.com/edisonm/assertions.git
 	branch = master
-	commit = 74ff5328ddfc53b9b0761b8a5f9b94d8b0aeeaee
-	parent = f9d505462826c2cdc9efbb1063db554f5019cd92
+	commit = 936aaabd4dc9e4407f0b5e7b2815cf492f4f29d7
+	parent = 39bc0523a0c3877f615e53d21f14035b4aa3c80c
 	cmdver = 0.3.1
