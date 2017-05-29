@@ -44,7 +44,7 @@ case $1 in
 	;;
     cover)
         swipl -g "assertz(package(xtools))" $extra_opt \
-              -g "[library(assertions)],[library(checkers)],['$to_load'],[library(gcover_unit),library(ws_cover)],browse_server(5000),ignore(cov_${run_tests}),www_open_url('http://localhost:5000')"
+              -g "[library(assertions)],[library(checkers)],['$to_load'],[library(gcover_unit),library(ws_cover)],browse_server(5000),ignore(cov_${run_tests}),cache_file_lines,www_open_url('http://localhost:5000')"
 	;;
     check)
 	if [ "$#" == "2" ] ; then
