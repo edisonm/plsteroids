@@ -30,6 +30,19 @@ case $1 in
 	find . -name "*.patch"|tar -cvzf patches.tgz -T -
 	find . -name "*.patch" -delete
 	;;
+    push)
+        git push
+        for i in `git subrepo status -q` ; do
+            git subrepo push $i
+        done
+        git push
+        ;;
+    pull)
+        git pull
+        for i in `git subrepo status -q` ; do
+            git subrepo pull $i
+        done
+        ;;
     tests)
 	swipl $extra_opt -g "['$to_load'],ignore($run_tests)" -t halt
 	;;
