@@ -143,4 +143,7 @@
   )
 
 (set-foreground-color "white")
-(set-default-font "-adobe-courier-medium-r-normal--20-*-100-100-m-150-iso8859-1")
+(if (< 3000 (display-pixel-width))
+    (set-default-font "-adobe-courier-medium-r-normal--14-*-100-100-m-90-iso8859-1")
+  (set-default-font "-adobe-courier-medium-r-normal--20-*-100-100-m-150-iso8859-1")
+  )
