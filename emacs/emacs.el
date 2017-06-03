@@ -137,13 +137,65 @@
 ;(add-hook 'ciao-mode-hook 'tagging-minor-mode)
 ;(add-hook 'emacs-lisp-mode-hook 'tagging-minor-mode)
 
+(defun tiny-size ()
+  "Change to tiny font size"
+  (interactive)
+  (progn
+    (set-default-font "5x7")
+    )
+  )
+(defun small-size ()
+  "Change to small font size"
+  (interactive)
+  (progn
+    (set-default-font "6x10")
+    )
+  )
+(defun mini-size ()
+  "Change to mini font size"
+  (interactive)
+  (progn
+    (set-default-font "8x13")
+    )
+  )
+(defun normal-size ()
+  "Change to normal font size"
+  (interactive)
+  (progn
+    (set-default-font "9x15")
+    )
+  )
+(defun big-size ()
+  "Change to big font size"
+  (interactive)
+  (progn
+    (set-default-font "10x20")
+    )
+  )
+(defun huge-size ()
+  "Change to huge font size"
+  (interactive)
+  (progn
+    ;(set-default-font "12x24")
+     (set-default-font "-adobe-courier-medium-r-normal--34-*-100-100-m-200-iso8859-1")
+    )
+  )
+
+
 (if (string= "root" (getenv "USER"))
-    (set-background-color myred)
+    ;; run-at-time is a kludge to fix a problem with non-x execution (-nw)
+    (run-at-time "0.1 sec" nil #'set-background-color myred)
   (set-background-color "black")
   )
 
 (set-foreground-color "white")
-(if (< 3000 (display-pixel-width))
+; (message (number-to-string (display-pixel-width)))
+(if (< (display-pixel-width) 3000)
     (set-default-font "-adobe-courier-medium-r-normal--14-*-100-100-m-90-iso8859-1")
   (set-default-font "-adobe-courier-medium-r-normal--20-*-100-100-m-150-iso8859-1")
   )
+
+; Just one character comment, otherwise in SWI it will be confused with
+; predicate documentation:
+; (setq comment-add 0)
+(add-hook 'prolog-mode-hook (lambda () (setq-local comment-add 0)))
