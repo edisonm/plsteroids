@@ -13,11 +13,11 @@ forallpacks () {
 
 if [ "$#" == "2" ] ; then
     to_load=`find . -name $2.plt`
-    extra_opt="-g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs]"
+    extra_opt=" -g assertz(package(xtools)) -g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs,library(assertions),library(checkers)]"
     run_tests="run_tests($2)"
 elif [ "$#" == "3" ] ; then
     to_load=`find . -name $2.plt`
-    extra_opt="-g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs]"
+    extra_opt=" -g assertz(package(xtools)) -g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs,library(assertions),library(checkers)]"
     run_tests="run_tests($2:$3)"
 else
     to_load="autotester.pl"
@@ -44,29 +44,16 @@ case $1 in
         done
         ;;
     tests)
-	swipl $extra_opt -g "['$to_load'],ignore($run_tests)" -t halt
-	;;
-    testst)
 	swipl $extra_opt -g "['$to_load'],time($run_tests)" -t halt
 	;;
     testrtc)
-	swipl $extra_opt -g "['$to_load'],trace_rtc($run_tests)" -t halt
-	;;
-    teststrtc)
 	swipl $extra_opt -g "['$to_load'],time(trace_rtc($run_tests))" -t halt
 	;;
     cover)
-        swipl -g "assertz(package(xtools))" $extra_opt \
-              -g "[library(assertions)],[library(checkers)],['$to_load'],[library(gcover_unit),library(ws_cover)],browse_server(5000),ignore(cov_${run_tests}),cache_file_lines,www_open_url('http://localhost:5000')"
+        swipl $extra_opt \
+              -g "['$to_load'],[library(gcover_unit),library(ws_cover)],browse_server(5000),time((cov_${run_tests},cache_file_lines)),www_open_url('http://localhost:5000')"
 	;;
     check)
-	if [ "$#" == "2" ] ; then
-	    swipl -q -s loadall.pl -g "showcheck($2,[dir(pltool(prolog))])"
-	else
-	    swipl -q -s loadall.pl -g 'checkall([dir(pltool(prolog))])'
-	fi
-	;;
-    checkt)
 	if [ "$#" == "2" ] ; then
 	    swipl -q -s loadall.pl -g "time(showcheck($2,[dir(pltool(prolog))]))"
 	else
