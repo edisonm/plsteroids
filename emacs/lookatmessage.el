@@ -36,6 +36,7 @@
 	    ;; 		     ", LINE=" (number-to-string error-line)
 	    ;; 		     ", COLUMN=" (number-to-string error-column)))
 	    )
+        (message (concat "File " error-filename " not found"))
 	)
       )
     )

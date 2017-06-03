@@ -1,3 +1,6 @@
+:- dynamic
+       package/1.
+
 package(xlibrary).
 package(assertions).
 package(xtools).
