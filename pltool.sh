@@ -44,25 +44,25 @@ case $1 in
         done
         ;;
     tests)
-	swipl $extra_opt -g "['$to_load'],time($run_tests)" -t halt
+	swipl -tty $extra_opt -g "['$to_load'],time($run_tests)" -t halt
 	;;
     testrtc)
-	swipl $extra_opt -g "['$to_load'],time(trace_rtc($run_tests))" -t halt
+	swipl -tty $extra_opt -g "['$to_load'],time(trace_rtc($run_tests))" -t halt
 	;;
     cover)
-        swipl $extra_opt \
+        swipl -tty $extra_opt \
               -g "['$to_load'],[library(gcover_unit),library(ws_cover)],browse_server(5000),time((cov_${run_tests},cache_file_lines)),www_open_url('http://localhost:5000')"
 	;;
     check)
 	if [ "$#" == "2" ] ; then
-	    swipl -q -s loadall.pl -g "time(showcheck($2,[dir(pltool(prolog))]))"
+	    swipl -tty -q -s loadall.pl -g "time(showcheck($2,[dir(pltool(prolog))]))"
 	else
-	    swipl -q -s loadall.pl -g 'time(checkall([dir(pltool(prolog))]))'
+	    swipl -tty -q -s loadall.pl -g 'time(checkall([dir(pltool(prolog))]))'
 	fi
 	;;
     checkload)
         if [ "$#" == "2" ] ; then
-            swipl -q -s plsconfig.pl -g "assertz(package($2)),[checkload],halt"
+            swipl -tty -q -s plsconfig.pl -g "assertz(package($2)),[checkload],halt"
         else
             for i in `find . -name pack.pl`; do
                 pack=`basename ${i%/pack.pl}`
