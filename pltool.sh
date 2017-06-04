@@ -74,6 +74,9 @@ case $1 in
     doc)
         swipl -s plsdoc.pl
         ;;
+    checkh)
+        swipl -q -s loadall.pl -g "forall(available_checker(C),(write('% '),write(C),write(':'),print_message(information, acheck(C)))),halt." 2>&1 |sed -e s:'^% '::g
+        ;;
     checkc)
 	if [ "$#" == "2" ] ; then
 	    swipl -q -s loadall.pl -g "showcheck($2,[dir(pltool(prolog))])"
