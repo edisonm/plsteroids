@@ -26,13 +26,7 @@ scanpack(M:Action, Pack, Loaded1, Loaded) :-
     absolute_file_name(Pack/pack, F, [file_type(prolog)]),
     read_file(F, PackOptions),
     call(M:Action, M:Pack),
-    ( option(requires(ReqPack), PackOptions)
-    ->( is_list(ReqPack)
-      ->ReqPacks=ReqPack
-      ; ReqPacks=[ReqPack]
-      )
-    ; ReqPacks = []
-    ),
+    findall(ReqPack, member(requires(ReqPack), PackOptions), ReqPacks),
     scanpacks(ReqPacks, M:Action, [Pack|Loaded1], Loaded).
 
 read_file(F, Terms) :-
