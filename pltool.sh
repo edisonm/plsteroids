@@ -71,11 +71,15 @@ case $1 in
             done
         fi
         ;;
+    updatedoc)
+        swipl -q -s loadall.pl -g "[pltoolmisc]" \
+              -g "updatedoc('xtools/README.md'),halt"
+        ;;
     doc)
         swipl -s plsdoc.pl
         ;;
     checkh)
-        swipl -q -s loadall.pl -g "forall(available_checker(C),(write('% '),write(C),write(':'),print_message(information, acheck(C)))),halt." 2>&1 |sed -e s:'^% '::g
+        swipl -q -s loadall.pl -g "[pltoolmisc]" -g "checkhelp,halt" 2>&1
         ;;
     checkc)
 	if [ "$#" == "2" ] ; then
