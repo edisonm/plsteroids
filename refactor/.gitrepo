@@ -6,7 +6,7 @@
 [subrepo]
 	remote = https://github.com/edisonm/refactor.git
 	branch = master
-	commit = d283142705c254e0daa242e670ef838a9d880234
-	parent = 19b4d1f6acacab44dae07e4033f4be44944e91e6
+	commit = a710d52227e5113ec72866e3b3271ea25fb2e1b8
+	parent = cbe26fe0cb78cfacbdd425070c4647c524bd5d22
 	cmdver = 0.3.1
 	method = merge
