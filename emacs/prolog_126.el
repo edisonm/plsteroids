@@ -451,7 +451,7 @@ Legal values:
       "parallel" "public" "sequential" "volatile"))
     (swi
      ("discontiguous" "dynamic" "ensure_loaded" "export" "export_list" "import"
-      "meta_predicate" "module" "module_transparent" "multifile" "require"
+      "meta_predicate" "module" "module_transparent" "multifile" "require" "table"
       "use_module" "volatile"))
     (gnu
      ("built_in" "char_conversion" "discontiguous" "dynamic" "ensure_linked"
