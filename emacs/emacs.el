@@ -190,10 +190,10 @@
 
 (set-foreground-color "white")
 ; (message (number-to-string (display-pixel-width)))
-(if (< (display-pixel-width) 3000)
-    (set-default-font "-adobe-courier-medium-r-normal--14-*-100-100-m-90-iso8859-1")
-  (set-default-font "-adobe-courier-medium-r-normal--20-*-100-100-m-150-iso8859-1")
-  )
+;; (if (< (display-pixel-width) 3000)
+;;     (set-default-font "-adobe-courier-medium-r-normal--14-*-100-100-m-90-iso8859-1")
+;;   (set-default-font "-adobe-courier-medium-r-normal--20-*-100-100-m-150-iso8859-1")
+;;   )
 
 ; Just one character comment, otherwise in SWI it will be confused with
 ; predicate documentation:
