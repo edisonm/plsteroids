@@ -6,7 +6,7 @@
 [subrepo]
 	remote = https://github.com/edisonm/rtchecks.git
 	branch = master
-	commit = 263ab730922d4f2d2b204fa05ab83c1f9a7232fc
-	parent = 17205ea8df8ac400f8a8eb8e6c7baad78413919a
+	commit = 3eeeefb433af712787cee888ffba310a90cd4347
+	parent = 2f025d4a7e3cb0e752de7ffb28f917cad486121b
 	cmdver = 0.3.1
 	method = merge
