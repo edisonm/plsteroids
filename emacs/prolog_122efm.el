@@ -882,7 +882,7 @@ Set by prolog-build-case-strings.")
   ;; manual (7.14.10 op/3).  The only problem is that GNU Prolog's
   ;; manual uses precedence levels in the opposite sense (higher
   ;; numbers bind less tightly) than SMIE, so we use negative numbers.
-  '(("." -10000 -10000)
+  '(("." -999 -999)
     ("?-" nil -1200)
     (":-" -1200 -1200)
     ("-->" -1200 -1200)
@@ -951,7 +951,7 @@ Set by prolog-build-case-strings.")
     ;;    ;   elserule
     ;;    )
     (`(:before . ,(or `"->" `";"))
-     (and (smie-rule-bolp) (smie-rule-parent-p "(") (smie-rule-parent 0)))
+     (and (smie-rule-bolp) (smie-rule-parent-p "(" ";") (smie-rule-parent 0)))
     (`(:after . ,(or `"->" `"*->"))
      ;; We distinguish
      ;;
