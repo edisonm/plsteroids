@@ -993,17 +993,17 @@ Set by prolog-build-case-strings.")
           (save-excursion
             (smie-indent-backward-token) ;Skip !
             (equal ":-" (car (smie-indent-backward-token))))
-          (smie-rule-parent prolog-indent-width)))
+          (smie-rule-parent (- prolog-indent-width 4))))
     (`(:after . ":-")
      (if (bolp)
          (save-excursion
            (smie-indent-forward-token)
            (skip-chars-forward " \t")
            (if (eolp)
-               prolog-indent-width
-             (min prolog-indent-width (current-column))))
-       prolog-indent-width))
-    (`(:after . "-->") prolog-indent-width)))
+               (- prolog-indent-width 4)
+             (- (min prolog-indent-width (current-column)) 4)))
+       (- prolog-indent-width 4)))
+    (`(:after . "-->") (- prolog-indent-width 4))))
 
 
 ;;-------------------------------------------------------------------
