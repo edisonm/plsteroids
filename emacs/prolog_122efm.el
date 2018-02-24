@@ -985,25 +985,12 @@ Set by prolog-build-case-strings.")
             ;; Only do it for small offsets, since the comment may actually be
             ;; an "end-of-line" comment at comment-column!
             (if (<= offset prolog-indent-width) offset))))
-    (`(:after . ",")
-     ;; Special indent for:
-     ;;    foopredicate(x) :- !,
-     ;;        toto.
-     (and (eq (char-before) ?!)
-          (save-excursion
-            (smie-indent-backward-token) ;Skip !
-            (equal ":-" (car (smie-indent-backward-token))))
-          (smie-rule-parent (- prolog-indent-width 4))))
-    (`(:after . ":-")
-     (if (bolp)
-         (save-excursion
-           (smie-indent-forward-token)
-           (skip-chars-forward " \t")
-           (if (eolp)
-               (- prolog-indent-width 4)
-             (- (min prolog-indent-width (current-column)) 4)))
-       (- prolog-indent-width 4)))
-    (`(:after . "-->") (- prolog-indent-width 4))))
+    (`(:after . ,(or `":-" `"-->"))
+     (if (smie-rule-parent-p ":-" "-->")
+         0 ; not the first
+       prolog-indent-width
+       ))
+    ))
 
 
 ;;-------------------------------------------------------------------
