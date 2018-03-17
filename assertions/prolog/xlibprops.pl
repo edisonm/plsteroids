@@ -1,9 +1,9 @@
-/*  Part of Extended Tools for SWI-Prolog
+/*  Part of Assertion Reader for SWI-Prolog
 
     Author:        Edison Mera Menendez
     E-mail:        efmera@gmail.com
-    WWW:           https://github.com/edisonm/xtools
-    Copyright (C): 2015, Process Design Center, Breda, The Netherlands.
+    WWW:           https://github.com/edisonm/assertions
+    Copyright (C): 2018, Process Design Center, Breda, The Netherlands.
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without
@@ -32,39 +32,9 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(is_entry_point, [is_entry_point/2]).
+:- module(xlibprops, []).
 
-is_entry_property(exported).
-is_entry_property((public)).
-is_entry_property(imported_from(_)).
+:- use_module(library(assertions)).
+:- use_module(library(normalize_head)).
 
-:- dynamic http_dispatch:handler/4.
-:- multifile http_dispatch:handler/4.
-
-:- multifile
-    is_entry_point_hook/2.
-
-is_entry_point_hook(term_expansion(_, _), _).
-is_entry_point_hook(goal_expansion(_, _), _).
-is_entry_point_hook(term_expansion(_, _, _, _), _).
-is_entry_point_hook(goal_expansion(_, _, _, _), _).
-is_entry_point_hook(thread_message_hook(_, _, _), user).
-is_entry_point_hook(attr_unify_hook(_, _), _).
-is_entry_point_hook(prolog_exception_hook(_, _, _, _), user).
-is_entry_point_hook(prolog_load_file(_, _), user).
-is_entry_point_hook(message_hook(_, _, _), user).
-is_entry_point_hook(prolog_trace_interception(_, _, _, _), user).
-is_entry_point_hook(_, prolog).
-is_entry_point_hook(doc_db(_, _, _, _), assrt_lib).
-is_entry_point_hook(H, sandbox) :- predicate_property(sandbox:H, multifile).
-
-is_entry_point(H, M) :- is_entry_point_hook(H, M), !.
-is_entry_point(H, M) :-
-    functor(H, Name, A),
-    A>0,
-    succ(A2, A),
-    functor(H2, Name, A2),
-    http_dispatch:handler(_, M:H2, _, _), !.
-is_entry_point(H, M) :-
-    is_entry_property(Prop),
-    predicate_property(M:H, Prop), !.
+:- pred normalize_head(+, -goal).

@@ -38,3 +38,4 @@
 :- reexport(library(globprops)).
 :- reexport(library(typeprops)).
 :- use_module(library(libprops)).
+:- use_module(library(xlibprops)).
