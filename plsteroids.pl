@@ -12,3 +12,5 @@ package(refactor).
 
 :- [plsdirs].
 :- [pltools].
+
+:- assertz(ref_msgtype:rstats_db).
