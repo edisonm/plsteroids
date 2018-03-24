@@ -1,3 +1,3 @@
 #!/bin/bash
 
-swipl -tty -s `dirname $0`/plsteroids $*
+swipl -tty -q -s `dirname $0`/plsteroids $*
