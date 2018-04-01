@@ -14,6 +14,7 @@
                        library(compound_expand),
                        library(ref_scenarios),
                        library(checkers),
+                       library(andorra/andorra_builtins_exports),
                        checkers(check_abstract_domains)
                       ])])).
 :- set_prolog_flag(autoload,true).
