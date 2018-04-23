@@ -91,10 +91,21 @@ case $1 in
     loadall)
 	swipl -q -s loadall.pl
 	;;
+    compile)
+        for i in `find . -name pack.pl`; do
+            pack=`basename ${i%/pack.pl}`
+            find $pack/prolog -type d -exec mkdir -p target/{} \;
+            find $pack/prolog -type f -name "*.pl" -exec ln -s ${PWD}/{} target/{} \;
+        done
+	swipl -q -s qcompile.pl
+	;;
     build)
 	echo -e "qsave_program(plsteroids,[]).\nhalt.\n" | \
 	    swipl -q -s loadall.pl
 	;;
+    clean)
+        rm -rf target
+        ;;
     *)
 	forallpacks $*
 	;;
