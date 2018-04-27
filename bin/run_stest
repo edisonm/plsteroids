@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+
+run_stest () {
+    mkdir -p target
+    swipl -q -s loadall.pl -g "time((checkeach([dir(pltool(prolog))],${1%.*})))" -t halt >target/$1.stdout 2>target/$1.stderr
+}
+
+run_stest $1
