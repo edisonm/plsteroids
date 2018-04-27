@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# workers="localhost:4"
+# workers="localhost:4 lapedison:4"
+workers="localhost:4 lapedison:4 skyedison:2"
+
+# workers="hpcedison.local:4 skyedison.local:2"
+# workers="skyedison.local:2"
+
+LOCKDIR=$HOME/.concurrent/
+
+run_job () {
+    round=$1
+    shift
+    worker=$1
+    shift
+    job=$1
+    shift
+    # echo "% Round=$round Worker=$worker Job=$job ; $*"
+    if [ $worker == localhost ] ; then
+        ( export CC_ROUND=$round CC_WORKER=$worker CC_JOB=$job ; $* )
+    else
+        ssh -q $worker "cd ${PWD} ; export CC_ROUND=$round CC_WORKER=$worker CC_JOB=$job ; $*"
+    fi
+}
+
+run_pull () {
+    round=0
+    while true
+    do
+        for workerjobs in $workers; do
+            worker=${workerjobs%:*}
+            jobs=${workerjobs##*:}
+            # echo worker=$worker jobs=$jobs
+            for ((job=0;$job<$jobs;job++)) ; do
+                LOCK=$LOCKDIR$round.$worker.$job.lck
+                # echo Trying $LOCK
+                if (
+                    flock -n 9 || exit 1
+                    run_job $round $worker $job $*
+                    exit 0
+                ) 9>$LOCK ; then
+                    exit 0
+                fi
+            done
+        done
+        round=$(($round+1))
+    done
+}

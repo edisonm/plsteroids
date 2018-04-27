@@ -1,7 +1,9 @@
 # PACKS=assertions rtchecks refactor xlibrary xtools
-
+SHELL=/bin/bash
 MAKEFLAGS += --no-print-directory
 JOBS?=$(shell nproc)
+
+CONCURRENT=. bin/concurrent ; run_pull
 
 push:
 	git push
@@ -19,7 +21,7 @@ pull:
 noop:
 
 %.plt: noop
-	@bin/run_utest '$@'
+	@$(CONCURRENT) bin/run_utest '$@'
 
 %.utest:
 	@$(MAKE) `find $* -name "*.plt"` -j$(JOBS)
@@ -33,7 +35,7 @@ stests: $(addsuffix .stest,$(CHECKERS))
 	@true
 
 %.stest: noop
-	@bin/run_stest '$@'
+	@$(CONCURRENT) bin/run_stest '$@'
 
 tests:
-	@$(MAKE) stests utests -j$(JOBS)
+	@$(MAKE) stests utests

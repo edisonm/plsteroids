@@ -6,6 +6,7 @@ run_utest () {
     mkdir -p target/`dirname $1`
     swipl -g "assertz(package(xtools))" \
 	  -g "assertz(package(`echo $1|sed -e 's:\/: :g'|awk '{print $1}'`)),[plsdirs,library(assertions),library(checkers)]" -g "['$1'],time(run_tests)" -t halt >target/$1.stdout 2>target/$1.stderr
+    echo "% `hostname`: $1: `tail -n1 target/$1.stderr`"
 }
 
 run_utest $1
