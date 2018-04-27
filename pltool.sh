@@ -94,8 +94,8 @@ case $1 in
     compile)
         for i in `find . -name pack.pl`; do
             pack=`basename ${i%/pack.pl}`
-            find $pack/prolog -type d -exec mkdir -p target/{} \;
-            find $pack/prolog -type f -name "*.pl" -exec ln -s ${PWD}/{} target/{} \;
+            find $pack/prolog -type d -exec mkdir -p target/bin/{} \;
+            find $pack/prolog -type f -name "*.pl" -exec ln -s ${PWD}/{} target/bin/{} \;
         done
 	swipl -q -s qcompile.pl
 	;;
