@@ -3,7 +3,6 @@
 :- use_module(pldoc(doc_modes)).
 :- use_module(library(filesex)).
 :- [library(checkers)].
-:- [checkers(check_abstract_domains)].
 :- [loadpacks].
 
 :- set_prolog_flag(autoload, false).
