@@ -3,7 +3,19 @@ SHELL=/bin/bash
 MAKEFLAGS += --no-print-directory
 JOBS?=$(shell nproc)
 
+PLSTEROIDS=target/bin/plsteroids
+
 CONCURRENT=. bin/concurrent ; run_pull
+
+build: $(PLSTEROIDS)
+	@true
+
+clean:
+	$(RM) -rf target
+
+$(PLSTEROIDS):
+	@mkdir -p `dirname $@`
+	@echo -e "infer_meta_if_required.\nqsave_program('$@',[]).\nhalt.\n" | swipl -s loadall.pl
 
 push:
 	git push
@@ -39,3 +51,6 @@ stests: $(addsuffix .stest,$(CHECKERS))
 
 tests:
 	@$(MAKE) stests utests
+
+get_plsteroids:
+	@echo $(PLSTEROIDS)

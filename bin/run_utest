@@ -1,12 +1,14 @@
 #!/bin/bash
 
-set -e
+. bin/run_test
 
-run_utest () {
-    mkdir -p target/`dirname $1`
+swi_cmd () {
     swipl -g "assertz(package(xtools))" \
-	  -g "assertz(package(`echo $1|sed -e 's:\/: :g'|awk '{print $1}'`)),[plsdirs,library(assertions),library(checkers)]" -g "['$1'],time(run_tests)" -t halt >target/$1.stdout 2>target/$1.stderr
-    echo "% `hostname`: $1: `tail -n1 target/$1.stderr`"
+	  -g "assertz(package(`echo $1|sed -e 's:\/: :g'|awk '{print $1}'`)),[plsdirs,library(assertions),library(checkers)]"
 }
 
-run_utest $1
+run_cmd () {
+    echo -e "['$1'],time(run_tests)->halt(0);halt(1).\n"
+}
+
+run_test $1

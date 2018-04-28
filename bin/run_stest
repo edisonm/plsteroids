@@ -1,11 +1,13 @@
 #!/bin/bash
 
-set -e
+. bin/run_test
 
-run_stest () {
-    mkdir -p target
-    swipl -q -s loadall.pl -g "time(checkeach([dir(pltool(prolog))],${1%.*}))" -t halt >target/$1.stdout 2>target/$1.stderr
-    echo "% `hostname`: $1: `tail -n1 target/$1.stderr`"
+swi_cmd () {
+    swipl -q -s loadall.pl
 }
 
-run_stest $1
+run_cmd () {
+    echo -e "time((infer_meta_if_required,checkeach([dir(pltool(prolog))],${1%.*})))->halt(0);halt(1).\n"
+}
+
+run_test $1

@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -e
+
+PLSTEROIDS=target/bin/plsteroids
+# `make get_plsteroids`
+
+error_found=0
+
+set_error_found () {
+    error_found=$((${error_found}>${1}?${error_found}:${1}))
+}
+
+err_test () {
+    grep -H -n "ERROR\|error\|Warn\|warn" $1 && set_error_found 1
+    return 0
+}
+
+run_test () {
+    mkdir -p `dirname target/$1`
+    if [ -f ${PLSTEROIDS} ] ; then
+        SWICMD=${PLSTEROIDS}
+    else
+        SWICMD=swi_cmd
+    fi
+    ( ( run_cmd $1|${SWICMD} $1 ) || echo -e "ERROR: program exited with code $?" ) >target/$1.stdout 2>target/$1.stderr
+    err_test target/$1.stderr target/$1.stdout
+    if [ "0" = $error_found ] ; then
+        errlevel=SUCCESS
+    else
+        errlevel=FAILURE
+    fi
+    JOBTAG=" $CC_WORKER.$CC_JOB.$CC_ROUND:"
+    if [ "$JOBTAG" = " ..:" ] ; then
+        JOBTAG=""
+    fi
+    echo "% $errlevel:$JOBTAG $1: `tail -n1 target/$1.stderr`"
+}
