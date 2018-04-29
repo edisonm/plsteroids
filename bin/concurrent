@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# workers="localhost:4"
+workers="localhost:4"
 # workers="localhost:4 lapedison:4"
-workers="localhost:4 lapedison:4 skyedison:2"
+# workers="localhost:4 lapedison:4 skyedison:2"
 
 # workers="hpcedison.local:4 skyedison.local:2"
 # workers="skyedison.local:2"

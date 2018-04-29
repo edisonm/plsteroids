@@ -1,0 +1,11 @@
+#!/bin/bash
+
+. bin/run_test
+
+swi_cmd () {
+    swipl -g "[plsteroids,library(assertions),library(checkers)]"
+}
+
+run_cmd () {
+    echo -e "['${1%.*}.plt'],time($RUN_TESTS)->halt(0);halt(1).\n"
+}

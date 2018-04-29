@@ -47,7 +47,7 @@ case $1 in
 	swipl -tty $extra_opt -g "['$to_load'],time($run_tests)" -t halt
 	;;
     testrtc)
-	swipl -tty $extra_opt -g "['$to_load'],time(trace_rtc($run_tests))" -t halt
+	swipl -tty -g "assertz(package(rtchecks))" $extra_opt -g "['$to_load'],[library(rtchecks_tracer)],time(trace_rtc($run_tests))" -t halt
 	;;
     cover)
         swipl -tty $extra_opt \

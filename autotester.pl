@@ -3,7 +3,6 @@
 :- user:[plsteroids].
 :- [assertions/tests/'assertions.plt'].
 :- [assertions/tests/foreign/'foreign.plt'].
-:- [assertions/tests/andorra/'andorra.plt'].
 :- [refactor/tests/'gcb.plt'].
 :- [refactor/tests/'refactor.plt'].
 :- [rtchecks/tests/'rtchecks.plt'].

@@ -2,6 +2,6 @@
 
 . bin/run_utest_common
 
-RUN_TESTS=run_tests
+RUN_TESTS="trace_rtc(run_tests)"
 
 run_test $1

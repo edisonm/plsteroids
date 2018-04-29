@@ -13,6 +13,7 @@ set_error_found () {
 
 err_test () {
     grep -H -n "ERROR\|error\|Warn\|warn" $1 && set_error_found 1
+    grep -H -n "fatal signal" $1 && set_error_found 2
     return 0
 }
 
@@ -25,11 +26,17 @@ run_test () {
     fi
     ( ( run_cmd $1|${SWICMD} $1 ) || echo -e "ERROR: program exited with code $?" ) >target/$1.stdout 2>target/$1.stderr
     err_test target/$1.stderr target/$1.stdout
-    if [ "0" = $error_found ] ; then
-        errlevel=SUCCESS
-    else
-        errlevel=FAILURE
-    fi
+    case $error_found in
+        0)
+            errlevel=SUCCESS
+            ;;
+        1)
+            errlevel=FAILURE
+            ;;
+        2)
+            errlevel="SEVERE "
+            ;;
+    esac
     JOBTAG=" $CC_WORKER.$CC_JOB.$CC_ROUND:"
     if [ "$JOBTAG" = " ..:" ] ; then
         JOBTAG=""
