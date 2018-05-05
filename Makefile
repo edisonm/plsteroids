@@ -10,6 +10,14 @@ CONCURRENT=. bin/concurrent ; run_pull
 build: $(PLSTEROIDS)
 	true
 
+compile:
+	for i in `find . -name pack.pl`; do \
+	    pack=`basename $${i%/pack.pl}` ; \
+	    find $${pack}/prolog -type d -exec mkdir -p target/lib/{} \; ; \
+	    find $${pack}/prolog -type f -name "*.pl" -exec ln -sf `pwd`/{} target/lib/{} \; ; \
+	done
+	swipl -q -s qcompile.pl -t halt
+
 clean:
 	$(RM) -rf target
 
@@ -53,6 +61,9 @@ noop:
 CHECKERS=$(shell for i in `find . -name "check_*.pl"`; do echo `basename $${i%.*}`|sed -e s:check_::g ; done)
 
 utests: $(shell find * -name "*.plt")
+	true
+
+rtests: $(shell for i in `find $* -name '*.plt'`; do echo $${i%.*}.plr; done)
 	true
 
 stests: $(addsuffix .stest,$(CHECKERS))
