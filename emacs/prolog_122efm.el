@@ -985,12 +985,15 @@ Set by prolog-build-case-strings.")
             ;; Only do it for small offsets, since the comment may actually be
             ;; an "end-of-line" comment at comment-column!
             (if (<= offset prolog-indent-width) offset))))
+    (`(:before . ":-")
+     (if (smie-rule-bolp)
+          (smie-rule-parent 0 )
+       ))
     (`(:after . ,(or `":-" `"-->"))
      (let ((offset (- prolog-indent-width (smie-indent-calculate))))
        (if (<= 0 offset) offset prolog-indent-width)))
     ))
 
-
 ;;-------------------------------------------------------------------
 ;; Prolog mode
 ;;-------------------------------------------------------------------
