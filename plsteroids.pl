@@ -9,6 +9,8 @@ package(assertions).
 package(xtools).
 package(rtchecks).
 package(refactor).
+% Next package should not be installed, since it contains experimental code:
+% package(playground).
 
 :- [plsdirs].
 :- [pltools].
