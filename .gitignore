@@ -1,2 +1,8 @@
 target
 *~
+*_impl.h
+*_intf.c
+*_intf.h
+*_so.pl
+*.so
+*.diff
