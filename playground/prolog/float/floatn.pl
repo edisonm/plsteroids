@@ -1,8 +1,14 @@
-:- module(floatn, [mpfr_get_default_prec/1]).
+:- module(floatn,
+          [ mpfr_get_default_prec/1,
+            floatn_new_value/3,
+            evalfunc_floatn/3
+          ]).
 
+:- use_module(library(neck)).
 :- use_module(library(assertions)).
+:- use_module(library(extend_args)).
 :- use_module(library(plprops)).
-:- use_module(library(float/evalexpr)).
+:- use_module(library(foreign/foreign_generator)).
 :- use_module(library(foreign/foreign_interface)).
 :- use_module(library(foreign/foreign_props)).
 % :- extra_compiler_opts('-O2 -gdwarf-2 -g3 -lmpfr').
@@ -21,80 +27,37 @@ side.
 */
 
 :- type floatn/1 + foreign(is_floatn).
+
 :- type mpfr_prec_t/1 + foreign(is_mpfr_prec_t).
 
 % documentation at /usr/share/doc/libmpfr-doc/mpfr.html
 
+:- global evaluable/1.
+
+evaluable(G) :- call(G).
+
 :- pred [ [ floatn_new_value(+term_t, int, -term_t),
             floatn_init
           ] + native,
-          mpfr_get_default_prec(-Prec:mpfr_prec_t)+(returns(Prec), foreign),
-          
-          log2(   int, -floatn) + native(floatn_const_log2),
-          pi(     int, -floatn) + native(floatn_const_pi),
-          euler(  int, -floatn) + native(floatn_const_euler),
-          catalan(int, -floatn) + native(floatn_const_catalan),
-          sqrt(   +floatn, int, -floatn) + native(floatn_sqrt),
-          cbrt(   +floatn, int, -floatn) + native(floatn_cbrt),
-          -(      +floatn, int, -floatn) + native(floatn_neg),
-          log(    +floatn, int, -floatn) + native(floatn_log),
-          log2(   +floatn, int, -floatn) + native(floatn_log2),
-          log10(  +floatn, int, -floatn) + native(floatn_log10),
-          log1p(  +floatn, int, -floatn) + native(floatn_log1p),
-          exp(    +floatn, int, -floatn) + native(floatn_exp),
-          exp2(   +floatn, int, -floatn) + native(floatn_exp2),
-          exp10(  +floatn, int, -floatn) + native(floatn_exp10),
-          expm1(  +floatn, int, -floatn) + native(floatn_expm1),
-          cos(    +floatn, int, -floatn) + native(floatn_cos),
-          sin(    +floatn, int, -floatn) + native(floatn_sin),
-          tan(    +floatn, int, -floatn) + native(floatn_tan),
-          sec(    +floatn, int, -floatn) + native(floatn_sec),
-          csc(    +floatn, int, -floatn) + native(floatn_csc),
-          cot(    +floatn, int, -floatn) + native(floatn_cot),
-          acos(   +floatn, int, -floatn) + native(floatn_acos),
-          asin(   +floatn, int, -floatn) + native(floatn_asin),
-          atan(   +floatn, int, -floatn) + native(floatn_atan),
-          cosh(   +floatn, int, -floatn) + native(floatn_cosh),
-          sinh(   +floatn, int, -floatn) + native(floatn_sinh),
-          tanh(   +floatn, int, -floatn) + native(floatn_tanh),
-          sech(   +floatn, int, -floatn) + native(floatn_sech),
-          csch(   +floatn, int, -floatn) + native(floatn_csch),
-          coth(   +floatn, int, -floatn) + native(floatn_coth),
-          acosh(  +floatn, int, -floatn) + native(floatn_acosh),
-          asinh(  +floatn, int, -floatn) + native(floatn_asinh),
-          atanh(  +floatn, int, -floatn) + native(floatn_atanh),
-          fac_ui(+int, int, -floatn) + native(floatn_fac_ui),
-          eint(   +floatn, int, -floatn) + native(floatn_eint),
-          li2(    +floatn, int, -floatn) + native(floatn_li2),
-          gamma(  +floatn, int, -floatn) + native(floatn_gamma),
-          lgamma( +floatn, int, -floatn) + native(floatn_lngamma),
-          digamma(+floatn, int, -floatn) + native(floatn_digamma),
-          zeta(   +floatn, int, -floatn) + native(floatn_zeta),
-          erf(    +floatn, int, -floatn) + native(floatn_erf),
-          erfc(   +floatn, int, -floatn) + native(floatn_erfc),
-          j0(     +floatn, int, -floatn) + native(floatn_j0),
-          j1(     +floatn, int, -floatn) + native(floatn_j1),
-          y0(     +floatn, int, -floatn) + native(floatn_y0),
-          y1(     +floatn, int, -floatn) + native(floatn_y1),
-          ai(     +floatn, int, -floatn) + native(floatn_ai),
-          +(    +floatn, +floatn, int, -floatn) + native(floatn_add),
-          *(    +floatn, +floatn, int, -floatn) + native(floatn_mul),
-          -(    +floatn, +floatn, int, -floatn) + native(floatn_sub),
-          ^(    +floatn, +floatn, int, -floatn) + native(floatn_pow),
-          **(   +floatn, +floatn, int, -floatn) + native(floatn_pow),
-          div(  +floatn, +floatn, int, -floatn) + native(floatn_div),
-          atan( +floatn, +floatn, int, -floatn) + native(floatn_atan2),
-          atan2(+floatn, +floatn, int, -floatn) + native(floatn_atan2),
-          beta( +floatn, +floatn, int, -floatn) + native(floatn_beta),
-          agm(  +floatn, +floatn, int, -floatn) + native(floatn_agm),
-          rootn_ui(+floatn, +int, int, -floatn) + native(floatn_rootn_ui),
-          jn(+int, +floatn, int, -floatn) + native(floatn_jn),
-          yn(+int, +floatn, int, -floatn) + native(floatn_yn),
-          gamma_inc(+floatn, +floatn, int, -floatn) + native(floatn_gamma_inc),
-          fma( +floatn, +floatn, +floatn, int, -floatn) + native(floatn_fma),
-          fms( +floatn, +floatn, +floatn, int, -floatn) + native(floatn_fms),
-          fmma(+floatn, +floatn, +floatn, +floatn, int, -floatn) + native(floatn_fmma),
-          fmms(+floatn, +floatn, +floatn, +floatn, int, -floatn) + native(floatn_fmms)
+          [ mpfr_get_default_prec(-Prec:mpfr_prec_t)
+          ] + (returns(Prec), foreign),
+          [ [ log2/2, pi/2, euler/2, catalan/2
+            ] :: (int * -floatn) + native(prefix(floatn_const_)),
+            [ [ sqrt/3,  cbrt/3,    log/3,     log2/3,  log10/3, log1p/3, exp/3,   exp2/3,  exp10/3, expm1/3,
+                cos/3,   sin/3,     tan/3,     sec/3,   csc/3,   cot/3,   acos/3,  asin/3,  atan/3,  cosh/3,
+                sinh/3,  tanh/3,    sech/3,    csch/3,  coth/3,  acosh/3, asinh/3, atanh/3, eint/3,  li2/3,
+                gamma/3, lngamma/3, digamma/3, zeta/3,  erf/3,   erfc/3,  j0/3,    j1/3,    y0/3,    y1/3,
+                ai/3,    neg/3
+              ] :: (+floatn * int * -floatn),
+              [ add/4, mul/4, sub/4, pow/4, div/4, atan2/4, gamma_inc/4, beta/4, agm/4
+              ] :: (+floatn * +floatn * int * -floatn),
+              [jn/4,   yn/4  ] :: (+int * +floatn * int * -floatn),
+              [fma/5,  fms/5 ] :: (+floatn * +floatn * +floatn * int * -floatn),
+              [fmma/6, fmms/6] :: (+floatn * +floatn * +floatn * +floatn * int * -floatn),
+              rootn_ui(+floatn, +int, int, -floatn),
+              fac_ui(+int, int, -floatn)
+            ] + native(prefix(floatn_))
+          ] + evaluable
         ].
 
 :- initialization(floatn_init).
@@ -107,8 +70,6 @@ epsilon(P, V) :-
     N1 is 1-N,
     evalexpr(floatn(P), 2^N1, V).
 
-e(P, V) :- evalexpr(floatn(P), exp(1), V).
-
 cputime(P, V) :-
     X is cputime,
     evalexpr(floatn(P), X, V).
@@ -117,54 +78,40 @@ eval(E, _, E).
 
 +(E, _, E).
 
-evalexpr:evaluable(floatn, E) :- evalexpr:evaluable(floatn(_), E).
-evalexpr:new_value(floatn, E, V) :- evalexpr:new_value(floatn(_), E, V).
-evalexpr:eval_func(floatn, F, V) :- evalexpr:eval_func(floatn(_), F, V).
-evalexpr:eval_hook(floatn, E, V) :- evalexpr:eval_hook(floatn(_), E, V).
+floatn_evaluable(Func, InputDomains) :-
+    curr_prop_asr(head, floatn:Call, _, Asr),
+    curr_prop_asr(glob, floatn:evaluable(_), _, Asr),
+    extend_args(Func, [_, _], Call),
+    collect_prop(Asr, floatn, call, InputDomains1),
+    subtract(InputDomains1, [var(_)], InputDomains),
+    neck.
 
-evalexpr:evaluable(floatn(_), E) :- evalexpr_evaluable(E).
-evalexpr:new_value(floatn(P), E, V) :- floatn_new_value(E, P, V).
-evalexpr:eval_func(floatn(P), F, V) :- eval_func_floatn(F, P, V).
-evalexpr:eval_hook(floatn(P), E, V) :- evalexpr_floatn(E, P, V).
-
-evalexpr_evaluable(log2).
-evalexpr_evaluable(euler).
-evalexpr_evaluable(catalan).
-evalexpr_evaluable(agm(_, _)).
-evalexpr_evaluable(expm1(_)).
-evalexpr_evaluable(ai(_)).
-evalexpr_evaluable(j0(_)).
-evalexpr_evaluable(j1(_)).
-evalexpr_evaluable(y0(_)).
-evalexpr_evaluable(y1(_)).
-evalexpr_evaluable(cbrt(_)).
-evalexpr_evaluable(eint(_)).
-evalexpr_evaluable(log2(_)).
-evalexpr_evaluable(log1p(_)).
-evalexpr_evaluable(zeta(_)).
-evalexpr_evaluable(li2(_)).
-evalexpr_evaluable(gamma(_)).
-evalexpr_evaluable(digamma(_)).
-evalexpr_evaluable(fma(_, _, _)).
-evalexpr_evaluable(fms(_, _, _)).
-evalexpr_evaluable(fmma(_, _, _, _)).
-evalexpr_evaluable(fmms(_, _, _, _)).
-
-eval_func_floatn(A/B, P, V) :-
-    div(A, B, P, V),
-    !.
-eval_func_floatn(F, P, V) :- call(F, P, V).
-
-evalexpr_floatn(floatn(E, P), _, V) :- evalexpr(floatn(P), E, V).
-evalexpr_floatn(root(  E, N), P, V) :- evalexpr(floatn(P), E**(1/N), V).
-evalexpr_floatn(rootn(E1, N), P, V) :-
-    N1 is N,
-    ( N >= 0
-    ->E = E1
-    ; E = 1/E1
-    ),
-    evalexpr(floatn(P), E, V1),
-    rootn_ui(V1, N1, P, V).
-evalexpr_floatn(fac_ui(E1), P, V) :-
-    E is E1,
-    fac_ui(E, P, V).
+evalfunc_floatn(A/B, P, V) :- div(A, B, P, V).
+evalfunc_floatn(A+B, P, V) :- add(A, B, P, V).
+evalfunc_floatn(A*B, P, V) :- mul(A, B, P, V).
+evalfunc_floatn(A-B, P, V) :- sub(A, B, P, V).
+evalfunc_floatn(A**B,P, V) :- pow(A, B, P, V).
+evalfunc_floatn(A^B, P, V) :- pow(A, B, P, V).
+evalfunc_floatn(-A,  P, V) :- neg(A, P, V).
+evalfunc_floatn(lgamma(A), P, V) :- lngamma(A, P, V).
+evalfunc_floatn(atan(A, B), P, V) :- atan2(A, B, P, V).
+evalfunc_floatn(e, P, V) :- evalexpr(floatn(P), exp(1), V).
+evalfunc_floatn(root(E, N), P, V) :- evalexpr(floatn(P), E**(1/N), V).
+evalfunc_floatn(eval(E), _, E).
+evalfunc_floatn(+(E), _, E).
+% evalfunc_floatn(rootn(E1, N), P, V) :-
+%     N1 is N,
+%     ( N >= 0
+%     ->E = E1
+%     ; E = 1/E1
+%     ),
+%     evalexpr(floatn(P), E, V1),
+%     rootn_ui(V1, N1, P, V).
+% evalfunc_floatn(fac_ui(E1), P, V) :-
+%     E is E1,
+%     fac_ui(E, P, V).
+evalfunc_floatn(F, P, V) :-
+    floatn_evaluable(F, _),
+    extend_args(F, [P, V], C),
+    neck,
+    C.

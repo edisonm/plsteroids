@@ -3,6 +3,7 @@
 
 :- use_module(library(list_sequence)).
 :- use_module(library(neck)).
+:- use_module(library(lists)).
 
 :- multifile
         evaluable/2,
@@ -23,8 +24,7 @@ evalexpr(Domain, Var, _) :-
     ; var(Var)
     ),
     !,
-    throw(error(instantiation_error,
-                context(evalexpr:evalexpr/3, _))).
+    throw(error(instantiation_error, context(evalexpr:evalexpr/3, _))).
 evalexpr(Domain, Expr, Value) :-
     new_value(Domain, Expr, Value),
     !.

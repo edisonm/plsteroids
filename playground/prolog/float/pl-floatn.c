@@ -1,5 +1,7 @@
 #include "pl-floatn.h"
 #include <string.h>
+#include <foreign_interface.h>
+
 // Three figures ~= 10 bits (remember, 2^10=1024)
 // equivalent double precision ~= 52 bits (17 decimals)
 // equivalent decimal128 precision ~= 110 bits (34 decimals)
@@ -99,10 +101,7 @@ foreign_t floatn_init() {
         PL_blob_t *type;                                                \
         int prec;                                                       \
         floatn *ra;                                                     \
-        if (!((PL_term_type(a) == PL_BLOB)                              \
-              && PL_get_blob(a, (void **)&ra, NULL, &type)              \
-              && (type == &record_mpfr)))                               \
-            return FALSE;                                               \
+        __rtcheck(PL_get_floatn(a, &ra));                               \
         fr = malloc(sizeof(floatn));                                    \
         if (!PL_get_integer(p, &prec))                                  \
             prec = mpfr_get_prec(*ra);                                  \
@@ -136,16 +135,9 @@ foreign_t floatn_init() {
         floatn *fr;                                                     \
         PL_blob_t *type;                                                \
         int prec;                                                       \
-        floatn *ra;                                                     \
-        if (!((PL_term_type(a) == PL_BLOB)                              \
-              && PL_get_blob(a, (void **)&ra, NULL, &type)              \
-              && (type == &record_mpfr)))                               \
-            return FALSE;                                               \
-        floatn *rb;                                                     \
-        if (!((PL_term_type(b) == PL_BLOB)                              \
-              && PL_get_blob(b, (void **)&rb, NULL, &type)              \
-              && (type == &record_mpfr)))                               \
-            return FALSE;                                               \
+        floatn *ra, *rb;                                                \
+        __rtcheck(PL_get_floatn(a, &ra));                               \
+        __rtcheck(PL_get_floatn(b, &rb));                               \
         fr = malloc(sizeof(floatn));                                    \
         if (!PL_get_integer(p, &prec))                                  \
             prec = MAX(mpfr_get_prec(*ra), mpfr_get_prec(*rb));         \
@@ -161,10 +153,7 @@ foreign_t floatn_init() {
         PL_blob_t *type;                                                \
         int prec;                                                       \
         floatn *ra;                                                     \
-        if (!((PL_term_type(a) == PL_BLOB)                              \
-              && PL_get_blob(a, (void **)&ra, NULL, &type)              \
-              && (type == &record_mpfr)))                               \
-            return FALSE;                                               \
+        __rtcheck(PL_get_floatn(a, &ra));                               \
         int ib;                                                         \
         if (!PL_get_integer(b, &ib)) {                                  \
             PL_type_error("integer", b);                                \
@@ -190,10 +179,7 @@ foreign_t floatn_init() {
             return FALSE;                                               \
         }                                                               \
         floatn *rb;                                                     \
-        if (!((PL_term_type(b) == PL_BLOB)                              \
-              && PL_get_blob(b, (void **)&rb, NULL, &type)              \
-              && (type == &record_mpfr)))                               \
-            return FALSE;                                               \
+        __rtcheck(PL_get_floatn(b, &rb));                               \
         fr = malloc(sizeof(floatn));                                    \
         if (!PL_get_integer(p, &prec))                                  \
             prec = mpfr_get_prec(*rb);                                  \
@@ -209,21 +195,10 @@ foreign_t floatn_init() {
         floatn *fr;                                                     \
         PL_blob_t *type;                                                \
         int prec;                                                       \
-        floatn *ra;                                                     \
-        if (!((PL_term_type(a) == PL_BLOB)                              \
-              && PL_get_blob(a, (void **)&ra, NULL, &type)              \
-              && (type == &record_mpfr)))                               \
-            return FALSE;                                               \
-        floatn *rb;                                                     \
-        if (!((PL_term_type(b) == PL_BLOB)                              \
-              && PL_get_blob(b, (void **)&rb, NULL, &type)              \
-              && (type == &record_mpfr)))                               \
-            return FALSE;                                               \
-        floatn *rc;                                                     \
-        if (!((PL_term_type(b) == PL_BLOB)                              \
-              && PL_get_blob(b, (void **)&rc, NULL, &type)              \
-              && (type == &record_mpfr)))                               \
-            return FALSE;                                               \
+        floatn *ra, *rb, *rc;                                           \
+        __rtcheck(PL_get_floatn(a, &ra));                               \
+        __rtcheck(PL_get_floatn(b, &rb));                               \
+        __rtcheck(PL_get_floatn(c, &rc));                               \
         fr = malloc(sizeof(floatn));                                    \
         if (!PL_get_integer(p, &prec))                                  \
             prec = MAX(mpfr_get_prec(*ra),                              \
@@ -241,26 +216,11 @@ foreign_t floatn_init() {
         floatn *fr;                                                     \
         PL_blob_t *type;                                                \
         int prec;                                                       \
-        floatn *ra;                                                     \
-        if (!((PL_term_type(a) == PL_BLOB)                              \
-              && PL_get_blob(a, (void **)&ra, NULL, &type)              \
-              && (type == &record_mpfr)))                               \
-            return FALSE;                                               \
-        floatn *rb;                                                     \
-        if (!((PL_term_type(b) == PL_BLOB)                              \
-              && PL_get_blob(b, (void **)&rb, NULL, &type)              \
-              && (type == &record_mpfr)))                               \
-            return FALSE;                                               \
-        floatn *rc;                                                     \
-        if (!((PL_term_type(c) == PL_BLOB)                              \
-              && PL_get_blob(c, (void **)&rc, NULL, &type)              \
-              && (type == &record_mpfr)))                               \
-            return FALSE;                                               \
-        floatn *rd;                                                     \
-        if (!((PL_term_type(d) == PL_BLOB)                              \
-              && PL_get_blob(d, (void **)&rd, NULL, &type)              \
-              && (type == &record_mpfr)))                               \
-            return FALSE;                                               \
+        floatn *ra, *rb, *rc, *rd;                                      \
+        __rtcheck(PL_get_floatn(a, &ra));                               \
+        __rtcheck(PL_get_floatn(b, &rb));                               \
+        __rtcheck(PL_get_floatn(c, &rc));                               \
+        __rtcheck(PL_get_floatn(d, &rd));                               \
         fr = malloc(sizeof(floatn));                                    \
         if (!PL_get_integer(p, &prec))                                  \
             prec = MAX(MAX(mpfr_get_prec(*ra),                          \
@@ -344,9 +304,10 @@ FLOATN_FUNCTION4(fmms)
 foreign_t floatn_new_value(term_t expr, term_t precision, term_t value)
 {
     floatn *ref;
-    int prec;
+    int prec, undefined_prec;
+    undefined_prec = PL_is_variable(precision);
     if (!PL_get_integer(precision, &prec)) {
-        if (!PL_is_variable(precision))
+        if (!undefined_prec)
             return FALSE;
         prec = 0;
     }
@@ -369,6 +330,20 @@ foreign_t floatn_new_value(term_t expr, term_t precision, term_t value)
         mpfr_init2(*ref, prec);
         mpfr_set_z(*ref, i, MPFR_RNDN);
         mpz_clear(i);
+        break;
+    }
+    case PL_TERM:
+    {
+        mpq_t q;
+        mpq_init(q);
+        if (!PL_get_mpq(expr, q))
+            return FALSE;
+        if (!prec)
+            prec = mpfr_get_default_prec();
+        ref = malloc(sizeof(floatn));
+        mpfr_init2(*ref, prec);
+        mpfr_set_q(*ref, q, MPFR_RNDN);
+        mpz_clear(q);
         break;
     }
     case PL_ATOM:
@@ -420,15 +395,24 @@ foreign_t floatn_new_value(term_t expr, term_t precision, term_t value)
     case PL_BLOB:
     {
         PL_blob_t *type;
-        if (!prec)
-            prec = mpfr_get_default_prec();
-        if (!((PL_get_blob(expr, (void **)&ref, NULL, &type) && (type == &record_mpfr))))
-            return FALSE;
+        floatn *v;
+        int vp;
+        __rtcheck(PL_get_floatn(expr, &v));
+        vp = mpfr_get_prec(*v);
+        if (!prec || (prec == vp)) {
+            return PL_unify(value, expr);
+        } else {
+            ref = malloc(sizeof(floatn));
+            mpfr_init2(*ref, prec);
+            mpfr_set(*ref, *v, MPFR_RNDN);
+        }
         break;
     }
     default:
         return FALSE;
     }
+    if (undefined_prec)
+        PL_unify_integer(precision, prec);
     return PL_unify_floatn(value, ref);
 }
 

@@ -16,5 +16,7 @@ loadpacks(Loader) :-
                         % library(compound_expand),
                         library(ref_scenarios),
                         library(checkers),
+                        library(float/floatn),
+                        library(float/floatn_so),
                         library(andorra/andorra_builtins_exports)
                        ])]), Loader).

@@ -1,5 +1,6 @@
 :- [plsteroids].
 :- use_module(library(apply_macros)). % Load it proactively
+:- use_module(library(float/floatn)).
 :- use_module(pldoc(doc_modes)).
 :- [library(checkers)].
 :- [loadpacks].
