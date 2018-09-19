@@ -1,11 +1,14 @@
 :- module(floatn,
           [ mpfr_get_default_prec/1,
+            floatn_data/1,
+            floatn_domain_args/1,
             floatn_new_value/3,
-            evalfunc_floatn/3
+            floatn_evalfunc/3
           ]).
 
 :- use_module(library(neck)).
 :- use_module(library(assertions)).
+:- use_module(library(substitute)).
 :- use_module(library(extend_args)).
 :- use_module(library(plprops)).
 :- use_module(library(foreign/foreign_generator)).
@@ -15,7 +18,11 @@
 :- extra_compiler_opts('-lmpfr -lgmp').
 :- use_foreign_header('pl-floatn').
 :- use_foreign_source('pl-floatn').
-:- gen_foreign_library(floatn).
+:- gen_foreign_library(libfloatn).
+
+:- multifile
+    floatn_evalfunc/3,
+    floatn_domain_args/1.
 
 /*
 
@@ -26,7 +33,7 @@ side.
 
 */
 
-:- type floatn/1 + foreign(is_floatn).
+:- type floatn/1 + native(is_floatn).
 
 :- type mpfr_prec_t/1 + foreign(is_mpfr_prec_t).
 
@@ -37,7 +44,8 @@ side.
 evaluable(G) :- call(G).
 
 :- pred [ [ floatn_new_value(+term_t, int, -term_t),
-            floatn_init
+            floatn_init,
+            floatn_data(-ptr)
           ] + native,
           [ mpfr_get_default_prec(-Prec:mpfr_prec_t)
           ] + (returns(Prec), foreign),
@@ -54,9 +62,15 @@ evaluable(G) :- call(G).
               [jn/4,   yn/4  ] :: (+int * +floatn * int * -floatn),
               [fma/5,  fms/5 ] :: (+floatn * +floatn * +floatn * int * -floatn),
               [fmma/6, fmms/6] :: (+floatn * +floatn * +floatn * +floatn * int * -floatn),
-              rootn_ui(+floatn, +int, int, -floatn),
-              fac_ui(+int, int, -floatn)
-            ] + native(prefix(floatn_))
+              rootn_ui(+floatn, +int, int, -floatn)
+              % fac_ui(+int, int, -floatn) % can not be casted in this framework
+            ] + native(prefix(floatn_)),
+            %% Non native:
+            e/2 :: (int * -floatn),
+            [ eval/3, (+)/3, (-)/3, lgamma/3
+            ] :: (+floatn * int * -floatn),
+            [ (/)/4, (+)/4, (*)/4, (-)/4, (**)/4, (^)/4, atan/4, root/4
+            ] :: (+floatn * +floatn * int * -floatn)
           ] + evaluable
         ].
 
@@ -75,8 +89,19 @@ cputime(P, V) :-
     evalexpr(floatn(P), X, V).
 
 eval(E, _, E).
-
 +(E, _, E).
+-(A, P, V) :- neg(A, P, V).
+
+/( A, B, P, V) :- div(A, B, P, V).
++( A, B, P, V) :- add(A, B, P, V).
+*( A, B, P, V) :- mul(A, B, P, V).
+-( A, B, P, V) :- sub(A, B, P, V).
+**(A, B, P, V) :- pow(A, B, P, V).
+^( A, B, P, V) :- pow(A, B, P, V).
+lgamma(A, P, V) :- lngamma(A, P, V).
+atan(A, B, P, V) :- atan2(A, B, P, V).
+e(P, V) :- evalexpr(floatn(P), exp(1), V).
+root(E, N, P, V) :- evalexpr(floatn(P), E**(1/N), V).
 
 floatn_evaluable(Func, InputDomains) :-
     curr_prop_asr(head, floatn:Call, _, Asr),
@@ -86,32 +111,18 @@ floatn_evaluable(Func, InputDomains) :-
     subtract(InputDomains1, [var(_)], InputDomains),
     neck.
 
-evalfunc_floatn(A/B, P, V) :- div(A, B, P, V).
-evalfunc_floatn(A+B, P, V) :- add(A, B, P, V).
-evalfunc_floatn(A*B, P, V) :- mul(A, B, P, V).
-evalfunc_floatn(A-B, P, V) :- sub(A, B, P, V).
-evalfunc_floatn(A**B,P, V) :- pow(A, B, P, V).
-evalfunc_floatn(A^B, P, V) :- pow(A, B, P, V).
-evalfunc_floatn(-A,  P, V) :- neg(A, P, V).
-evalfunc_floatn(lgamma(A), P, V) :- lngamma(A, P, V).
-evalfunc_floatn(atan(A, B), P, V) :- atan2(A, B, P, V).
-evalfunc_floatn(e, P, V) :- evalexpr(floatn(P), exp(1), V).
-evalfunc_floatn(root(E, N), P, V) :- evalexpr(floatn(P), E**(1/N), V).
-evalfunc_floatn(eval(E), _, E).
-evalfunc_floatn(+(E), _, E).
-% evalfunc_floatn(rootn(E1, N), P, V) :-
-%     N1 is N,
-%     ( N >= 0
-%     ->E = E1
-%     ; E = 1/E1
-%     ),
-%     evalexpr(floatn(P), E, V1),
-%     rootn_ui(V1, N1, P, V).
-% evalfunc_floatn(fac_ui(E1), P, V) :-
-%     E is E1,
-%     fac_ui(E, P, V).
-evalfunc_floatn(F, P, V) :-
+floatn_evalfunc(F, P, V) :-
     floatn_evaluable(F, _),
     extend_args(F, [P, V], C),
     neck,
     C.
+
+domain_substitution(floatn(A), A=floatn(_)) :- !.
+domain_substitution(Prop1, A=Prop) :-
+    extend_args(Prop, [A], Prop1).
+
+floatn_domain_args(D) :-
+    floatn_evaluable(F, L1),
+    maplist(domain_substitution, L1, L),
+    substitute_values(L, F, D),
+    neck.

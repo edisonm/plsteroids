@@ -16,4 +16,6 @@ typedef mpfr_t floatn;
 int PL_unify_floatn(term_t t, floatn *fr);
 int PL_get_floatn(term_t t, floatn **fr);
 
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
 #endif

@@ -10,8 +10,6 @@
 #define DEFAULT_PRECISION 104
 #define DEFAULT_NUMDIGITS  34
 
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-
 void floatn_to_str(floatn *ref, char **c)
 {
     size_t size;
@@ -22,7 +20,6 @@ void floatn_to_str(floatn *ref, char **c)
 
 static int write_floatn_ref(IOSTREAM *s, atom_t aref, int flags)
 {
-    mpfr_exp_t e;
     floatn *ref = PL_blob_data(aref, NULL, NULL);
     (void) flags;
     char *c;
@@ -51,7 +48,7 @@ static void aquire_floatn(atom_t aref)
     (void) ref;
 }
 
-static PL_blob_t record_mpfr =
+static PL_blob_t __record_mpfr =
 {
     PL_BLOB_MAGIC,
     //PL_BLOB_UNIQUE|
@@ -63,14 +60,16 @@ static PL_blob_t record_mpfr =
     aquire_floatn
 };
 
-int is_floatn(term_t v) {
+PL_blob_t *record_mpfr = &__record_mpfr;
+
+foreign_t is_floatn(term_t v) {
     void *src;
     PL_blob_t *type;
     return PL_get_blob(v, (void *)&src, NULL, &type)
-        && type == &record_mpfr;
+        && type == record_mpfr;
 }
 
-int is_mpfr_prec_t(term_t v) {
+foreign_t is_mpfr_prec_t(term_t v) {
     return PL_is_integer(v);
 }
 
@@ -79,6 +78,11 @@ foreign_t floatn_init() {
     mp_set_memory_functions(NULL, NULL, NULL);
     return TRUE;
 }
+
+foreign_t floatn_data(term_t t) {
+    return PL_unify_pointer(t, record_mpfr);
+}
+
 
 #define FLOATN_FUNCTION0(name)                                          \
     foreign_t floatn_##name(term_t p, term_t r)                         \
@@ -323,7 +327,7 @@ foreign_t floatn_new_value(term_t expr, term_t precision, term_t value)
     {
         mpz_t i;
         mpz_init(i);
-        PL_get_mpz(expr, i);
+        __rtcheck(PL_get_mpz(expr, i));
         if (!prec)
             prec = MAX(mpfr_get_default_prec(), mpz_sizeinbase(i, 2));
         ref = malloc(sizeof(floatn));
@@ -343,13 +347,13 @@ foreign_t floatn_new_value(term_t expr, term_t precision, term_t value)
         ref = malloc(sizeof(floatn));
         mpfr_init2(*ref, prec);
         mpfr_set_q(*ref, q, MPFR_RNDN);
-        mpz_clear(q);
+        mpq_clear(q);
         break;
     }
     case PL_ATOM:
     {
         char *c, *p;
-        PL_get_atom_chars(expr, &c);
+        __rtcheck(PL_get_atom_chars(expr, &c));
         if (!prec)
             prec = MAX(mpfr_get_default_prec(), strlen(c)*10/3);
         ref = malloc(sizeof(floatn));
@@ -367,7 +371,7 @@ foreign_t floatn_new_value(term_t expr, term_t precision, term_t value)
     {
         char *c, *p;
         size_t len;
-        PL_get_string_chars(expr, &c, &len);
+        __rtcheck(PL_get_string_chars(expr, &c, &len));
         if (!prec)
             prec = MAX(mpfr_get_default_prec(), strlen(c)*10/3);
         ref = malloc(sizeof(floatn));
@@ -384,7 +388,7 @@ foreign_t floatn_new_value(term_t expr, term_t precision, term_t value)
     case PL_FLOAT:
     {
         double d;
-        PL_get_float(expr, &d);
+        __rtcheck(PL_get_float(expr, &d));
         if (!prec)
             prec = mpfr_get_default_prec();
         ref = malloc(sizeof(floatn));
@@ -399,7 +403,8 @@ foreign_t floatn_new_value(term_t expr, term_t precision, term_t value)
         int vp;
         __rtcheck(PL_get_floatn(expr, &v));
         vp = mpfr_get_prec(*v);
-        if (!prec || (prec == vp)) {
+        if (!prec) prec = vp;
+        if (prec == vp) {
             return PL_unify(value, expr);
         } else {
             ref = malloc(sizeof(floatn));
@@ -412,20 +417,20 @@ foreign_t floatn_new_value(term_t expr, term_t precision, term_t value)
         return FALSE;
     }
     if (undefined_prec)
-        PL_unify_integer(precision, prec);
+        __rtcheck(PL_unify_integer(precision, prec));
     return PL_unify_floatn(value, ref);
 }
 
 int PL_unify_floatn(term_t t, floatn *fr)
 {
-    return PL_unify_blob(t, *fr, sizeof(floatn), &record_mpfr);
+    return PL_unify_blob(t, *fr, sizeof(floatn), record_mpfr);
 }
 
 int PL_get_floatn(term_t t, floatn **fr)
 {
     PL_blob_t *type;
     
-    if (PL_get_blob(t, (void **)fr, NULL, &type) && type == &record_mpfr)
+    if (PL_get_blob(t, (void **)fr, NULL, &type) && type == record_mpfr)
         return TRUE;
     
     PL_type_error("floatn", t);
