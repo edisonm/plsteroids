@@ -8,7 +8,7 @@ evaluator:castexpr(    complexn(P, E), complexn(P), E) :- integer(P).
 evaluator:evalfunc(    complexn(P), E, V) :- complexn_evalfunc(E, P, P, V).
 evaluator:domain_value(complexn(P), E, V) :- complexn_new_value(E, P, P, V).
 evaluator:domain_order(complexn(P), [5, P]).
-evaluator:domain_args( complexn(_), FD) :- complexn_complexn_domain_args(FD).
+evaluator:domain_args( complexn(_), FD) :- complexn_domain_args(FD).
 
 evaluator:castexpr(    complexn(R, I, E), complexn(R, I), E) :- integer(R), integer(I).
 evaluator:evalfunc(    complexn(R, I), E, V) :- complexn_evalfunc(E, R, I, V).

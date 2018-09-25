@@ -405,6 +405,8 @@ foreign_t floatn_new_value(term_t expr, term_t precision, term_t value)
         vp = mpfr_get_prec(*v);
         if (!prec) prec = vp;
         if (prec == vp) {
+            if (undefined_prec)
+                __rtcheck(PL_unify_integer(precision, prec));
             return PL_unify(value, expr);
         } else {
             ref = malloc(sizeof(floatn));

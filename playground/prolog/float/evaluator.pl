@@ -28,11 +28,11 @@ evalexpr(Domain, Expr1, Value) :-
 evalexpr(Domain, Expr, Value) :-
     functor(Expr, F, A),
     functor(EVal, F, A),
-    functor(DArg, F, A),
+    functor(EDAr, F, A),
     ( nonvar(Domain)
-    ->EDom = DArg,
-      domain_args(Domain, DArg),
-      mapargs(join_domain(Domain), DArg),
+    ->EDom = EDAr,
+      domain_args(Domain, EDAr),
+      mapargs(join_domain(Domain), EDAr),
       mapargs(evalexpr, EDom, Expr, EVal),
       evalfunc(Domain, EVal, Value)
     ; functor(EDom, F, A),
@@ -44,9 +44,9 @@ evalexpr(Domain, Expr, Value) :-
                       ))),
       Domain = Domain1,
       freeze(Domain,
-             ( domain_args(Domain, DArg),
-               mapargs(join_domain(Domain), DArg),
-               mapargs(cast_domain, EDom, DArg, EVal, EC),
+             ( domain_args(Domain, EDAr),
+               mapargs(join_domain(Domain), EDAr),
+               mapargs(cast_domain, EDom, EDAr, EVal, EC),
                evalfunc(Domain, EC, Value)
              ))
     ).

@@ -71,13 +71,29 @@ int is_mpc_prec_t(term_t v) {
         complexn *cx;                                                   \
         PL_blob_t *type;                                                \
         int prec_r, prec_i;                                             \
-        fr = malloc(sizeof(complexn));                                  \
+        cx = malloc(sizeof(complexn));                                  \
         if (!PL_get_integer(p_r, &prec_r))                              \
             prec_r = mpfr_get_default_prec();                           \
         if (!PL_get_integer(p_i, &prec_i))                              \
             prec_i = mpfr_get_default_prec();                           \
         mpc_init3(*cx, prec_r, prec_i);                                 \
-        mpc_##name(*cx, MPFR_RNDN);                                     \
+        mpc_##name(*cx, MPC_RNDNN);                                     \
+        return PL_unify_complexn(r, cx);                                \
+    }
+
+#define COMPLEXN_FUNCTION0n(name)                                       \
+    foreign_t complexn_##name(term_t p_r, term_t p_i, term_t r)         \
+    {                                                                   \
+        complexn *cx;                                                   \
+        PL_blob_t *type;                                                \
+        int prec_r, prec_i;                                             \
+        cx = malloc(sizeof(complexn));                                  \
+        if (!PL_get_integer(p_r, &prec_r))                              \
+            prec_r = mpfr_get_default_prec();                           \
+        if (!PL_get_integer(p_i, &prec_i))                              \
+            prec_i = mpfr_get_default_prec();                           \
+        mpc_init3(*cx, prec_r, prec_i);                                 \
+        mpc_##name(*cx);                                                \
         return PL_unify_complexn(r, cx);                                \
     }
 
@@ -86,16 +102,17 @@ int is_mpc_prec_t(term_t v) {
     {                                                                   \
         complexn *cx;                                                   \
         PL_blob_t *type;                                                \
-        int prec_r, prec_i;                                             \
+        int prec_r, prec_i, prec_ar, prec_ai;                           \
         complexn *ra;                                                   \
         __rtcheck(PL_get_complexn(a, &ra));                             \
         cx = malloc(sizeof(complexn));                                  \
+        mpc_get_prec2(&prec_ar, &prec_ai, *ra);                         \
         if (!PL_get_integer(p_r, &prec_r))                              \
-            prec_r = mpfr_get_default_prec();                           \
+            prec_r = prec_ar;                                           \
         if (!PL_get_integer(p_i, &prec_i))                              \
-            prec_i = mpfr_get_default_prec();                           \
+            prec_i = prec_ai;                                           \
         mpc_init3(*cx, prec_r, prec_i);                                 \
-        mpc_##name(*cx, *ra, MPFR_RNDN);                                \
+        mpc_##name(*cx, *ra, MPC_RNDNN);                                \
         return PL_unify_complexn(r, cx);                                \
     }
 
@@ -104,14 +121,15 @@ int is_mpc_prec_t(term_t v) {
     {                                                                   \
         floatn *fr;                                                     \
         PL_blob_t *type;                                                \
-        int prec_r, prec_i;                                             \
+        int prec_r, prec_i, prec_ar, prec_ai;                           \
         complexn *ra;                                                   \
         __rtcheck(PL_get_complexn(a, &ra));                             \
         fr = malloc(sizeof(floatn));                                    \
+        mpc_get_prec2(&prec_ar, &prec_ai, *ra);                         \
         if (!PL_get_integer(p_r, &prec_r))                              \
-            prec_r = mpfr_get_default_prec();                           \
+            prec_r = prec_ar;                                           \
         if (!PL_get_integer(p_i, &prec_i))                              \
-            prec_i = mpfr_get_default_prec();                           \
+            prec_i = prec_ai;                                           \
         mpfr_init2(*fr, MAX(prec_r, prec_i));                           \
         mpc_##name(*fr, *ra, MPFR_RNDN);                                \
         return PL_unify_floatn(r, fr);                                  \
@@ -122,17 +140,38 @@ int is_mpc_prec_t(term_t v) {
     {                                                                   \
         complexn *cx;                                                   \
         PL_blob_t *type;                                                \
-        int prec_r, prec_i;                                             \
+        int prec_r, prec_i, prec_ar, prec_ai, prec_br, prec_bi;         \
         complexn *ra, *rb;                                              \
         __rtcheck(PL_get_complexn(a, &ra));                             \
         __rtcheck(PL_get_complexn(b, &rb));                             \
         cx = malloc(sizeof(complexn));                                  \
+        mpc_get_prec2(&prec_ar, &prec_ai, *ra);                         \
+        mpc_get_prec2(&prec_br, &prec_bi, *rb);                         \
         if (!PL_get_integer(p_r, &prec_r))                              \
-            prec_r = mpfr_get_default_prec();                           \
+            prec_r = MAX(prec_ar, prec_br);                             \
         if (!PL_get_integer(p_i, &prec_i))                              \
-            prec_i = mpfr_get_default_prec();                           \
+            prec_i = MAX(prec_ai, prec_bi);                             \
         mpc_init3(*cx, prec_r, prec_i);                                 \
-        mpc_##name(*cx, *ra, *rb, MPFR_RNDN);                           \
+        mpc_##name(*cx, *ra, *rb, MPC_RNDNN);                           \
+        return PL_unify_complexn(r, cx);                                \
+    }
+
+#define COMPLEXN_FUNCTION2f(name)                                       \
+    foreign_t complexn_##name(term_t a, term_t b, term_t p_r, term_t p_i, term_t r) \
+    {                                                                   \
+        complexn *cx;                                                   \
+        PL_blob_t *type;                                                \
+        int prec_r, prec_i;                                             \
+        floatn *ra, *rb;                                                \
+        __rtcheck(PL_get_floatn(a, &ra));                               \
+        __rtcheck(PL_get_floatn(b, &rb));                               \
+        cx = malloc(sizeof(complexn));                                  \
+        if (!PL_get_integer(p_r, &prec_r))                              \
+            prec_r = mpfr_get_prec(*ra);                                \
+        if (!PL_get_integer(p_i, &prec_i))                              \
+            prec_i = mpfr_get_prec(*rb);                                \
+        mpc_init3(*cx, prec_r, prec_i);                                 \
+        mpc_##name(*cx, *ra, *rb, MPC_RNDNN);                           \
         return PL_unify_complexn(r, cx);                                \
     }
 
@@ -163,6 +202,8 @@ COMPLEXN_FUNCTION1(y0)
 COMPLEXN_FUNCTION1(y1)
 COMPLEXN_FUNCTION1(ai)
 */
+COMPLEXN_FUNCTION0n(set_nan)
+
 COMPLEXN_FUNCTION1(sqrt)
 COMPLEXN_FUNCTION1(neg)
 COMPLEXN_FUNCTION1(log)
@@ -182,13 +223,18 @@ COMPLEXN_FUNCTION1(asinh)
 COMPLEXN_FUNCTION1(atanh)
 COMPLEXN_FUNCTION1(proj)
 
+FLOATN_FUNCTION1(abs)
 FLOATN_FUNCTION1(arg)
+FLOATN_FUNCTION1(norm)
+FLOATN_FUNCTION1(real)
+FLOATN_FUNCTION1(imag)
 
 COMPLEXN_FUNCTION2(add)
 COMPLEXN_FUNCTION2(mul)
 COMPLEXN_FUNCTION2(sub)
 COMPLEXN_FUNCTION2(div)
 COMPLEXN_FUNCTION2(pow)
+COMPLEXN_FUNCTION2f(set_fr_fr)
 
 /* COMPLEXN_FUNCTION2i2(rootn_ui) */
 /* COMPLEXN_FUNCTION2(atan2) */

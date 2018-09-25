@@ -1,5 +1,6 @@
 :- module(floatn,
           [ mpfr_get_default_prec/1,
+            floatn/1,
             floatn_data/1,
             floatn_domain_args/1,
             floatn_new_value/3,

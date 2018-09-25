@@ -27,16 +27,22 @@ evaluable(G) :- call(G).
 :- pred [ [ complexn_new_value(+term_t, int, int, -term_t),
             complexn_bind_floatn(+ptr)
           ] + native,
-          [ [ [ sqrt/4, neg/4, log/4, log10/4, exp/4, cos/4, sin/4, tan/4, acos/4, asin/4,
-                atan/4, cosh/4, sinh/4, tanh/4, acosh/4, asinh/4, atanh/4, proj/4
+          [ [ [ sqrt/4, neg/4,  log/4,  log10/4, exp/4,  cos/4,    sin/4,   tan/4, acos/4, asin/4,
+                atan/4, cosh/4, sinh/4, tanh/4,  acosh/4, asinh/4, atanh/4, proj/4
               ] :: (+complexn * int * int * -complexn),
               [ add/5, mul/5, sub/5, div/5, pow/5
               ] :: (+complexn * +complexn * int * int * -complexn),
-              [ arg/4
+              [ abs/4, arg/4, norm/4, real/4, imag/4
               ] :: (+complexn * int * int * -floatn)
             ] + native(prefix(complexn_)),
             [ eval/4, (+)/4, (-)/4, cbrt/4
             ] :: (+complexn * int * int * -complexn),
+            [ i/3
+            ] :: (int * int * -complexn),
+            [ cnan/3 :: (int * int * -complexn)
+            ] + native(complexn_set_nan),
+            [ c/5 :: (+floatn * +floatn * int * int * -complexn)
+            ] + native(complexn_set_fr_fr),
             [ (/)/5, (+)/5, (*)/5, (-)/5, (**)/5, (^)/5, root/5
             ] :: (+complexn * +complexn * int * int * -complexn)
           ] + evaluable
@@ -55,6 +61,7 @@ eval(E, _, _, E).
 ^( A, B, R, I, V) :- pow(A, B, R, I, V).
 cbrt(E, R, I, V) :-    evalexpr(complexn(R, I), E**(1/3), V).
 root(E, N, R, I, V) :- evalexpr(complexn(R, I), E**(1/N), V).
+i(R, I, V) :- evalexpr(complexn(R, I), c(0,1), V).
 
 complexn_init :-
     floatn_data(P),
