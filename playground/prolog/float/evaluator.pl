@@ -37,23 +37,29 @@ evalexpr(Domain, Expr, Value) :-
       evalfunc(Domain, EVal, Value)
     ; functor(EDom, F, A),
       mapargs(evalexpr, EDom, Expr, EVal),
-      ignore(order_by([desc(Order)],
-                      ( arg(_, EDom, Domain1),
-                        nonvar(Domain1),
-                        domain_order(Domain1, Order)
-                      ))),
-      Domain = Domain1,
+      ( order_by([asc(Order)],
+                 ( domain_args(Domain1, EDAr),
+                   mapargs(compare_order, EDom, EDAr),
+                   domain_order(Domain1, Order)
+                 ))
+      ->Domain = Domain1
+      ; freeze(Domain, domain_args(Domain, EDAr))
+      ),
       freeze(Domain,
-             ( domain_args(Domain, EDAr),
-               mapargs(join_domain(Domain), EDAr),
+             ( mapargs(join_domain(Domain), EDAr),
                mapargs(cast_domain, EDom, EDAr, EVal, EC),
                evalfunc(Domain, EC, Value)
              ))
     ).
 
+compare_order(DomainE, DomainA) :-
+    domain_order(DomainE, OrderE),
+    domain_order(DomainA, OrderA),
+    OrderE@=<OrderA.
+
 join_domain(Domain, Domain1) :- ignore(Domain=Domain1).
 
-%% cast_domain(Domain1, Domain, Value1, Value)
+%%  cast_domain(Domain1, Domain, Value1, Value)
 %
 %   Converts from Value1 of Domain1 to Value of Domain
 

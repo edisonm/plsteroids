@@ -435,6 +435,6 @@ int PL_get_floatn(term_t t, floatn **fr)
     if (PL_get_blob(t, (void **)fr, NULL, &type) && type == record_mpfr)
         return TRUE;
     
-    PL_type_error("floatn", t);
+    /* PL_type_error("floatn", t); */
     return FALSE;
 }

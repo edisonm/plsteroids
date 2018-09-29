@@ -434,6 +434,5 @@ int PL_get_complexn(term_t t, complexn **fr)
     if (PL_get_blob(t, (void **)fr, NULL, &type) && type == &record_mpc)
         return TRUE;
     
-    PL_type_error("complexn", t);
     return FALSE;
 }
