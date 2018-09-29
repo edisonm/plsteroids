@@ -1,5 +1,6 @@
 :- module(evaluator_num, []).
 
+:- use_module(library(arithmetic)).
 :- use_module(library(neck)).
 :- use_module(library(mapnargs)).
 :- use_module(library(float/evaluator)).
