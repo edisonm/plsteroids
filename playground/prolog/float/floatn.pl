@@ -12,6 +12,7 @@
 :- use_module(library(substitute)).
 :- use_module(library(extend_args)).
 :- use_module(library(plprops)).
+:- use_module(library(float/float_props)).
 :- use_module(library(foreign/foreign_generator)).
 :- use_module(library(foreign/foreign_interface)).
 :- use_module(library(foreign/foreign_props)).
@@ -19,7 +20,7 @@
 :- extra_compiler_opts('-lmpfr -lgmp').
 :- use_foreign_header('pl-floatn').
 :- use_foreign_source('pl-floatn').
-:- gen_foreign_library(libfloatn).
+:- gen_foreign_library(plbin(libfloatn), floatn_init).
 
 :- multifile
     floatn_evalfunc/3,
@@ -40,12 +41,7 @@ side.
 
 % documentation at /usr/share/doc/libmpfr-doc/mpfr.html
 
-:- global evaluable/1.
-
-evaluable(G) :- call(G).
-
-:- pred [ [ floatn_new_value(+term_t, int, -term_t),
-            floatn_init,
+:- pred [ [ floatn_new_value(+term, int, -term),
             floatn_data(-ptr)
           ] + native,
           [ mpfr_get_default_prec(-Prec:mpfr_prec_t)
@@ -67,15 +63,13 @@ evaluable(G) :- call(G).
               % fac_ui(+int, int, -floatn) % can not be casted in this framework
             ] + native(prefix(floatn_)),
             %% Non native:
-            e/2 :: (int * -floatn),
+            [ e/2, epsilon/2, cputime/2 ] :: (int * -floatn),
             [ eval/3, (+)/3, (-)/3, lgamma/3
             ] :: (+floatn * int * -floatn),
             [ (/)/4, (+)/4, (*)/4, (-)/4, (**)/4, (^)/4, atan/4, root/4
             ] :: (+floatn * +floatn * int * -floatn)
           ] + evaluable
         ].
-
-:- initialization(floatn_init).
 
 epsilon(P, V) :-
     ( var(P)
@@ -104,12 +98,18 @@ atan(A, B, P, V) :- atan2(A, B, P, V).
 e(P, V) :- evalexpr(floatn(P), exp(1), V).
 root(E, N, P, V) :- evalexpr(floatn(P), E**(1/N), V).
 
-floatn_evaluable(Func, InputDomains) :-
+:- public
+    curr_floatn_evaluable/2.
+
+curr_floatn_evaluable(Func, InputDomains) :-
     curr_prop_asr(head, floatn:Call, _, Asr),
     curr_prop_asr(glob, floatn:evaluable(_), _, Asr),
     extend_args(Func, [_, _], Call),
     collect_prop(Asr, floatn, call, InputDomains1),
-    subtract(InputDomains1, [var(_)], InputDomains),
+    subtract(InputDomains1, [var(_)], InputDomains).
+
+floatn_evaluable(Func, InputDomains) :-
+    curr_floatn_evaluable(Func, InputDomains),
     neck.
 
 floatn_evalfunc(F, P, V) :-
@@ -118,12 +118,14 @@ floatn_evalfunc(F, P, V) :-
     neck,
     C.
 
-domain_substitution(floatn(A), A=floatn(_)) :- !.
-domain_substitution(Prop1, A=Prop) :-
-    extend_args(Prop, [A], Prop1).
+:- public
+    curr_floatn_domain_args/1.
 
-floatn_domain_args(D) :-
+curr_floatn_domain_args(D) :-
     floatn_evaluable(F, L1),
     maplist(domain_substitution, L1, L),
-    substitute_values(L, F, D),
+    substitute_values(L, F, D).
+
+floatn_domain_args(D) :-
+    curr_floatn_domain_args(D),
     neck.

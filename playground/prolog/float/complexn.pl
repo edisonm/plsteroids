@@ -9,6 +9,7 @@
 :- use_module(library(extend_args)).
 :- use_module(library(plprops)).
 :- use_module(library(float/floatn)).
+:- use_module(library(float/float_props)).
 :- use_module(library(foreign/foreign_generator)).
 :- use_module(library(foreign/foreign_interface)).
 :- use_module(library(foreign/foreign_props)).
@@ -16,16 +17,11 @@
 :- extra_compiler_opts('-lmpc -lgmp').
 :- use_foreign_header('pl-complexn').
 :- use_foreign_source('pl-complexn').
-:- gen_foreign_library(libcomplexn).
+:- gen_foreign_library(plbin(libcomplexn)).
 
 :- type complexn/1 + native(is_complexn).
 
-:- global evaluable/1.
-
-evaluable(G) :- call(G).
-
-:- pred [ [ complexn_new_value(+term_t, int, int, -term_t),
-            complexn_bind_floatn(+ptr)
+:- pred [ [ complexn_new_value(+term, int, int, -term)
           ] + native,
           [ [ [ sqrt/4, neg/4,  log/4,  log10/4, exp/4,  cos/4,    sin/4,   tan/4, acos/4, asin/4,
                 atan/4, cosh/4, sinh/4, tanh/4,  acosh/4, asinh/4, atanh/4, proj/4
@@ -48,8 +44,6 @@ evaluable(G) :- call(G).
           ] + evaluable
         ].
 
-:- initialization(complexn_init).
-
 eval(E, _, _, E).
 +(E, _, _, E).
 -(A, R, I, V) :- neg(A, R, I, V).
@@ -63,19 +57,14 @@ cbrt(E, R, I, V) :-    evalexpr(complexn(R, I), E**(1/3), V).
 root(E, N, R, I, V) :- evalexpr(complexn(R, I), E**(1/N), V).
 i(R, I, V) :- evalexpr(complexn(R, I), c(0,1), V).
 
-complexn_init :-
-    floatn_data(P),
-    complexn_bind_floatn(P).
+:- public
+        complexn_evalfunc/6,
+        complexn_evaluable/6.
 
 complexn_evaluable(F, R, I, V, C, Asr) :-
     curr_prop_asr(head, complexn:C, _, Asr),
-    curr_prop_asr(glob, complexn:evaluable(_), _, Asr),
+    prop_asr(glob, evaluable(_), _, Asr),
     extend_args(F, [R, I, V], C).
-
-domain_substitution(complexn(A), A=complexn(_, _)) :- !.
-domain_substitution(floatn(A), A=floatn(_)) :- !.
-domain_substitution(Prop1, A=Prop) :-
-    extend_args(Prop, [A], Prop1).
 
 complexn_evalfunc(Domain, F, R, I, V, C) :-
     complexn_evaluable(F, R, I, V, C, Asr),
@@ -92,6 +81,8 @@ floatn:floatn_evalfunc(E, P, V) :-
     complexn_evalfunc(floatn(_), E, P, P, V, C),
     neck,
     C.
+
+:- public complexn_domain_args/2.
 
 complexn_domain_args(Domain, FDom) :-
     complexn_evaluable(Func, _, _, _, _, Asr),

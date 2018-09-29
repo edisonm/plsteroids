@@ -6,16 +6,24 @@
 :- use_module(library(float/evaluator)).
 
 % crafted to get float operators
+
+:- public curr_rat_arithmetic_function/1.
+
+:- meta_predicate curr_rat_arithmetic_function(?).
+
 setnum(_, N, X) :- arithmetic_expression_value((4 rdiv 5)/N, X).
 
-rat_arithmetic_function(Expr) :-
+curr_rat_arithmetic_function(Expr) :-
     current_arithmetic_function(Expr),
     \+ \+ ( mapnargs(setnum(Expr), Expr),
             catch(arithmetic_expression_value(Expr, Value),
                   _,
                   fail),
             rational(Value)
-           ),
+           ).
+
+rat_arithmetic_function(Expr) :-
+    curr_rat_arithmetic_function(Expr),
     neck.
 
 evaluator:castexpr(rat(Expr), rat, Expr).

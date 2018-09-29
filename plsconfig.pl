@@ -3,7 +3,7 @@
 :- use_module(library(filesex)).
 % set directories
 set_plroot :-
-    source_location(File, _),
+    prolog_load_context(source, File),
     directory_file_path(Dir, _, File),
     directory_file_path(Dir, 'target/lib', LibDir),
     retractall(user:file_search_path(plroot, _)),
@@ -15,5 +15,6 @@ set_plroot :-
     ).
 
 user:file_search_path(library, pltool(prolog)).
+user:file_search_path(plbin,   plroot(target/bin)).
 
 :- set_plroot.

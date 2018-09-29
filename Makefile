@@ -20,6 +20,7 @@ compile:
 
 clean:
 	$(RM) -rf target
+	mkdir -p target/bin
 
 $(PLSTEROIDS):
 	mkdir -p `dirname $@`

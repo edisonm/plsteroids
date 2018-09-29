@@ -1,6 +1,5 @@
 :- module(evaluator_complexn, []).
 
-:- use_module(library(extend_args)).
 :- use_module(library(float/evaluator)).
 :- use_module(library(float/complexn)).
 

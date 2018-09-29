@@ -73,10 +73,9 @@ foreign_t is_mpfr_prec_t(term_t v) {
     return PL_is_integer(v);
 }
 
-foreign_t floatn_init() {
+void floatn_init() {
     // PL_action(PL_GMP_SET_ALLOC_FUNCTIONS, FALSE)
     mp_set_memory_functions(NULL, NULL, NULL);
-    return TRUE;
 }
 
 foreign_t floatn_data(term_t t) {

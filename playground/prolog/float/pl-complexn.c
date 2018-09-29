@@ -251,18 +251,6 @@ COMPLEXN_FUNCTION2f(set_fr_fr)
 /* COMPLEXN_FUNCTION4(fmma) */
 /* COMPLEXN_FUNCTION4(fmms) */
 
-foreign_t complexn_init() {
-    // PL_action(PL_GMP_SET_ALLOC_FUNCTIONS, FALSE)
-    mp_set_memory_functions(NULL, NULL, NULL);
-    return TRUE;
-}
-
-PL_blob_t *record_mpfr = NULL;
-
-foreign_t complexn_bind_floatn(term_t t) {
-    return PL_get_pointer(t, (void **)&record_mpfr);
-}
-
 foreign_t complexn_new_value(term_t expr, term_t precision_r, term_t precision_i, term_t value)
 {
     complexn *ref;

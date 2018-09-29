@@ -11,17 +11,24 @@
 % be evaluated to a float, which is not good.
 
 % crafted to get integer operators
+
+:- public curr_int_arithmetic_function/1.
+
+:- meta_predicate curr_int_arithmetic_function(?).
+
 setint(N, N).
 
-
-int_arithmetic_function(Expr) :-
+curr_int_arithmetic_function(Expr) :-
     current_arithmetic_function(Expr),
     \+ \+ ( mapnargs(setint, Expr),
             catch(arithmetic_expression_value(Expr, Value),
                   _,
                   fail),
             integer(Value)
-           ),
+          ).
+
+int_arithmetic_function(Expr) :-
+    curr_int_arithmetic_function(Expr),
     neck.
 
 evaluator:castexpr(int(Expr), int, Expr).

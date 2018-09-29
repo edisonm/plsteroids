@@ -1,7 +1,5 @@
 :- module(evaluator, [evalexpr/3]).
 
-:- use_module(library(extend_args)).
-:- use_module(library(foldargs)).
 :- use_module(library(mapargs)).
 
 :- multifile
