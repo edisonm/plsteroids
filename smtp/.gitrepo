@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/JanWielemaker/smtp.git
+	branch = master
+	commit = 6bbdca1484d86bc95a10543484445a5653a9002a
+	parent = aeaf9f877f5d1ee26b7ca4d6efd9f5cfba124bbd
+	cmdver = 0.3.1
