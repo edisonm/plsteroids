@@ -12,6 +12,7 @@
 :- use_module(library(substitute)).
 :- use_module(library(extend_args)).
 :- use_module(library(plprops)).
+:- use_module(library(float/evaluator)).
 :- use_module(library(float/float_props)).
 :- use_module(library(foreign/foreign_generator)).
 :- use_module(library(foreign/foreign_interface)).
