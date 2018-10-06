@@ -24,7 +24,7 @@ clean:
 
 $(PLSTEROIDS):
 	mkdir -p `dirname $@`
-	echo -e "infer_meta_if_required.\nqsave_program('$@',[]).\nhalt.\n" | swipl -q -s loadall.pl
+	echo -e "infer_meta:infer_meta_if_required.\nqsave_program('$@',[]).\nhalt.\n" | swipl -q -s loadall.pl
 
 patches:
 	forallpacks git format-patch origin

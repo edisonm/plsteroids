@@ -9,6 +9,9 @@
 :- [loadpacks].
 
 :- set_prolog_flag(autoload, false).
-:- loadpacks(consult).
+
+use_module_ne(Lib) :- use_module(Lib, []).
+
+:- loadpacks(use_module_ne).
 :- set_prolog_flag(autoload, true).
 :- [library(ws_source)].
