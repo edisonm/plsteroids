@@ -278,6 +278,32 @@ submit_eq_c1([], CLP, v(K,[X^P]), I) :-
 	!,
         root_d(CLP, -I, K, P, Val),
         X = Val.
+% second degree equation: Note that the solver is a bit modified from the
+% standard formulas, to ensure numerical stability, and to order the solutions
+submit_eq_c1([v(A,[Y^P2])], CLP, v(B,[X^P1]), C) :-
+        compare_d(CLP, =, P2, 2*P1),
+        X==Y,
+        !,
+        B2 is B*B,
+        P is 4*A*C,
+        ( compare_d(CLP, >, B2, P)
+        ->% Note: B =:= 0 not required, since is considered before
+          Disc is B2 - P,
+          div_d(CLP, B + sign(B)*sqrt(Disc), -2, Temp),
+          div_d(CLP, Temp, A, R1),
+          div_d(CLP, C, Temp, R2),
+          ( R1 < R2
+          ->( Z = R1
+            ; Z = R2
+            )
+          ; ( Z = R2
+            ; Z = R1
+            )
+          )
+        ; compare_d(CLP, =, B2, P),
+          div_d(CLP, -B, 2*A, Z)
+        ),
+        submit_eq_c1([], CLP, v(-1,[X^P1]), Z).
 % case c11d: fail if var(X) and none of the above.
 submit_eq_c1([], _, v(_K,[X^_P]), _I) :-
         var(X),
