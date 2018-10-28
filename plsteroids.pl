@@ -11,6 +11,7 @@ package(rtchecks).
 package(refactor).
 package(playground).
 package(smtp).
+package(clpcd).
 
 :- [plsdirs].
 :- [pltools].
