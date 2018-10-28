@@ -59,11 +59,10 @@
 	    {}/1,
 	    entailed/1,
 	    nf/2,
-	    nf_constant/2,
 	    repair/2,
 	    wait_linear/3
 	]).
-:- use_module(spec_n).
+:- use_module(library(clpn/spec_n)).
 :- use_module(library(near_utils)).
 
 % bb_inf(Ints,Term,Inf)
@@ -171,7 +170,7 @@ rhs_value(Xn,Value) :-
 % Viol. The floor and ceiling of its actual bound is returned in Floor and Ceiling.
 
 bb_first_nonint([I|Is],[Rhs|Rhss],Viol,F,C) :-
-	(   compare_d(=, Rhs, integer(Rhs))
+	(   compare_d(clpn, =, Rhs, integer(Rhs))
 	->  bb_first_nonint(Is,Rhss,Viol,F,C)
         ;   Viol = I,
 	    F is floor(Rhs),

@@ -42,10 +42,6 @@
 	    redundancy_vars/1,
 	    systems/3
 	]).
-:- use_module(class,
-	[
-	    class_allvars/2
-	]).
 
 %
 % redundancy removal (semantic definition)
@@ -78,16 +74,6 @@ not_memq([],_).
 not_memq([Y|Ys],X) :-
 	X \== Y,
 	not_memq(Ys,X).
-
-% redundancy_systems(Classes)
-%
-% Does redundancy removal via redundancy_vs/1 on all variables in the classes Classes.
-
-redundancy_systems([]).
-redundancy_systems([S|Sys]) :-
-	class_allvars(S,All),
-	redundancy_vs(All),
-	redundancy_systems(Sys).
 
 % redundancy_vars(Vs)
 %

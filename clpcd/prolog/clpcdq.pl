@@ -49,7 +49,9 @@
 	    clp_type/2,
 	    dump/3%, projecting_assert/1
 	  ]).
-:- license(gpl_swipl, 'CLP(Q)').
+
+:- use_module(library(dialect)).
+:- license(gpl_swipl, 'CLPCD(Q)').
 :- expects_dialect(swi).
 
 %
@@ -61,22 +63,22 @@
 :- dynamic
 	user:portray_message/2.
 %
-user:portray_message(warning,import(_,_,clpq,private)).
+user:portray_message(warning,import(_,_,clpcdq,private)).
 
-:- use_module([ clpq/bb_q,
-		clpq/bv_q,
-		clpq/fourmotz_q,
-		clpq/ineq_q,
-		clpq/itf_q,
-		clpq/nf_q,
-		clpq/store_q,
-		clpqr/class,
-		clpqr/dump,
-		clpqr/geler,
-		clpqr/itf,
-		clpqr/ordering,
-		clpqr/project,
-		clpqr/redund,
+:- use_module([ clpcdq/bb_q,
+		clpcdq/bv_q,
+		clpcdq/fourmotz_q,
+		clpcdq/ineq_q,
+		clpcdq/itf_q,
+		clpcdq/nf_q,
+		clpcdq/store_q,
+		library(clpcd/class),
+		library(clpcd/dump),
+		library(clpcd/geler),
+		library(clpcd/itf),
+		library(clpcd/ordering),
+		library(clpcd/project),
+		library(clpcd/redund),
 		library(ugraphs)
 	      ]).
 

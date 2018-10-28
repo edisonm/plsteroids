@@ -115,17 +115,6 @@ mark_target([V|Vs]) :-
 	),
 	mark_target(Vs).
 	
-
-% mark_keep(Vars)
-%
-% Mark the variables in Vars to be kept during elimination.
-
-mark_keep([]).
-mark_keep([V|Vs]) :-
-	get_attr(V,clpcd_itf,Att),
-	setarg(11,Att,keep),
-	mark_keep(Vs).
-
 %
 % Collect the pivots in reverse order
 % We have to protect the target variables pivot partners

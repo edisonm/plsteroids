@@ -44,33 +44,6 @@
 :- meta_predicate
 	geler(+,?,0).
 
-% l2conj(List,Conj)
-%
-% turns a List into a conjunction of the form (El,Conj) where Conj
-% is of the same form recursively and El is an element of the list
-
-l2conj([X|Xs],Conj) :-
-	(   X = [],
-	    Conj = X
-	;   Xs = [_|_],
-	    Conj = (X,Xc),
-	    l2conj(Xs,Xc)
-	).
-
-% nonexhausted(Goals,OutList,OutListTail)
-%
-% removes the goals that have already run from Goals
-% and puts the result in the difference list OutList
-
-nonexhausted(run(Mutex,G)) -->
-	(   { var(Mutex) }
-	->  [G]
-	;   []
-	).
-nonexhausted((A,B)) -->
-	nonexhausted(A),
-	nonexhausted(B).
-
 attr_unify_hook(g(CLP,goals(Gx),_),Y) :-
 	!,
 	(   var(Y),
@@ -124,7 +97,7 @@ collect_nonlin([X|Xs]) -->
 % trans(Goals,OutList,OutListTail)
 %
 % transforms the goals (of the form run(Mutex,Goal)
-% that are in Goals (in the conjunction form, see also l2conj)
+% that are in Goals (in the conjunction form)
 % that have not been run (Mutex = variable) into a readable output format
 % and notes that they're done (Mutex = 'done'). Because of the Mutex
 % variable, each goal is only added once (so not for each variable).
@@ -147,6 +120,9 @@ transg(M:G) -->
 	!,
 	M:transg(G).
 transg(G) --> [G].
+
+:- public run/2.
+:- meta_predicate run(?, 0 ).
 
 % run(Mutex,G)
 %

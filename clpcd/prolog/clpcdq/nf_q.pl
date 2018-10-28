@@ -49,7 +49,7 @@
 	    wait_linear/3,
 	    nf2term/2
 	]).
-:- use_module('../clpqr/geler',
+:- use_module(library(clpqr/geler),
 	[
 	    geler/3
 	]).
@@ -74,7 +74,7 @@
 	    add_linear_11/3,
 	    normalize_scalar/2
 	]).
-:- use_module('../clpqr/highlight', []).
+:- use_module(library(clpqr/highlight), []).
 
 :- meta_predicate wait_linear(?, ?, 0).
 
@@ -860,17 +860,7 @@ nf_power(N,Sum,Norm) :-
 	->  % 0^0 is indeterminate but we say 1
 	    Norm = [v(1,[])]
 	).
-%
-% N>0
-%
-% iterative method: X^N = X*(X^N-1)
-nf_power_pos(1,Sum,Norm) :-
-	!,
-	Sum = Norm.
-nf_power_pos(N,Sum,Norm) :-
-	N1 is N-1,
-	nf_power_pos(N1,Sum,Pn1),
-	nf_mul(Sum,Pn1,Norm).
+
 %
 % N>0
 %
@@ -1082,43 +1072,6 @@ pe2term_args([],[]).
 pe2term_args([A|As],[T|Ts]) :-
 	nf2term(A,T),
 	pe2term_args(As,Ts).
-
-% transg(Goal,[OutList|OutListTail],OutListTail)
-%
-% puts the equalities and inequalities that are implied by the elements in Goal
-% in the difference list OutList
-%
-% called by geler.pl for project.pl
-
-transg(resubmit_eq(Nf)) -->
-	{
-	    nf2term([],Z),
-	    nf2term(Nf,Term)
-	},
-	[clpq:{Term=Z}].
-transg(resubmit_lt(Nf)) -->
-	{
-	    nf2term([],Z),
-	    nf2term(Nf,Term)
-	},
-	[clpq:{Term<Z}].
-transg(resubmit_le(Nf)) -->
-	{
-	    nf2term([],Z),
-	    nf2term(Nf,Term)
-	},
-	[clpq:{Term=<Z}].
-transg(resubmit_ne(Nf)) -->
-	{
-	    nf2term([],Z),
-	    nf2term(Nf,Term)
-	},
-	[clpq:{Term=\=Z}].
-transg(wait_linear_retry(Nf,Res,Goal)) -->
-	{
-	    nf2term(Nf,Term)
-	},
-	[clpq:{Term=Res},Goal].
 
 		 /*******************************
 		 *	       SANDBOX		*

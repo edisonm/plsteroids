@@ -58,7 +58,7 @@
 	    indep/2,
 	    nf_coeff_of/3
 	]).
-:- use_module('../clpqr/class',
+:- use_module(library(clpqr/class),
 	[
 	    class_drop/2
 	]).

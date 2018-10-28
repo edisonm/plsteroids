@@ -77,6 +77,7 @@
 	    sup/4,
 	    inf/2,
 	    inf/4,
+            'solve_='/1,
 	    'solve_<'/1,
 	    'solve_=<'/1,
 	    'solve_=\\='/1,
@@ -97,7 +98,7 @@
 	    mult_hom/3,
 	    mult_linear_factor/3
 	]).
-:- use_module('../clpqr/class',
+:- use_module(library(clpcd/class),
 	[
 	    class_allvars/2,
 	    class_basis/2,
@@ -431,22 +432,6 @@ iterate_dec(OptVar,Opt) :-
 	dec_step(H,Status),
 	(   Status = applied
 	->  iterate_dec(OptVar,Opt)
-	;   Status = optimum,
-	    Opt is R + I
-	).
-
-% iterate_inc(OptVar,Opt)
-%
-% Increases the bound on the variables of the linear equation of OptVar as much
-% as possible and returns the resulting optimal bound in Opt. Fails if for some
-% variable, a status of unlimited is found.
-
-iterate_inc(OptVar,Opt) :-
-	get_attr(OptVar,itf,Att),
-	arg(4,Att,lin([I,R|H])),
-	inc_step(H,Status),
-	(   Status = applied
-	->  iterate_inc(OptVar,Opt)
 	;   Status = optimum,
 	    Opt is R + I
 	).
@@ -868,45 +853,11 @@ solve(H,Lin,_,Bind0,BindT) :-
 	    rcbl(Basis,Bind1,BindT)
 	).
 
-%
-% Much like solve, but we solve for a particular variable of type t_none
-%
-
-% solve_x(H,Lin,I,X,[Bind|BindT],BindT)
-%
-%
-
-solve_x(Lin,X) :-
-	Lin = [I,_|H],
-	solve_x(H,Lin,I,X,Bindings,[]),
-	export_binding(Bindings).
-
-solve_x([],_,I,_,Bind0,Bind0) :-
-	!,
-	I =:= 0.
-solve_x(H,Lin,_,X,Bind0,BindT) :-
-	sd(H,[],ClassesUniq,9-9-0,_,NV,NVT),
-	get_attr(X,itf,Att),
-	arg(5,Att,order(OrdX)),
-	isolate(OrdX,Lin,Lin1),
-	(   arg(6,Att,class(NewC))
-	->  class_allvars(NewC,Deps),
-	    (   ClassesUniq = [_] % rank increasing
-	    ->	bs_collect_bindings(Deps,OrdX,Lin1,Bind0,BindT)
-	    ;   Bind0 = BindT,
-		bs(Deps,OrdX,Lin1)
-	    ),
-	    eq_classes(NV,NVT,ClassesUniq)
-	;   setarg(4,Att,lin(Lin1)),
-	    Lin1 = [Inhom,_|Hom],
-	    bs_collect_binding(Hom,X,Inhom,Bind0,BindT),
-	    eq_classes(NV,NVT,ClassesUniq)
-	).
-
 % solve_ord_x(Lin,OrdX,ClassX)
 %
-% Does the same thing as solve_x/2, but has the ordering of X and its class as
-% input. This also means that X has a class which is not sure in solve_x/2.
+% Much like solve, but we solve for a particular variable of type t_none, it has
+% the ordering of X and its class as input. This also means that X has a class
+% which is not sure in solve_x/2.
 
 solve_ord_x(Lin,OrdX,ClassX) :-
 	Lin = [I,_|H],
@@ -939,7 +890,7 @@ solve_ord_x([_|_],Lin,_,OrdX,ClassX,Bind0,BindT) :-
 
 sd([],Class0,Class0,Preference0,Preference0,NV0,NV0).
 sd([l(X*K,_)|Xs],Class0,ClassN,Preference0,PreferenceN,NV0,NVt) :-
-	get_attr(X,itf,Att),
+	get_attr(X,clpcd_itf,Att),
 	(   arg(6,Att,class(Xc)) % old: has class
 	->  NV0 = NV1,
 	    ord_add_element(Class0,Xc,Class1),
@@ -1212,24 +1163,6 @@ detach_bounds_vlv(OrdV,Lin,Class,Var,NewLin) :-
 
 % ----------------------------- manipulate the basis --------------------------
 
-% basis_drop(X)
-%
-% Removes X from the basis of the class to which X belongs.
-
-basis_drop(X) :-
-	get_attr(X,itf,Att),
-	arg(6,Att,class(Cv)),
-	class_basis_drop(Cv,X).
-
-% basis(X,Basis)
-%
-% Basis is the basis of the class to which X belongs.
-
-basis(X,Basis) :-
-	get_attr(X,itf,Att),
-	arg(6,Att,class(Cv)),
-	class_basis(Cv,Basis).
-
 % basis_add(X,NewBasis)
 %
 % NewBasis is the result of adding X to the basis of the class to which X
@@ -1251,28 +1184,6 @@ basis_pivot(Leave,Enter) :-
 	class_basis_pivot(Cv,Enter,Leave).
 
 % ----------------------------------- pivot -----------------------------------
-
-% pivot(Dep,Indep)
-%
-% The linear equation of variable Dep, is transformed into one of variable
-% Indep, containing Dep. Then, all occurrences of Indep in linear equations are
-% substituted by this new definition
-
-%
-% Pivot ignoring rhs and active states
-%
-
-pivot(Dep,Indep) :-
-	get_attr(Dep,itf,AttD),
-	arg(4,AttD,lin(H)),
-	arg(5,AttD,order(OrdDep)),
-	get_attr(Indep,itf,AttI),
-	arg(5,AttI,order(Ord)),
-	arg(5,AttI,class(Class)),
-	delete_factor(Ord,H,H0,Coeff),
-	K is -1 rdiv Coeff,
-	add_linear_ff(H0,K,[0,0,l(Dep* -1,OrdDep)],K,Lin),
-	backsubst(Class,Ord,Lin).
 
 % pivot_a(Dep,Indep,IndepT,DepT)
 %

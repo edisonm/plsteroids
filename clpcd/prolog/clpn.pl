@@ -53,6 +53,8 @@
 	    clp_type/2,
 	    dump/3%, projecting_assert/1
 	]).
+
+:- use_module(library(dialect)).
 :- license(gpl_swipl, 'CLP(N)').
 :- expects_dialect(swi).
 

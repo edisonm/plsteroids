@@ -58,7 +58,6 @@
 	    {}/1,
 	    entailed/1,
 	    nf/2,
-	    nf_constant/2,
 	    repair/2,
 	    wait_linear/3
 	]).

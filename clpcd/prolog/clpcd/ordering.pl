@@ -46,7 +46,6 @@
 	]).
 :- use_module(class,
 	[
-	    class_get_clp/2,
 	    class_get_prio/2,
 	    class_put_prio/2
 	]).
