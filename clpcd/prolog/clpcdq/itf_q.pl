@@ -92,7 +92,7 @@ verify_nonzero(nonzero,Y) :-
 	(   var(Y)
 	->  (   get_attr(Y,clpcd_itf,Att)
 	    ->  setarg(8,Att,nonzero)
-	    ;   put_attr(Y,itf,t(clpcdq,n,n,n,n,n,n,nonzero,n,n,n))
+	    ;   put_attr(Y,clpcd_itf,t(clpcdq,n,n,n,n,n,n,nonzero,n,n,n))
 	    )
 	;   Y =\= 0
 	).

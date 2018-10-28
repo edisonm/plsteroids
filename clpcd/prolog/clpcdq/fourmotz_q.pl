@@ -258,11 +258,11 @@ crossproduct([A|As]) -->
 crossproduct([],_) --> [].
 crossproduct([B:Kb|Bs],A:Ka) -->
 	{
-	    get_attr(A,itf,AttA),
+	    get_attr(A,clpcd_itf,AttA),
 	    arg(2,AttA,type(Ta)),
 	    arg(3,AttA,strictness(Sa)),
 	    arg(4,AttA,lin(LinA)),
-	    get_attr(B,itf,AttB),
+	    get_attr(B,clpcd_itf,AttB),
 	    arg(2,AttB,type(Tb)),
 	    arg(3,AttB,strictness(Sb)),
 	    arg(4,AttB,lin(LinB)),
