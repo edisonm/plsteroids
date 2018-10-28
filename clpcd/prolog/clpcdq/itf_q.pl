@@ -84,7 +84,7 @@ numbers_only(Y) :-
 
 verify_nonzero(nonzero,Y) :-
 	(   var(Y)
-	->  (   get_attr(Y,itf,Att)
+	->  (   get_attr(Y,clpcd_itf,Att)
 	    ->  setarg(8,Att,nonzero)
 	    ;   put_attr(Y,itf,t(clpq,n,n,n,n,n,n,nonzero,n,n,n))
 	    )
