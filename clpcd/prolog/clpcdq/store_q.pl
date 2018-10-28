@@ -55,11 +55,18 @@
 	    renormalize/2	
 	]).
 
+:- use_module(library(clpcd/compare)).
+
 % normalize_scalar(S,[N,Z])
 %
 % Transforms a scalar S into a linear expression [S,0]
 
 normalize_scalar(S,[S,0]).
+
+:- multifile
+        clpcd_project:renormalize/3.
+
+clpcd_project:renormalize(clpcdq,Lin,New) :- renormalize(Lin,New).
 
 % renormalize(List,Lin)
 %
@@ -147,7 +154,7 @@ add_linear_ffh([l(Y*Ky,OrdY)|Ys],X,Kx,OrdX,Xs,Zs,Ka,Kb) :-
 	compare(Rel,OrdX,OrdY),
 	(   Rel = (=)
 	->  Kz is Kx*Ka+Ky*Kb,
-	    (   Kz =:= 0
+	    (   compare_d(clpcdq, =, Kx*Ka, -Ky*Kb)
 	    ->  add_linear_ffh(Xs,Ka,Ys,Kb,Zs)
 	    ;   Zs = [l(X*Kz,OrdX)|Ztail],
 		add_linear_ffh(Xs,Ka,Ys,Kb,Ztail)
@@ -191,7 +198,7 @@ add_linear_f1h([l(Y*Ky,OrdY)|Ys],X,Kx,OrdX,Xs,Zs,Ka) :-
 	compare(Rel,OrdX,OrdY),
 	(   Rel = (=)
 	->  Kz is Kx*Ka+Ky,
-	    (   Kz =:= 0
+	    (   compare_d(clpcdq, =, Kx*Ka, -Ky)
 	    ->  add_linear_f1h(Xs,Ka,Ys,Zs)
 	    ;   Zs = [l(X*Kz,OrdX)|Ztail],
 		add_linear_f1h(Xs,Ka,Ys,Ztail)
@@ -234,7 +241,8 @@ add_linear_11h([l(Y*Ky,OrdY)|Ys],X,Kx,OrdX,Xs,Zs) :-
 	compare(Rel,OrdX,OrdY),
 	(   Rel = (=)
 	->  Kz is Kx+Ky,
-	    (   Kz =:= 0
+	    (   % Kz =:= 0
+                compare_d(clpcdq, =, Kx, -Ky)
 	    ->  add_linear_11h(Xs,Ys,Zs)
 	    ;   Zs = [l(X*Kz,OrdX)|Ztail],
 		add_linear_11h(Xs,Ys,Ztail)
@@ -253,7 +261,7 @@ add_linear_11h([l(Y*Ky,OrdY)|Ys],X,Kx,OrdX,Xs,Zs) :-
 % expression Lin by scalar K
 
 mult_linear_factor(Lin,K,Mult) :-
-	K =:= 1,
+        compare_d(clpcdq, =, K, 1),
 	!,
 	Mult = Lin.
 mult_linear_factor(Lin,K,Res) :-
@@ -349,6 +357,11 @@ isolate(OrdN,Lin,Lin1) :-
 	K is -1 rdiv Coeff,
 	mult_linear_factor(Lin0,K,Lin1).
 
+:- multifile
+        clpcd_project:indep/3.
+
+clpcd_project:indep(clpcdq,Lin,OrdV) :- indep(Lin,OrdV).
+
 % indep(Lin,OrdX)
 %
 % succeeds if Lin = [0,_|[l(X*1,OrdX)]]
@@ -356,8 +369,9 @@ isolate(OrdN,Lin,Lin1) :-
 indep(Lin,OrdX) :-
 	Lin = [I,_|[l(_*K,OrdY)]],
 	OrdX == OrdY,
-	K =:= 1,
-	I =:= 0.
+	% K =:= 1.0
+        compare_d(clpcdq, =, K, 1),
+	compare_d(clpcdq, =, I, 0).
 
 % nf2sum(Lin,Sofar,Term)
 %
@@ -368,9 +382,11 @@ nf2sum([],I,I).
 nf2sum([X|Xs],I,Sum) :-
 	(   I =:= 0
 	->  X = l(Var*K,_),
- 	    (   K =:= 1
+ 	    (   % K =:= 1
+                compare_d(clpcdq, =, K, 1)
 	    ->  hom2sum(Xs,Var,Sum)
-	    ;   K =:= -1
+	    ;   % K =:= -1
+                compare_d(clpcdq, =, K, -1)
 	    ->  hom2sum(Xs,-Var,Sum)
 	    ;	hom2sum(Xs,K*Var,Sum)
 	    )
@@ -386,11 +402,14 @@ nf2sum([X|Xs],I,Sum) :-
 
 hom2sum([],Term,Term).
 hom2sum([l(Var*K,_)|Cs],Sofar,Term) :-
-	(   K =:= 1
+	(   % K =:= 1
+            compare_d(clpcdq, =, K, 1)
 	->  Next = Sofar + Var
-	;   K =:= -1
+	;   % K =:= -1
+            compare_d(clpcdq, =, K, -1)
 	->  Next = Sofar - Var
-	;   K < 0
+	;   % K < 0
+            compare_d(clpcdq, <, K, 0)
 	->  Ka is -K,
 	    Next = Sofar - Ka*Var
 	;   Next = Sofar + K*Var

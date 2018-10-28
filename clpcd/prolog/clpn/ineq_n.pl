@@ -77,7 +77,7 @@
 	    add_linear_ff/5,
 	    normalize_scalar/2
 	]).
-:- use_module(spec_n).
+:- use_module(library(clpcd/compare)).
 
 % ineq(H,I,Nf,Strictness)
 %

@@ -62,7 +62,7 @@
 	    repair/2,
 	    wait_linear/3
 	]).
-:- use_module(library(clpn/spec_n)).
+:- use_module(library(clpcd/compare)).
 :- use_module(library(near_utils)).
 
 % bb_inf(Ints,Term,Inf)

@@ -89,6 +89,16 @@ user:portray_message(warning,import(_,_,clpcdq,private)).
 :- multifile
 	prolog:message/3.
 
+clpcd_compare:compare_d(clpcdq, Op, A, B) :-
+    compare_q(Op, A, B).
+
+compare_q(=,  A, B) :- A =:= B.
+compare_q(=<, A, B) :- A =< B.
+compare_q(>=, A, B) :- A >= B.
+compare_q(<,  A, B) :- A < B.
+compare_q(>,  A, B) :- A > B.
+compare_q(\=, A, B) :- A =\= B.
+
 prolog:message(query(YesNo,Bindings)) --> !,
 	{dump_toplevel_bindings(Bindings,Constraints)},
 	dump_format(Constraints),

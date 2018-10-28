@@ -76,7 +76,7 @@
 	    add_linear_11/3,
 	    normalize_scalar/2
 	]).
-:- use_module(spec_n).
+:- use_module(library(clpcd/compare)).
 :- use_module(library(clpcd/highlight), []).
 
 goal_expansion(geler(X,Y),geler(clpn,X,Y)).

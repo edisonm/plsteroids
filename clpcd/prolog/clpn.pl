@@ -92,16 +92,32 @@ user:portray_message(warning,import(_,_,clpn,private)).
 	    silent(true)
 	]).
 
+:- use_module(library(near_utils)).
+
 		 /*******************************
 		 *	 TOPLEVEL PRINTING	*
 		 *******************************/
 
 :- multifile
-	prolog:message/3.
+	prolog:message/3,
+        clpcd_compare:compare_d/4,
+        clpcd_highlight:clpcd_module/1,
+        prolog_colour:syntax_message//1.
 
 % prolog:message(query(YesNo)) --> !,
 %	['~@'-[chr:print_all_stores]],
 %         '$messages':prolog_message(query(YesNo)).
+
+
+clpcd_compare:compare_d(clpn, Op, A, B) :-
+    near_compare(Op, A, B).
+
+clpcd_highlight:clpcd_module(clpn).
+
+prolog_colour:syntax_message(constraint(clpcd(Sub))) -->
+	[ 'clp(~w) constraint'-[Sub] ].
+prolog_colour:syntax_message(type_error(constraint(clpcd(Sub)))) -->
+	[ 'Only clp(~w) constraints may appear inside {}'-[Sub] ].
 
 prolog:message(query(YesNo,Bindings)) --> !,
 	{dump_toplevel_bindings(Bindings,Constraints)},

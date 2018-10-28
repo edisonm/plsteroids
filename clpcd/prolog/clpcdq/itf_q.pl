@@ -63,6 +63,12 @@
 	    class_drop/2
 	]).
 
+:- multifile
+        clpcd_itf:do_checks/9.
+
+clpcd_itf:do_checks(clpcdq,Y,Ty,St,Li,Or,Cl,No,Later) :-
+	do_checks(Y,Ty,St,Li,Or,Cl,No,Later).
+
 do_checks(Y,Ty,St,Li,Or,Cl,No,Later) :-
 	numbers_only(Y),
 	verify_nonzero(No,Y),

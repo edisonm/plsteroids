@@ -125,7 +125,7 @@
 	[
 	    ord_add_element/3
 	]).
-:- use_module(spec_n).
+:- use_module(library(clpcd/compare)).
 
 % For the rhs maint. the following events are important:
 %

@@ -73,7 +73,11 @@
 	    normalize_scalar/2
 	]).
 		
+:- multifile
+        clpcd_project:fm_elim/4.
 
+clpcd_project:fm_elim(clpcdq,Avs,Tvs,Pivots) :-
+    fm_elim(Avs,Tvs,Pivots).
 
 fm_elim(Vs,Target,Pivots) :-
 	prefilter(Vs,Vsf),

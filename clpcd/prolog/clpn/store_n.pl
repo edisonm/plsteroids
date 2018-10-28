@@ -56,7 +56,7 @@
 	    renormalize/2	
 	]).
 
-:- use_module(spec_n).
+:- use_module(library(clpcd/compare)).
 
 % normalize_scalar(S,[N,Z])
 %

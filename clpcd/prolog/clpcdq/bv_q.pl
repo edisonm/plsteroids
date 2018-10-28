@@ -243,6 +243,12 @@ var_with_def_intern(Type,Var,Lin,Strict) :-
 	get_or_add_class(Var,Class),
 	same_class(Hom,Class).
 
+:- multifile
+        clpcd_ordering:var_intern/3.
+
+clpcd_ordering:var_intern(clpcdq, X, Class) :-
+        var_intern(X, Class).
+
 % TODO
 %
 %
@@ -1020,6 +1026,11 @@ deactivate_bound(t_lU(L,U),X) :-
 	get_attr(X,clpcd_itf,Att),
 	setarg(2,Att,type(t_lu(L,U))).
 
+:- multifile
+        clpcd_redund:intro_at/4.
+
+clpcd_redund:intro_at(clpcdq,A,B,C) :- intro_at(A,B,C).
+
 % intro_at(X,Value,Type)
 %
 % Variable X gets new type Type which reflects the activation of a bound with
@@ -1118,6 +1129,11 @@ determine_active(t_lu(L,U),X,K,S) :-
 	;   KS > 0
 	->  intro_at(X,U,t_lU(L,U))
 	).
+
+:- multifile
+        clpcd_redund:detach_bounds/2.
+
+clpcd_redund:detach_bounds(clpcdq,V) :- detach_bounds(V).
 
 %
 % Careful when an indep turns into t_none !!!
@@ -1233,6 +1249,10 @@ select_active_bound(t_l(_),0).
 select_active_bound(t_u(_),0).
 select_active_bound(t_lu(_,_),0).
 
+:- multifile
+        clpcd_project:pivot/6.
+
+clpcd_project:pivot(clpcdq,T,Class,Ord,Type,IndAct) :- pivot(T,Class,Ord,Type,IndAct).
 
 % pivot(Dep,Class,IndepOrd,DepAct,IndAct)
 %
@@ -1567,6 +1587,11 @@ narrow_l( t_lu(_,U), X, L) :-
 
 % ----------------------------------- dump ------------------------------------
 
+:- multifile
+        clpcd_itf:dump_v//5.
+
+clpcd_itf:dump_v(clpcdq,Type,V,I,H) --> dump_var(Type,V,I,H).
+
 % dump_var(Type,Var,I,H,Dump,DumpTail)
 %
 % Returns in Dump a representation of the linear constraint on variable
@@ -1653,6 +1678,11 @@ dump_var(T,V,I,H) --> % should not happen
 dump_strict(0,Result,_,Result).
 dump_strict(1,_,Result,Result).
 dump_strict(2,_,Result,Result).
+
+:- multifile
+        clpcd_itf:dump_nz//4.
+
+clpcd_itf:dump_nz(clpcdq,V,H,I) --> dump_nz(V,H,I).
 
 % dump_nz(V,H,I,Dump,DumpTail)
 %

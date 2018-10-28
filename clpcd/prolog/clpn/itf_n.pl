@@ -63,7 +63,7 @@
 	[
 	    class_drop/2
 	]).
-:- use_module(spec_n).
+:- use_module(library(clpcd/compare)).
 
 :- multifile
         clpcd_itf:do_checks/9.
