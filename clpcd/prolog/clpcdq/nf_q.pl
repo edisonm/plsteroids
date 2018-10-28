@@ -219,7 +219,7 @@ submit_eq_b(v(_,[NL^1])) :-
 % case b4: A is non-linear and not invertible => submit equality to geler
 submit_eq_b(Term) :-
 	term_variables(Term,Vs),
-	geler(clpq,Vs,resubmit_eq([Term])).
+	geler(clpcdq,Vs,resubmit_eq([Term])).
 
 % submit_eq_c(A,B,Rest)
 %
@@ -246,7 +246,7 @@ submit_eq_c(A,B,Rest) :-	% c2
 submit_eq_c(A,B,Rest) :-
 	Norm = [A,B|Rest],
 	term_variables(Norm,Vs),
-	geler(clpq,Vs,resubmit_eq(Norm)).
+	geler(clpcdq,Vs,resubmit_eq(Norm)).
 
 % submit_eq_c1(Rest,B,K)
 %
@@ -293,7 +293,7 @@ submit_eq_c1(Rest,B,I) :-
 submit_eq_c1(Rest,B,I) :-
 	Norm = [v(I,[]),B|Rest],
 	term_variables(Norm,Vs),
-	geler(clpq,Vs,resubmit_eq(Norm)).
+	geler(clpcdq,Vs,resubmit_eq(Norm)).
 
 % -----------------------------------------------------------------------
 
@@ -334,7 +334,7 @@ submit_lt_b([X^1],K) :-
 % non-linear => geler
 submit_lt_b(P,K) :-
 	term_variables(P,Vs),
-	geler(clpq,Vs,resubmit_lt([v(K,P)])).
+	geler(clpcdq,Vs,resubmit_lt([v(K,P)])).
 
 % submit_lt_c(Bs,A,B)
 %
@@ -353,7 +353,7 @@ submit_lt_c(Rest,A,B) :-
 	(   linear(Norm)
 	->  'solve_<'(Norm)
 	;   term_variables(Norm,Vs),
-	    geler(clpq,Vs,resubmit_lt(Norm))
+	    geler(clpcdq,Vs,resubmit_lt(Norm))
 	).
 
 % submit_le(Nf)
@@ -394,7 +394,7 @@ submit_le_b([X^1],K) :-
 %  cX^P =< 0 => geler
 submit_le_b(P,K) :-
 	term_variables(P,Vs),
-	geler(clpq,Vs,resubmit_le([v(K,P)])).
+	geler(clpcdq,Vs,resubmit_le([v(K,P)])).
 
 % submit_le_c(Bs,A,B)
 %
@@ -413,7 +413,7 @@ submit_le_c(Rest,A,B) :-
 	(   linear(Norm)
 	->  'solve_=<'(Norm)
 	;   term_variables(Norm,Vs),
-	    geler(clpq,Vs,resubmit_le(Norm))
+	    geler(clpcdq,Vs,resubmit_le(Norm))
 	).
 
 % submit_ne(Nf)
@@ -427,7 +427,7 @@ submit_ne(Norm1) :-
 	;   linear(Norm1)
 	->  'solve_=\\='(Norm1)
 	;   term_variables(Norm1,Vs),
-	    geler(clpq,Vs,resubmit_ne(Norm1))
+	    geler(clpcdq,Vs,resubmit_ne(Norm1))
 	).
 
 % linear(A)
@@ -459,7 +459,7 @@ wait_linear(Term,Var,Goal) :-
 	->  Var = Nf,
 	    call(Goal)
 	;   term_variables(Nf,Vars),
-	    geler(clpq,Vars,wait_linear_retry(Nf,Var,Goal))
+	    geler(clpcdq,Vars,wait_linear_retry(Nf,Var,Goal))
 	).
 %
 % geler clients
@@ -482,7 +482,7 @@ wait_linear_retry(Nf0,Var,Goal) :-
 	->  Var = Nf,
 	    call(Goal)
 	;   term_variables(Nf,Vars),
-	    geler(clpq,Vars,wait_linear_retry(Nf,Var,Goal))
+	    geler(clpcdq,Vars,wait_linear_retry(Nf,Var,Goal))
 	).
 % -----------------------------------------------------------------------
 

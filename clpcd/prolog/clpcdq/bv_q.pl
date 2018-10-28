@@ -206,7 +206,7 @@ deref_var(X,Lin) :-
 		setarg(5,Att,order(Ord))
 	    )
 	;   Lin = [0,0,l(X*1,Ord)],
-	    put_attr(X,itf,t(clpq,type(t_none),strictness(0),
+	    put_attr(X,itf,t(clpcdq,type(t_none),strictness(0),
 		lin(Lin),order(Ord),n,n,n,n,n,n))
 	).
 
@@ -237,7 +237,7 @@ var_with_def_assign(Var,Lin) :-
 % strictness(Strictness)
 
 var_with_def_intern(Type,Var,Lin,Strict) :-
-	put_attr(Var,itf,t(clpq,type(Type),strictness(Strict),lin(Lin),
+	put_attr(Var,itf,t(clpcdq,type(Type),strictness(Strict),lin(Lin),
 	    order(_),n,n,n,n,n,n)),	% check uses
 	Lin = [_,_|Hom],
 	get_or_add_class(Var,Class),
@@ -248,7 +248,7 @@ var_with_def_intern(Type,Var,Lin,Strict) :-
 %
 
 var_intern(Type,Var,Strict) :-
-	put_attr(Var,itf,t(clpq,type(Type),strictness(Strict),
+	put_attr(Var,itf,t(clpcdq,type(Type),strictness(Strict),
 	    lin([0,0,l(Var*1,Ord)]),order(Ord),n,n,n,n,n,n)),
 	get_or_add_class(Var,_Class).
 
@@ -263,7 +263,7 @@ var_intern(Var,Class) :-	% for ordered/1 but otherwise free vars
 	!,
 	get_or_add_class(Var,Class).
 var_intern(Var,Class) :-
-	put_attr(Var,itf,t(clpq,type(t_none),strictness(0),
+	put_attr(Var,itf,t(clpcdq,type(t_none),strictness(0),
 	    lin([0,0,l(Var*1,Ord)]),order(Ord),n,n,n,n,n,n)),
 	get_or_add_class(Var,Class).
 
@@ -935,7 +935,7 @@ eq_classes(NV,_,Cs) :-
 	!,
 	equate(Cs,_).
 eq_classes(NV,NVT,Cs) :-
-	class_new(Su,clpq,NV,NVT,[]), % make a new class Su with NV as the variables
+	class_new(Su,clpcdq,NV,NVT,[]), % make a new class Su with NV as the variables
 	attach_class(NV,Su), % attach the variables NV to Su
 	equate(Cs,Su).
 
