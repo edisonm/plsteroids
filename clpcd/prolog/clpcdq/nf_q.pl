@@ -49,7 +49,7 @@
 	    wait_linear/3,
 	    nf2term/2
 	]).
-:- use_module(library(clpqr/geler),
+:- use_module(library(clpcd/geler),
 	[
 	    geler/3
 	]).
@@ -74,7 +74,7 @@
 	    add_linear_11/3,
 	    normalize_scalar/2
 	]).
-:- use_module(library(clpqr/highlight), []).
+:- use_module(library(clpcd/highlight), []).
 
 :- meta_predicate wait_linear(?, ?, 0).
 

@@ -58,7 +58,7 @@
 	    indep/2,
 	    nf_coeff_of/3
 	]).
-:- use_module(library(clpqr/class),
+:- use_module(library(clpcd/class),
 	[
 	    class_drop/2
 	]).
@@ -182,13 +182,13 @@ verify_type_var(t_lU(L,U),Y,S) -->
 llb(S,L,V) -->
 	{S /\ 2 =:= 0},
 	!,
-	[clpq:{L =< V}].
+	[clpcdq:{L =< V}].
 llb(_,L,V) --> [clpq:{L < V}].
 
 lub(S,U,V) -->
 	{S /\ 1 =:= 0},
 	!,
-	[clpq:{V =< U}].
+	[clpcdq:{V =< U}].
 lub(_,U,V) -->	[clpq:{V < U}].
 
 %

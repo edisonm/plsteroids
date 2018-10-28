@@ -77,7 +77,7 @@
 	    sup/4,
 	    inf/2,
 	    inf/4,
-            'solve_='/1,
+	    'solve_='/1,
 	    'solve_<'/1,
 	    'solve_=<'/1,
 	    'solve_=\\='/1,

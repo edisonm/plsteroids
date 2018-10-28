@@ -50,17 +50,17 @@
 	    pivot/5,	
 	    var_with_def_intern/4
 	]).
-:- use_module(library(clpqr/class),
+:- use_module(library(clpcd/class),
 	[
 	    class_allvars/2
 	]).
-:- use_module(library(clpqr/project),
+:- use_module(library(clpcd/project),
 	[
 	    drop_dep/1,
 	    drop_dep_one/1,
 	    make_target_indep/2
 	]).
-:- use_module(library(clpqr/redund),
+:- use_module(library(clpcd/redund),
 	[
 	    redundancy_vars/1
 	]).
