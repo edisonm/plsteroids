@@ -39,43 +39,23 @@
 */
 
 
-:- module(nf_n,
+:- module(clpcd_nf,
 	[
-	    {}/1,
-	    nf/2,
-	    entailed/1,
+	    add_constraint/2,
+	    nf/3,
+	    entailed/2,
 	    split/3,
-	    repair/2,
+	    repair/3,
 	    nf_constant/2,
-	    wait_linear/3,
-	    nf2term/2
+	    wait_linear/4,
+	    nf2term/3
 	]).
 
 :- use_module(library(clpcd/geler),
 	[
 	    geler/3
 	]).
-:- use_module(bv_n,
-	[
-	    log_deref/4,
-	    solve/1,
-	    'solve_<'/1,
-	    'solve_=<'/1,
-	    'solve_=\\='/1
-	]).
-:- use_module(ineq_n,
-	[
-	    ineq_one/4,
-	    ineq_one_s_p_0/1,
-	    ineq_one_s_n_0/1,
-	    ineq_one_n_p_0/1,
-	    ineq_one_n_n_0/1
-	]).
-:- use_module(store_n,
-	[
-	    add_linear_11/3,
-	    normalize_scalar/2
-	]).
+:- use_module(library(clpcd/ineq)).
 :- use_module(library(clpcd/compare)).
 :- use_module(library(clpcd/highlight), []).
 
@@ -91,88 +71,91 @@ goal_expansion(geler(X,Y),geler(clpn,X,Y)).
 % Constraints are converted to normal form and if necessary, submitted to the linear
 % equality/inequality solver (bv + ineq) or to the non-linear store (geler)
 
-{Rel} :-
+add_constraint(Rel, CLP) :-
 	var(Rel),
 	!,
-	throw(instantiation_error({Rel},1)).
-{R,Rs} :-
+	throw(instantiation_error(CLP:{Rel},1)).
+add_constraint((R,Rs), CLP) :-
 	!,
-	{R},{Rs}.
-{R;Rs} :-
+	add_constraint(R, CLP),
+        all_constraint(Rs, CLP).
+add_constraint((R;Rs), CLP) :-
 	!,
-	({R};{Rs}). % for entailment checking
-{L < R} :-
+	( add_constraint(R, CLP)
+        ; add_constraint(Rs, CLP)
+        ). % for entailment checking
+add_constraint(L < R, CLP) :-
 	!,
-	nf(L-R,Nf),
-	submit_lt(Nf).
-{L > R} :-
+	nf(L-R,CLP,Nf),
+	submit_lt(Nf, CLP).
+add_constraint(L > R, CLP) :-
 	!,
-	nf(R-L,Nf),
-	submit_lt(Nf).
-{L =< R} :-
+	nf(R-L,CLP,Nf),
+	submit_lt(Nf, CLP).
+add_constraint(L =< R, CLP) :-
 	!,
-	nf(L-R,Nf),
-	submit_le( Nf).
-{<=(L,R)} :-
+	nf(L-R,CLP,Nf),
+	submit_le(Nf, CLP).
+add_constraint(<=(L,R), CLP) :-
 	!,
-	nf(L-R,Nf),
-	submit_le(Nf).
-{L >= R} :-
+	nf(L-R,CLP,Nf),
+	submit_le(Nf, CLP).
+add_constraint(L >= R, CLP) :-
 	!,
-	nf(R-L,Nf),
-	submit_le(Nf).
-{L =\= R} :-
+	nf(R-L,CLP,Nf),
+	submit_le(Nf, CLP).
+add_constraint(L =\= R, CLP) :-
 	!,
-	nf(L-R,Nf),
-	submit_ne(Nf).
-{L =:= R} :-
+	nf(L-R,CLP,Nf),
+	submit_ne(CLP, Nf).
+add_constraint(L =:= R, CLP) :-
 	!,
-	nf(L-R,Nf),
-	submit_eq(Nf).
-{L = R} :-
+	nf(L-R,CLP,Nf),
+	submit_eq(Nf, CLP).
+add_constraint(L = R, CLP) :-
 	!,
-	nf(L-R,Nf),
-	submit_eq(Nf).
-{Rel} :- throw(type_error({Rel},1,'a constraint',Rel)).
+	nf(L-R,CLP,Nf),
+	submit_eq(Nf, CLP).
+add_constraint(Rel, CLP) :- throw(type_error(CLP:{Rel},1,'a constraint',Rel)).
 
-% entailed(C)
+% entailed(CLP, C)
 %
 % s -> c = ~s v c = ~(s /\ ~c)
 % where s is the store and c is the constraint for which
 % we want to know whether it is entailed.
 % C is negated and added to the store. If this fails, then c is entailed by s
 
-entailed(C) :-
-	negate(C,Cn),
-	\+ {Cn}.
+entailed(CLP, C) :-
+	negate(C,CLP,Cn),
+	\+ add_constraint(Cn, CLP).
 
 % negate(C,Res).
 %
 % Res is the negation of constraint C
 % first rule is to prevent binding with other rules when a variable is input
 
-negate(Rel,_) :-
+negate(Rel,CLP,_) :-
 	var(Rel),
 	!,
-	throw(instantiation_error(entailed(Rel),1)).
-negate((A,B),(Na;Nb)) :-
+	throw(instantiation_error(entailed(CLP,Rel),1)).
+negate((A,B),C,(Na;Nb)) :-
 	!,
-	negate(A,Na),
-	negate(B,Nb).
-negate((A;B),(Na,Nb)) :-
+	negate(A,C,Na),
+	negate(B,C,Nb).
+negate((A;B),C,(Na,Nb)) :-
 	!,
-	negate(A,Na),
-	negate(B,Nb).
-negate(A<B,A>=B) :- !.
-negate(A>B,A=<B) :- !.
-negate(A=<B,A>B) :- !.
-negate(A>=B,A<B) :- !.
-negate(A=:=B,A=\=B) :- !.
-negate(A=B,A=\=B) :- !.
-negate(A=\=B,A=:=B) :- !.
-negate(Rel,_) :- throw( type_error(entailed(Rel),1,'a constraint',Rel)).
+	negate(A,C,Na),
+	negate(B,C,Nb).
+negate(A<B,_,A>=B) :- !.
+negate(A>B,_,A=<B) :- !.
+negate(A=<B,_,A>B) :- !.
+negate(A>=B,_,A<B) :- !.
+negate(A=:=B,_,A=\=B) :- !.
+negate(A=B,_,A=\=B) :- !.
+negate(A=\=B,_,A=:=B) :- !.
+negate(Rel,CLP,_) :- throw( type_error(entailed(CLP,Rel),1,'a constraint',Rel)).
 
-% submit_eq(Nf)
+% submit_eq(Nf, CLP)
 %
 % Submits the equality Nf = 0 to the constraint store, where Nf is in normal form.
 % The following cases may apply:
@@ -191,49 +174,49 @@ negate(Rel,_) :- throw( type_error(entailed(Rel),1,'a constraint',Rel)).
 %	c2) linear(Nf)
 %	c3) nonlinear -> geler
 
-submit_eq([]).	% trivial success: case a
-submit_eq([T|Ts]) :-
-	submit_eq(Ts,T).
-submit_eq([],A) :- submit_eq_b(A).	% case b
-submit_eq([B|Bs],A) :- submit_eq_c(A,B,Bs).	% case c
+submit_eq([], _).	% trivial success: case a
+submit_eq([T|Ts], CLP) :-
+	submit_eq(Ts,CLP,T).
+submit_eq([],CLP,A) :- submit_eq_b(A, CLP).	% case b
+submit_eq([B|Bs],CLP,A) :- submit_eq_c(A,CLP,B,Bs).	% case c
 
-% submit_eq_b(A)
+% submit_eq_b(A, CLP)
 %
 % Handles case b of submit_eq/1
 
 % case b1: A is a constant (non-zero)
-submit_eq_b(v(_,[])) :-
+submit_eq_b(v(_,[]), _) :-
 	!,
 	fail.
 % case b2/b3: A is n*X^P => X = 0
-submit_eq_b(v(_,[X^P])) :-
+submit_eq_b(v(_,[X^P]), _) :-
 	var(X),
 	P > 0,
 	!,
 	X = 0.
 % case b2: non-linear is invertible: NL(X) = 0 => X - inv(NL)(0) = 0
-submit_eq_b(v(_,[NL^1])) :-
+submit_eq_b(v(_,[NL^1]), CLP) :-
 	nonvar(NL),
-	nl_invertible(NL,X,0,Inv),
+	nl_invertible(CLP,NL,X,0,Inv),
 	!,
-	nf(-Inv,S),
-	nf_add(X,S,New),
-	submit_eq(New).
+	nf(-Inv,CLP,S),
+	nf_add(X, CLP, S, New),
+	submit_eq(New, CLP).
 % case b4: A is non-linear and not invertible => submit equality to geler
-submit_eq_b(Term) :-
+submit_eq_b(Term, CLP) :-
 	term_variables(Term,Vs),
-	geler(clpn,Vs,resubmit_eq([Term])).
+	geler(CLP,Vs,resubmit_eq(CLP, [Term])).
 
-% submit_eq_c(A,B,Rest)
+% submit_eq_c(A,CLP,B,Rest)
 %
 % Handles case c of submit_eq/1
 
 % case c1: A is a constant
-submit_eq_c(v(I,[]),B,Rest) :-
+submit_eq_c(v(I,[]),CLP,B,Rest) :-
 	!,
-	submit_eq_c1(Rest,B,I).
+	submit_eq_c1(Rest,CLP,B,I).
 % case c2: A,B and Rest are linear
-submit_eq_c(A,B,Rest) :-	% c2
+submit_eq_c(A,CLP,B,Rest) :-	% c2
 	A = v(_,[X^1]),
 	var(X),
 	B = v(_,[Y^1]),
@@ -244,24 +227,25 @@ submit_eq_c(A,B,Rest) :-	% c2
 	% 'solve_='(Hom).
 	nf_length(Hom,0,Len),
 	log_deref(Len,Hom,[],HomD),
-	solve(HomD).
+	solve(CLP,HomD).
 % case c3: A, B or Rest is non-linear => geler
-submit_eq_c(A,B,Rest) :-
+submit_eq_c(A,CLP,B,Rest) :-
 	Norm = [A,B|Rest],
 	term_variables(Norm,Vs),
-	geler(clpn,Vs,resubmit_eq(Norm)).
+	geler(CLP,Vs,resubmit_eq(CLP, Norm)).
 
-% submit_eq_c1(Rest,B,K)
+% submit_eq_c1(Rest,CLP,B,K)
 %
 % Handles case c1 of submit_eq/1
 
 % case c11a:
 % i+kX^p=0 if p is an odd integer
 % special case: one solution if P is negativ but also for a negative X
-submit_eq_c1([], v(K,[X^P]), I) :-
+submit_eq_c1([], CLP, v(K,[X^P]), I) :-
+        CLP = clpn,
 	var(X),
         P =\= 0,
-        compare_d(clpn, =, integer(P), P),
+        compare_d(CLP, =, integer(P), P),
         0 > (-I/K),
         1 =:= integer(P) mod 2,
         !,
@@ -270,10 +254,11 @@ submit_eq_c1([], v(K,[X^P]), I) :-
 % case c11b:
 % i+kX^p=0 for p =\= 0, integer(P) =:= P
 % special case: generate 2 solutions if p is a positive even integer
-submit_eq_c1([], v(K,[X^P]), I) :-
+submit_eq_c1([], CLP, v(K,[X^P]), I) :-
+        CLP = clpn,
 	var(X),
         P =\= 0,
-        compare_d(clpn, =, integer(P), P),
+        compare_d(CLP, =, integer(P), P),
         0 =< (-I/K),
         0 =:= integer(P) mod 2,
 	!,
@@ -284,7 +269,8 @@ submit_eq_c1([], v(K,[X^P]), I) :-
         ).
 % case c11c:
 % i+kX^p=0 for p =\= 0, 0 =< (-I/K)
-submit_eq_c1([], v(K,[X^P]), I) :-
+submit_eq_c1([], CLP, v(K,[X^P]), I) :-
+        CLP = clpn,
         var(X),
         P =\= 0,
         0 =< (-I/K),
@@ -292,37 +278,39 @@ submit_eq_c1([], v(K,[X^P]), I) :-
 	Val is (-I/K) ** (1/P),
         X = Val.
 % case c11d: fail if var(X) and none of the above.
-submit_eq_c1([], v(_K,[X^_P]), _I) :-
-    var(X),
-    !,
-    fail.
+submit_eq_c1([], CLP, v(_K,[X^_P]), _I) :-
+        CLP = clpn,
+        var(X),
+        !,
+        fail.
 % case c11e: fail for { -25 = _X^2.5 } and { -25 = _X^(-2.5) } and may be others!
 %			 if you uncomment this case { -25 = _X^2.5 } throw an error(evaluation_error(undefined))
 %			 and { -25 = _X^(-2.5) } succeed with an unbound X
-submit_eq_c1([], v(K,[X^P]), I) :-
-    nonvar(X),
-    X = exp(_,_),   % TLS added 03/12
-    1 =:= abs(P),
-    0 >= I,
-    0 >= K,
-    !,
-    fail.
+submit_eq_c1([], CLP, v(K,[X^P]), I) :-
+        CLP = clpn,
+        nonvar(X),
+        X = exp(_,_),   % TLS added 03/12
+        1 =:= abs(P),
+        0 >= I,
+        0 >= K,
+        !,
+        fail.
 % case c12: non-linear, invertible: cNL(X)^1+k=0 => inv(NL)(-k/c) = 0 ;
 %				    cNL(X)^-1+k=0 => inv(NL)(-c/k) = 0
-submit_eq_c1([],v(K,[NL^P]),I) :-
+submit_eq_c1([],CLP,v(K,[NL^P]),I) :-
 	nonvar(NL),
-	(   compare_d(clpn, =, P, 1),
-	    Y is -I/K
-	;   compare_d(clpn, =, P, -1),
-	    Y is -K/I
+	(   compare_d(CLP, =, P, 1),
+            div_d(CLP, -I, K, Y)
+	;   compare_d(CLP, =, P, -1),
+            div_d(CLP, -K, I, Y)
 	),
-	nl_invertible(NL,X,Y,Inv),
+	nl_invertible(CLP,NL,X,Y,Inv),
 	!,
-	nf(-Inv,S),
-	nf_add(X,S,New),
-	submit_eq(New).
+	nf(-Inv,CLP,S),
+	nf_add(X, CLP, S, New),
+	submit_eq(New, CLP).
 % case c13: linear: X + Y + Z + c = 0 =>
-submit_eq_c1(Rest,B,I) :-
+submit_eq_c1(Rest,CLP,B,I) :-
 	B = v(_,[Y^1]),
 	var(Y),
 	linear(Rest),
@@ -333,12 +321,12 @@ submit_eq_c1(Rest,B,I) :-
 	normalize_scalar(I,Nonvar),
 	log_deref(Len,Hom,[],HomD),
 	add_linear_11(Nonvar,HomD,LinD),
-	solve(LinD).
+	solve(CLP,LinD).
 % case c14: other cases => geler
-submit_eq_c1(Rest,B,I) :-
+submit_eq_c1(Rest,CLP,B,I) :-
 	Norm = [v(I,[]),B|Rest],
 	term_variables(Norm,Vs),
-	geler(clpn,Vs,resubmit_eq(Norm)).
+	geler(CLP,Vs,resubmit_eq(CLP, Norm)).
 
 % -----------------------------------------------------------------------
 
@@ -347,58 +335,58 @@ submit_eq_c1(Rest,B,I) :-
 % Submits the inequality Nf<0 to the constraint store, where Nf is in normal form.
 
 % 0 < 0 => fail
-submit_lt([]) :- fail.
+submit_lt([], _) :- fail.
 % A + B < 0
-submit_lt([A|As]) :- submit_lt(As,A).
+submit_lt([A|As], CLP) :- submit_lt(As, CLP, A).
 
 % submit_lt(As,A)
 %
 % Does what submit_lt/1 does where Nf = [A|As]
 
 % v(K,P) < 0
-submit_lt([],v(K,P)) :- submit_lt_b(P,K).
+submit_lt([], CLP, v(K,P)) :- submit_lt_b(P,CLP,K).
 % A + B + Bs < 0
-submit_lt([B|Bs],A) :- submit_lt_c(Bs,A,B).
+submit_lt([B|Bs], CLP, A) :- submit_lt_c(Bs,CLP,A,B).
 
-% submit_lt_b(P,K)
+% submit_lt_b(P,CLP,K)
 %
 % Does what submit_lt/2 does where A = [v(K,P)] and As = []
 
 % c < 0
-submit_lt_b([],I) :-
+submit_lt_b([],CLP,I) :-
 	!,
-	I < 0.
+	compare_d(CLP, <, I, 0).
 % cX^1 < 0 : if c < 0 then X > 0, else X < 0
-submit_lt_b([X^1],K) :-
+submit_lt_b([X^1],CLP,K) :-
 	var(X),
 	!,
 	(   K > 0
-	->  ineq_one_s_p_0(X)	% X is strictly negative
-	;   ineq_one_s_n_0(X)	% X is strictly positive
+	->  ineq_one_s_p_0(CLP, X)	% X is strictly negative
+	;   ineq_one_s_n_0(CLP, X)	% X is strictly positive
 	).
 % non-linear => geler
-submit_lt_b(P,K) :-
+submit_lt_b(P,CLP,K) :-
 	term_variables(P,Vs),
-	geler(clpn,Vs,resubmit_lt([v(K,P)])).
+	geler(CLP,Vs,resubmit_lt(CLP, [v(K,P)])).
 
-% submit_lt_c(Bs,A,B)
+% submit_lt_c(Bs,CLP,A,B)
 %
 % Does what submit_lt/2 does where As = [B|Bs].
 
 %  c + kX < 0 => kX < c
-submit_lt_c([],A,B) :-
+submit_lt_c([],CLP,A,B) :-
 	A = v(I,[]),
 	B = v(K,[Y^1]),
 	var(Y),
 	!,
-	ineq_one(strict,Y,K,I).
+	ineq_one(strict, CLP, Y, K, I).
 % linear < 0 => solve, non-linear < 0 => geler
-submit_lt_c(Rest,A,B) :-
+submit_lt_c(Rest,CLP,A,B) :-
 	Norm = [A,B|Rest],
 	(   linear(Norm)
 	->  'solve_<'(Norm)
 	;   term_variables(Norm,Vs),
-	    geler(clpn,Vs,resubmit_lt(Norm))
+	    geler(CLP,Vs,resubmit_lt(CLP, Norm))
 	).
 
 % submit_le(Nf)
@@ -407,72 +395,72 @@ submit_lt_c(Rest,A,B) :-
 % See also submit_lt/1
 
 % 0 =< 0 => success
-submit_le([]).
+submit_le([], _).
 % A + B =< 0
-submit_le([A|As]) :- submit_le(As,A).
+submit_le([A|As], CLP) :- submit_le(As, CLP, A).
 
 % submit_le(As,A)
 %
 % See submit_lt/2. This handles less or equal.
 
 % v(K,P) =< 0
-submit_le([],v(K,P)) :- submit_le_b(P,K).
+submit_le([], CLP, v(K,P)) :- submit_le_b(P,CLP,K).
 % A + B + Bs =< 0
-submit_le([B|Bs],A) :- submit_le_c(Bs,A,B).
+submit_le([B|Bs], CLP, A) :- submit_le_c(Bs,CLP,A,B).
 
 % submit_le_b(P,K)
 %
 % See submit_lt_b/2. This handles less or equal.
 
 % c =< 0
-submit_le_b([],I) :-
+submit_le_b([],CLP,I) :-
 	!,
-	I =< 0.
+	compare_d(CLP, =<, I, 0).
 % cX^1 =< 0: if c < 0 then X >= 0, else X =< 0
-submit_le_b([X^1],K) :-
+submit_le_b([X^1],CLP,K) :-
 	var(X),
 	!,
 	(   K > 0
-	->  ineq_one_n_p_0(X)	% X is non-strictly negative
-	;   ineq_one_n_n_0(X)	% X is non-strictly positive
+	->  ineq_one_n_p_0(CLP, X)	% X is non-strictly negative
+	;   ineq_one_n_n_0(CLP, X)	% X is non-strictly positive
 	).
 %  cX^P =< 0 => geler
-submit_le_b(P,K) :-
+submit_le_b(P,CLP,K) :-
 	term_variables(P,Vs),
-	geler(clpn,Vs,resubmit_le([v(K,P)])).
+	geler(CLP,Vs,resubmit_le(CLP, [v(K,P)])).
 
-% submit_le_c(Bs,A,B)
+% submit_le_c(Bs,CLP,A,B)
 %
-% See submit_lt_c/3. This handles less or equal.
+% See submit_lt_c/4. This handles less or equal.
 
 % c + kX^1 =< 0 => kX =< 0
-submit_le_c([],A,B) :-
+submit_le_c([],CLP,A,B) :-
 	A = v(I,[]),
 	B = v(K,[Y^1]),
 	var(Y),
 	!,
-	ineq_one(nonstrict,Y,K,I).
+	ineq_one(nonstrict, CLP, Y, K, I).
 % A, B & Rest are linear => solve, otherwise => geler
-submit_le_c(Rest,A,B) :-
+submit_le_c(Rest,CLP,A,B) :-
 	Norm = [A,B|Rest],
 	(   linear(Norm)
-	->  'solve_=<'(Norm)
+	->  'solve_=<'(CLP, Norm)
 	;   term_variables(Norm,Vs),
-	    geler(clpn,Vs,resubmit_le(Norm))
+	    geler(CLP,Vs,resubmit_le(CLP, Norm))
 	).
 
-% submit_ne(Nf)
+% submit_ne(CLP,Nf)
 %
 % Submits the inequality Nf =\= 0 to the constraint store, where Nf is in normal form.
 % if Nf is a constant => check constant = 0, else if Nf is linear => solve else => geler
 
-submit_ne(Norm1) :-
+submit_ne(CLP,Norm1) :-
 	(   nf_constant(Norm1,K)
 	->  K =\= 0
 	;   linear(Norm1)
-	->  'solve_=\\='(Norm1)
+	->  'solve_=\\='(CLP,Norm1)
 	;   term_variables(Norm1,Vs),
-	    geler(clpn,Vs,resubmit_ne(Norm1))
+	    geler(CLP,Vs,resubmit_ne(CLP,Norm1))
 	).
 
 % linear(A)
@@ -497,38 +485,39 @@ linear_ps([V^1]) :- var(V).	% excludes sin(_), ...
 % Goal delays until Term gets linear.
 % At this time, Var will be bound to the normalform of Term.
 %
-:- meta_predicate wait_linear( ?, ?, 0 ).
-%
-wait_linear(Term,Var,Goal) :-
-	nf(Term,Nf),
+:- meta_predicate wait_linear(?, ?, ?, 0 ).
+
+wait_linear(CLP,Term,Var,Goal) :-
+	nf(Term,CLP,Nf),
 	(   linear(Nf)
 	->  Var = Nf,
 	    call(Goal)
 	;   term_variables(Nf,Vars),
-	    geler(clpn,Vars,wait_linear_retry(Nf,Var,Goal))
+	    geler(CLP,Vars,wait_linear_retry(Nf,Var,Goal))
 	).
 %
 % geler clients
 %
-resubmit_eq(N) :-
-	repair(N,Norm),
-	submit_eq(Norm).
-resubmit_lt(N) :-
-	repair(N,Norm),
-	submit_lt(Norm).
-resubmit_le(N) :-
-	repair(N,Norm),
-	submit_le(Norm).
-resubmit_ne(N) :-
-	repair(N,Norm),
-	submit_ne(Norm).
-wait_linear_retry(Nf0,Var,Goal) :-
-	repair(Nf0,Nf),
+resubmit_eq(CLP, N) :-
+	repair(CLP, N, Norm),
+	submit_eq(Norm, CLP).
+resubmit_lt(CLP, N) :-
+	repair(CLP, N, Norm),
+	submit_lt(Norm, CLP).
+resubmit_le(CLP, N) :-
+	repair(CLP, N, Norm),
+	submit_le(Norm, CLP).
+resubmit_ne(CLP,N) :-
+	repair(CLP, N, Norm),
+	submit_ne(CLP,Norm).
+
+wait_linear_retry(CLP,Nf0,Var,Goal) :-
+	repair(CLP, Nf0, Nf),
 	(   linear(Nf)
 	->  Var = Nf,
 	    call(Goal)
 	;   term_variables(Nf,Vars),
-	    geler(clpn,Vars,wait_linear_retry(Nf,Var,Goal))
+	    geler(CLP,Vars,wait_linear_retry(Nf,Var,Goal))
 	).
 % -----------------------------------------------------------------------
 
@@ -537,15 +526,15 @@ wait_linear_retry(Nf0,Var,Goal) :-
 % Res is the evaluation of the inverse of nonlinear function F in variable X
 % where X is Y
 
-nl_invertible(sin(X),X,Y,Res) :- Res is asin(Y).
-nl_invertible(cos(X),X,Y,Res) :- Res is acos(Y).
-nl_invertible(tan(X),X,Y,Res) :- Res is atan(Y).
-nl_invertible(exp(B,C),X,A,Res) :-
+nl_invertible_(sin(X),_,X,Y,Res) :- Res is asin(Y).
+nl_invertible_(cos(X),_,X,Y,Res) :- Res is acos(Y).
+nl_invertible_(tan(X),_,X,Y,Res) :- Res is atan(Y).
+nl_invertible_(exp(B,C),CLP,X,A,Res) :-
 	(   nf_constant(B,Kb)
 	->  A > 0,
 	    Kb > 0,
             % Kb =\= 1.0
-            compare_d(clpn, \=, Kb, 1),
+            compare_d(CLP, \=, Kb, 1),
 	    X = C, % note delayed unification
 	    Res is log(A)/log(Kb)
 	;   nf_constant(C,Kc),
@@ -555,9 +544,13 @@ nl_invertible(exp(B,C),X,A,Res) :-
 	    Res is A**(1/Kc)
 	).
 
+nl_invertible(C,F,X,Y,Res) :-
+        nl_invertible_(F,C,X,Y,N),
+        cast_d(C,N,Res).
+
 % -----------------------------------------------------------------------
 
-% nf(Exp,Nf)
+% nf(Exp,CLP,Nf)
 %
 % Returns in Nf, the normal form of expression Exp
 %
@@ -565,110 +558,92 @@ nl_invertible(exp(B,C),X,A,Res) :-
 % v(A,[]) means scalar A
 
 % variable X => 1*X^1
-nf(X,Norm) :-
+nf(X,_,Norm) :-
 	var(X),
 	!,
 	Norm = [v(1,[X^1])].
-nf(X,Norm) :-
-	number(X),
+nf(X,CLP,Norm) :-
+	nf_number(CLP,X,Norm),
+        !.
+% nf(#(Const),Norm) :-
+% 	monash_constant(Const,Value),
+% 	!,
+% 	Norm = [v(Value,[])].
+nf(-A,CLP,Norm) :-
 	!,
-	nf_number(X,Norm).
+	nf(A,CLP,An),
+	nf_mul_factor(v(-1,[]), CLP, An, Norm).
+nf(+A,CLP,Norm) :-
+	!,
+	nf(A,CLP,Norm).
 %
-nf(#(Const),Norm) :-
-	monash_constant(Const,Value),
+nf(A+B,CLP,Norm) :-
 	!,
-	Norm = [v(Value,[])].
+	nf(A,CLP,An),
+	nf(B,CLP,Bn),
+	nf_add(An, CLP, Bn, Norm).
+nf(A-B,CLP,Norm) :-
+	!,
+	nf(A,CLP,An),
+	nf(-B,CLP,Bn),
+	nf_add(An, CLP, Bn, Norm).
 %
-nf(-A,Norm) :-
+nf(A*B,CLP,Norm) :-
 	!,
-	nf(A,An),
-	nf_mul_factor(v(-1,[]),An,Norm).
-nf(+A,Norm) :-
+	nf(A,CLP,An),
+	nf(B,CLP,Bn),
+	nf_mul(CLP, An, Bn, Norm).
+nf(A/B,CLP,Norm) :-
 	!,
-	nf(A,Norm).
-%
-nf(A+B,Norm) :-
-	!,
-	nf(A,An),
-	nf(B,Bn),
-	nf_add(An,Bn,Norm).
-nf(A-B,Norm) :-
-	!,
-	nf(A,An),
-	nf(-B,Bn),
-	nf_add(An,Bn,Norm).
-%
-nf(A*B,Norm) :-
-	!,
-	nf(A,An),
-	nf(B,Bn),
-	nf_mul(An,Bn,Norm).
-nf(A/B,Norm) :-
-	!,
-	nf(A,An),
-	nf(B,Bn),
+	nf(A,CLP,An),
+	nf(B,CLP,Bn),
 	nf_div(Bn,An,Norm).
 % non-linear function, one argument: Term = f(Arg) equals f'(Sa1) = Skel
-nf(Term,Norm) :-
+nf(Term,CLP,Norm) :-
 	nonlin_1(Term,Arg,Skel,Sa1),
 	!,
-	nf(Arg,An),
+	nf(Arg,CLP,An),
 	nf_nonlin_1(Skel,An,Sa1,Norm).
 % non-linear function, two arguments: Term = f(A1,A2) equals f'(Sa1,Sa2) = Skel
-nf(Term,Norm) :-
+nf(Term,CLP,Norm) :-
 	nonlin_2(Term,A1,A2,Skel,Sa1,Sa2),
 	!,
-	nf(A1,A1n),
-	nf(A2,A2n),
-	nf_nonlin_2(Skel,A1n,A2n,Sa1,Sa2,Norm).
+	nf(A1, CLP, A1n),
+	nf(A2, CLP, A2n),
+	nf_nonlin_2(CLP,Skel,A1n,A2n,Sa1,Sa2,Norm).
 %
-nf(Term,_) :-
-	throw(type_error(nf(Term,_),1,'a numeric expression',Term)).
+nf(Term,CLP,_) :-
+	throw(type_error(nf(Term,CLP,_),1,'a numeric expression',Term)).
 
 % nf_number(N,Res)
 %
 % If N is a number, N is normalized
 
-nf_number(N,Res) :-
-        ( number(N)
-        ->Num = N              
-        ; rational(N),
-          N = A rdiv B,
-          Num is A / B
-        ),
+nf_number(CLP, N, Res) :-
+        cast_d(CLP, N, Num),
 	(   Num =:= 0
 	->  Res = []
 	;   Res = [v(Num,[])]
 	).
 
-nonlin_1(abs(X),X,abs(Y),Y).
-nonlin_1(sin(X),X,sin(Y),Y).
-nonlin_1(cos(X),X,cos(Y),Y).
-nonlin_1(tan(X),X,tan(Y),Y).
-nonlin_2(min(A,B),A,B,min(X,Y),X,Y).
-nonlin_2(max(A,B),A,B,max(X,Y),X,Y).
-nonlin_2(exp(A,B),A,B,exp(X,Y),X,Y).
-nonlin_2(pow(A,B),A,B,exp(X,Y),X,Y).	% pow->exp
-nonlin_2(A^B,A,B,exp(X,Y),X,Y).
-
-nf_nonlin_1(Skel,An,S1,Norm) :-
+nf_nonlin_1(CLP,Skel,An,S1,Norm) :-
 	(   nf_constant(An,S1)
 	->  nl_eval(Skel,Res),
-	    nf_number(Res,Norm)
+	    nf_number(CLP,Res,Norm)
 	;   S1 = An,
 	    Norm = [v(1,[Skel^1])]).
-nf_nonlin_2(Skel,A1n,A2n,S1,S2,Norm) :-
+nf_nonlin_2(CLP,Skel,A1n,A2n,S1,S2,Norm) :-
 	(   nf_constant(A1n,S1),
 	    nf_constant(A2n,S2)
 	->  nl_eval(Skel,Res),
-	    nf_number(Res,Norm)
+	    nf_number(CLP,Res,Norm)
 	;   Skel=exp(_,_),
 	    nf_constant(A2n,Exp),
-	    integerp(Exp,I)
-	->  nf_power(I,A1n,Norm)
+	    integerp(CLP,Exp,I)
+	->  nf_power(CLP, I, A1n, Norm)
 	;   S1 = A1n,
 	    S2 = A2n,
-	    Norm = [v(1.0,[Skel^1])]
+	    Norm = [v(1,[Skel^1])]
 	).
 
 % evaluates non-linear functions in one variable where the variable is bound
@@ -681,15 +656,6 @@ nl_eval(tan(X),R) :- R is tan(X).
 nl_eval(min(X,Y),R) :- R is min(X,Y).
 nl_eval(max(X,Y),R) :- R is max(X,Y).
 nl_eval(exp(X,Y),R) :- R is X**Y.
-
-monash_constant(X,_) :-
-	var(X),
-	!,
-	fail.
-monash_constant(p,pi).
-monash_constant(pi,pi).
-monash_constant(e,e).
-monash_constant(zero,0).
 
 %
 % check if a Nf consists of just a constant
@@ -720,72 +686,72 @@ split([First|T],H,I) :-
 % terms in the same variable with the same exponent are added,
 % e.g. when A contains v(5,[X^1]) and B contains v(4,[X^1]) then C contains v(9,[X^1]).
 
-nf_add([],Bs,Bs).
-nf_add([A|As],Bs,Cs) :- nf_add(Bs,A,As,Cs).
+nf_add([], _, Bs, Bs).
+nf_add([A|As], CLP, Bs, Cs) :- nf_add(Bs, CLP, A, As, Cs).
 
-nf_add([],A,As,Cs) :- Cs = [A|As].
-nf_add([B|Bs],A,As,Cs) :-
+nf_add([], _, A, As, Cs) :- Cs = [A|As].
+nf_add([B|Bs], CLP, A, As, Cs) :-
 	A = v(Ka,Pa),
 	B = v(Kb,Pb),
 	compare(Rel,Pa,Pb),
-	nf_add_case(Rel,A,As,Cs,B,Bs,Ka,Kb,Pa).
+	nf_add_case(Rel,CLP,A,As,Cs,B,Bs,Ka,Kb,Pa).
 
-% nf_add_case(Rel,A,As,Cs,B,Bs,Ka,Kb,Pa)
+% nf_add_case(Rel,CLP,A,As,Cs,B,Bs,Ka,Kb,Pa)
 %
 % merges sorted lists [A|As] and [B|Bs] into new sorted list Cs
 % A = v(Ka,Pa) and B = v(Kb,_)
 % Rel is the ordering relation (<, > or =) between A and B.
 % when Rel is =, Ka and Kb are added to form a new scalar for Pa
-nf_add_case(<,A,As,Cs,B,Bs,_,_,_) :-
+nf_add_case(<,CLP,A,As,Cs,B,Bs,_,_,_) :-
 	Cs = [A|Rest],
-	nf_add(As,B,Bs,Rest).
-nf_add_case(>,A,As,Cs,B,Bs,_,_,_) :-
+	nf_add(As, CLP, B, Bs, Rest).
+nf_add_case(>,CLP,A,As,Cs,B,Bs,_,_,_) :-
 	Cs = [B|Rest],
-	nf_add(Bs,A,As,Rest).
-nf_add_case(=,_,As,Cs,_,Bs,Ka,Kb,Pa) :-
+	nf_add(Bs, CLP, A, As, Rest).
+nf_add_case(=,CLP,_,As,Cs,_,Bs,Ka,Kb,Pa) :-
 	Kc is Ka + Kb,
 	(   % Kc =:= 0.0
-            compare_d(clpn, =, Ka, -Kb)
-	->  nf_add(As,Bs,Cs)
+            compare_d(CLP, =, Ka, -Kb)
+	->  nf_add(As, CLP, Bs, Cs)
 	;   Cs = [v(Kc,Pa)|Rest],
-	    nf_add(As,Bs,Rest)
+	    nf_add(As, CLP, Bs, Rest)
 	).
 
-nf_mul(A,B,Res) :-
+nf_mul(CLP, A, B, Res) :-
 	nf_length(A,0,LenA),
 	nf_length(B,0,LenB),
-	nf_mul_log(LenA,A,[],LenB,B,Res).
+	nf_mul_log(LenA, CLP, A, [], LenB, B, Res).
 
-nf_mul_log(0,As,As,_,_,[]) :- !.
-nf_mul_log(1,[A|As],As,Lb,B,R) :-
+nf_mul_log(0, _, As, As, _, _, []) :- !.
+nf_mul_log(1, CLP, [A|As], As, Lb, B, R) :-
 	!,
-	nf_mul_factor_log(Lb,B,[],A,R).
-nf_mul_log(2,[A1,A2|As],As,Lb,B,R) :-
+	nf_mul_factor_log(Lb, CLP, B, [], A, R).
+nf_mul_log(2, CLP, [A1,A2|As], As, Lb, B, R) :-
 	!,
-	nf_mul_factor_log(Lb,B,[],A1,A1b),
-	nf_mul_factor_log(Lb,B,[],A2,A2b),
-	nf_add(A1b,A2b,R).
-nf_mul_log(N,A0,A2,Lb,B,R) :-
+	nf_mul_factor_log(Lb, CLP, B, [], A1, A1b),
+	nf_mul_factor_log(Lb, CLP, B, [], A2, A2b),
+	nf_add(A1b, CLP, A2b, R).
+nf_mul_log(N, CLP, A0, A2, Lb, B, R) :-
 	P is N>>1,
 	Q is N-P,
-	nf_mul_log(P,A0,A1,Lb,B,Rp),
-	nf_mul_log(Q,A1,A2,Lb,B,Rq),
-	nf_add(Rp,Rq,R).
+	nf_mul_log(P, CLP, A0, A1, Lb, B, Rp),
+	nf_mul_log(Q, CLP, A1, A2, Lb, B, Rq),
+	nf_add(Rp, CLP, Rq, R).
 
 
 % nf_add_2: does the same thing as nf_add, but only has 2 elements to combine.
-nf_add_2(Af,Bf,Res) :-		%  unfold: nf_add([Af],[Bf],Res).
+nf_add_2(CLP, Af, Bf, Res) :-		%  unfold: nf_add([Af],[Bf],Res).
 	Af = v(Ka,Pa),
 	Bf = v(Kb,Pb),
 	compare(Rel,Pa,Pb),
-	nf_add_2_case(Rel,Af,Bf,Res,Ka,Kb,Pa).
+	nf_add_2_case(Rel, CLP, Af, Bf, Res, Ka, Kb, Pa).
 
-nf_add_2_case(<,Af,Bf,[Af,Bf],_,_,_).
-nf_add_2_case(>,Af,Bf,[Bf,Af],_,_,_).
-nf_add_2_case(=,_, _,Res,Ka,Kb,Pa) :-
+nf_add_2_case(<, _, Af, Bf, [Af,Bf], _, _, _).
+nf_add_2_case(>, _, Af, Bf, [Bf,Af], _, _, _).
+nf_add_2_case(=, CLP, _, _, Res, Ka, Kb, Pa) :-
 	Kc is Ka + Kb,
 	(   % Kc =:= 0
-            compare_d(clpn, =, Ka, -Kb)
+            compare_d(CLP, =, Ka, -Kb)
 	->  Res = []
 	;   Res = [v(Kc,Pa)]
 	).
@@ -802,12 +768,12 @@ nf_mul_k([v(I,P)|Vs],K,[v(Ki,P)|Vks]) :-
 %
 % multiplies each element of the list Sum with factor A which is of the form v(_,_)
 % and puts the result in the sorted list Res.
-nf_mul_factor(v(K,[]),Sum,Res) :-
+nf_mul_factor(v(K,[]), _, Sum, Res) :-
 	!,
 	nf_mul_k(Sum,K,Res).
-nf_mul_factor(F,Sum,Res) :-
+nf_mul_factor(F, CLP, Sum, Res) :-
 	nf_length(Sum,0,Len),
-	nf_mul_factor_log(Len,Sum,[],F,Res).
+	nf_mul_factor_log(Len, CLP, Sum, [], F, Res).
 
 % nf_mul_factor_log(Len,[Sum|SumTail],SumTail,F,Res)
 %
@@ -815,21 +781,21 @@ nf_mul_factor(F,Sum,Res) :-
 % Len is the length of Sum
 % Sum is split logarithmically each step
 
-nf_mul_factor_log(0,As,As,_,[]) :- !.
-nf_mul_factor_log(1,[A|As],As,F,[R]) :-
+nf_mul_factor_log(0, _, As, As, _, []) :- !.
+nf_mul_factor_log(1, _, [A|As], As, F, [R]) :-
 	!,
 	mult(A,F,R).
-nf_mul_factor_log(2,[A,B|As],As,F,Res) :-
+nf_mul_factor_log(2, CLP, [A,B|As], As, F, Res) :-
 	!,
 	mult(A,F,Af),
 	mult(B,F,Bf),
-	nf_add_2(Af,Bf,Res).
-nf_mul_factor_log(N,A0,A2,F,R) :-
+	nf_add_2(CLP, Af, Bf, Res).
+nf_mul_factor_log(N, CLP, A0, A2, F, R) :-
 	P is N>>1, % P is rounded(N/2)
 	Q is N-P,
-	nf_mul_factor_log(P,A0,A1,F,Rp),
-	nf_mul_factor_log(Q,A1,A2,F,Rq),
-	nf_add(Rp,Rq,R).
+	nf_mul_factor_log(P, CLP, A0, A1, F, Rp),
+	nf_mul_factor_log(Q, CLP, A1, A2, F, Rq),
+	nf_add(Rp, CLP, Rq, R).
 
 % mult(A,B,C)
 %
@@ -885,9 +851,9 @@ nf_div([],_,_) :-
 % division by v(K,P) => multiplication by v(1/K,P^-1)
 nf_div([v(K,P)],Sum,Res) :-
 	!,
-	Ki is 1/K,
+        div_d(CLP, 1, K, Ki),
 	mult_exp(P,-1,Pi),
-	nf_mul_factor(v(Ki,Pi),Sum,Res).
+	nf_mul_factor(v(Ki,Pi), CLP, Sum, Res).
 nf_div(D,A,[v(1,[(A/D)^1])]).
 
 % zero_division
@@ -909,17 +875,17 @@ mult_exp([X^P|Xs],K,[X^I|Tail]) :-
 % | ?- time({(1+X+Y+Z)^15=0}). (sicstus, try with SWI)
 % Timing 00:00:02.610	  2.610   iterative
 % Timing 00:00:00.660	  0.660   binomial
-nf_power(N,Sum,Norm) :-
+nf_power(CLP, N, Sum, Norm) :-
 	integer(N),
 	compare(Rel,N,0),
 	(   Rel = (<)
 	->  Pn is -N,
 	    % nf_power_pos(Pn,Sum,Inorm),
-	    binom(Sum,Pn,Inorm),
+	    binom(Sum, CLP, Pn, Inorm),
 	    nf_div(Inorm,[v(1,[])],Norm)
 	;   Rel = (>)
 	->  % nf_power_pos(N,Sum,Norm)
-	    binom(Sum,N,Norm)
+	    binom(Sum, CLP, N, Norm)
 	;   Rel = (=)
 	->  % 0^0 is indeterminate but we say 1
 	    Norm = [v(1,[])]
@@ -929,25 +895,25 @@ nf_power(N,Sum,Norm) :-
 % N>0
 %
 % binomial method
-binom(Sum,1,Power) :-
+binom(Sum, _, 1, Power) :-
 	!,
 	Power = Sum.
-binom([],_,[]).
-binom([A|Bs],N,Power) :-
+binom([], _, _, []).
+binom([A|Bs], CLP, N, Power) :-
 	(   Bs = []
 	->  nf_power_factor(A,N,Ap),
 	    Power = [Ap]
 	;   Bs = [_|_]
 	->  factor_powers(N,A,v(1,[]),Pas),
-	    sum_powers(N,Bs,[v(1,[])],Pbs,[]),
+	    sum_powers(N, CLP, Bs, [v(1,[])], Pbs, []),
 	    combine_powers(Pas,Pbs,0,N,1,[],Power)
 	).
 
 combine_powers([],[],_,_,_,Pi,Pi).
 combine_powers([A|As],[B|Bs],L,R,C,Pi,Po) :-
-	nf_mul(A,B,Ab),
+	nf_mul(CLP, A, B, Ab),
 	nf_mul_k(Ab,C,Abc),
-	nf_add(Abc,Pi,Pii),
+	nf_add(Abc, CLP, Pi, Pii),
 	L1 is L+1,
 	R1 is R-1,
 	C1 is C*R//L1,
@@ -962,36 +928,36 @@ factor_powers(N,F,Prev,[[Prev]|Ps]) :-
 	N1 is N-1,
 	mult(Prev,F,Next),
 	factor_powers(N1,F,Next,Ps).
-sum_powers(0,_,Prev,[Prev|Lt],Lt) :- !.
-sum_powers(N,S,Prev,L0,Lt) :-
+sum_powers(0, _, _, Prev, [Prev|Lt], Lt) :- !.
+sum_powers(N, CLP, S, Prev, L0, Lt) :-
 	N1 is N-1,
-	nf_mul(S,Prev,Next),
-	sum_powers(N1,S,Next,L0,[Prev|Lt]).
+	nf_mul(CLP, S, Prev, Next),
+	sum_powers(N1, CLP, S, Next, L0, [Prev|Lt]).
 
 % ------------------------------------------------------------------------------
-repair(Sum,Norm) :-
+repair(CLP, Sum, Norm) :-
 	nf_length(Sum,0,Len),
-	repair_log(Len,Sum,[],Norm).
-repair_log(0,As,As,[]) :- !.
-repair_log(1,[v(Ka,Pa)|As],As,R) :-
+	repair_log(Len, CLP, Sum, [], Norm).
+repair_log(0, -, As, As, []) :- !.
+repair_log(1, CLP, [v(Ka,Pa)|As], As, R) :-
 	!,
-	repair_term(Ka,Pa,R).
-repair_log(2,[v(Ka,Pa),v(Kb,Pb)|As],As,R) :-
+	repair_term(CLP, Ka, Pa, R).
+repair_log(2, CLP, [v(Ka,Pa),v(Kb,Pb)|As], As, R) :-
 	!,
-	repair_term(Ka,Pa,Ar),
-	repair_term(Kb,Pb,Br),
-	nf_add(Ar,Br,R).
-repair_log(N,A0,A2,R) :-
+	repair_term(CLP, Ka, Pa, Ar),
+	repair_term(CLP, Kb, Pb, Br),
+	nf_add(Ar, CLP, Br, R).
+repair_log(N, CLP, A0, A2, R) :-
 	P is N>>1,
 	Q is N-P,
-	repair_log(P,A0,A1,Rp),
-	repair_log(Q,A1,A2,Rq),
-	nf_add(Rp,Rq,R).
+	repair_log(P, CLP, A0, A1, Rp),
+	repair_log(Q, CLP, A1, A2, Rq),
+	nf_add(Rp, CLP, Rq, R).
 
-repair_term(K,P,Norm) :-
+repair_term(CLP, K, P, Norm) :-
 	length(P,Len),
 	repair_p_log(Len,P,[],Pr,[v(1,[])],Sum),
-	nf_mul_factor(v(K,Pr),Sum,Norm).
+	nf_mul_factor(v(K,Pr), CLP, Sum, Norm).
 
 repair_p_log(0,Ps,Ps,[],L0,L0) :- !.
 repair_p_log(1,[X^P|Ps],Ps,R,L0,L1) :-
@@ -1012,84 +978,84 @@ repair_p_log(N,P0,P2,R,L0,L2) :-
 repair_p(Term,P,[Term^P],L0,L0) :- var(Term).
 repair_p(Term,P,[],L0,L1) :-
 	nonvar(Term),
-	repair_p_one(Term,TermN),
-	nf_power(P,TermN,TermNP),
-	nf_mul(TermNP,L0,L1).
+	repair_p_one(Term, CLP, TermN),
+	nf_power(CLP, P, TermN, TermNP),
+	nf_mul(CLP, TermNP, L0, L1).
 %
 % An undigested term a/b is distinguished from an
 % digested one by the fact that its arguments are
 % digested -> cuts after repair of args!
 %
-repair_p_one(Term,TermN) :-
-	nf_number(Term,TermN),	% freq. shortcut for nf/2 case below
+repair_p_one(Term, CLP, TermN) :-
+	nf_number(CLP,Term,TermN),	% freq. shortcut for nf/2 case below
 	!.
-repair_p_one(A1/A2,TermN) :-
-	repair(A1,A1n),
-	repair(A2,A2n),
+repair_p_one(A1/A2, CLP, TermN) :-
+	repair(CLP, A1, A1n),
+	repair(CLP, A2, A2n),
 	!,
 	nf_div(A2n,A1n,TermN).
-repair_p_one(Term,TermN) :-
+repair_p_one(Term, CLP, TermN) :-
 	nonlin_1(Term,Arg,Skel,Sa),
-	repair(Arg,An),
+	repair(CLP, Arg, An),
 	!,
 	nf_nonlin_1(Skel,An,Sa,TermN).
-repair_p_one(Term,TermN) :-
+repair_p_one(Term, CLP, TermN) :-
 	nonlin_2(Term,A1,A2,Skel,Sa1,Sa2),
-	repair(A1,A1n),
-	repair(A2,A2n),
+	repair(CLP, A1, A1n),
+	repair(CLP, A2, A2n),
 	!,
-	nf_nonlin_2(Skel,A1n,A2n,Sa1,Sa2,TermN).
-repair_p_one(Term,TermN) :-
-	nf(Term,TermN).
+	nf_nonlin_2(CLP,Skel,A1n,A2n,Sa1,Sa2,TermN).
+repair_p_one(Term, CLP, TermN) :-
+	nf(Term, CLP, TermN).
 
 nf_length([],Li,Li).
 nf_length([_|R],Li,Lo) :-
 	Lii is Li+1,
 	nf_length(R,Lii,Lo).
 % ------------------------------------------------------------------------------
-% nf2term(NF,Term)
+% nf2term(NF,CLP,Term)
 %
 % transforms a normal form into a readable term
 
 % empty normal form = 0
-nf2term([],0).
+nf2term([],_,0).
 % term is first element (+ next elements)
-nf2term([F|Fs],T) :-
-	f02t(F,T0),	% first element
-	yfx(Fs,T0,T).	% next elements
+nf2term([F|Fs],CLP,T) :-
+	f02t(F,CLP,T0),	% first element
+	yfx(Fs,CLP,T0,T).	% next elements
 
-yfx([],T0,T0).
-yfx([F|Fs],T0,TN) :-
-	fn2t(F,Ft,Op),
+yfx([],_,T0,T0).
+yfx([F|Fs],CLP,T0,TN) :-
+	fn2t(F,CLP,Ft,Op),
 	T1 =.. [Op,T0,Ft],
-	yfx(Fs,T1,TN).
+	yfx(Fs,CLP,T1,TN).
 
-% f02t(v(K,P),T)
+% f02t(v(K,P),CLP,T)
 %
 % transforms the first element of the normal form (something of the form v(K,P))
 % into a readable term
-f02t(v(K,P),T) :-
+f02t(v(K,P),CLP,T) :-
 	(   % just a constant
 	    P = []
 	->  T = K
-	;   compare_d(clpn, =, K, 1) % K =:= 1
-	->  p2term(P,T)
-	;   compare_d(clpn, =, K, -1) % K =:= -1
+	;   compare_d(CLP, =, K, 1) % K =:= 1
+	->  p2term(P,CLP,T)
+	;   compare_d(CLP, =, K, -1) % K =:= -1
 	->  T = -Pt,
-	    p2term(P,Pt)
+	    p2term(P,CLP,Pt)
 	;   T = K*Pt,
-	    p2term(P,Pt)
+	    p2term(P,CLP,Pt)
 	).
 
 % f02t(v(K,P),T,Op)
 %
 % transforms a next element of the normal form (something of the form v(K,P))
 % into a readable term
-fn2t(v(K,P),Term,Op) :-
-	(   compare_d(clpn, =, K, 1) % K =:= 1
+fn2t(v(K,P),CLP,Term,Op) :-
+	(   compare_d(CLP, =, K, 1) % K =:= 1
 	->  Term = Pt,
 	    Op = +
-	;   compare_d(clpn, =, K, -1) % K =:= -1
+	;   compare_d(CLP, =, K, -1) % K =:= -1
 	->  Term = Pt,
 	    Op = -
 	;   K < 0 % K < 0
@@ -1100,18 +1066,18 @@ fn2t(v(K,P),Term,Op) :-
 	    Term = K*Pt,
 	    Op = +
 	),
-	p2term(P,Pt).
+	p2term(P,CLP,Pt).
 
 % transforms the P part in v(_,P) into a readable term
-p2term([X^P|Xs],Term) :-
+p2term([X^P|Xs],CLP,Term) :-
 	(   Xs = []
-	->  pe2term(X,Xt),
+	->  pe2term(CLP,X,Xt),
 	    exp2term(P,Xt,Term)
 	;   Xs = [_|_]
 	->  Term = Xst*Xtp,
-	    pe2term(X,Xt),
+	    pe2term(CLP,X,Xt),
 	    exp2term(P,Xt,Xtp),
-	    p2term(Xs,Xst)
+	    p2term(Xs,CLP,Xst)
 	).
 
 %
@@ -1121,21 +1087,22 @@ exp2term(P,X,Term) :-
 	% Term = exp(X,Pn)
 	Term = X^P.
 
-pe2term(X,Term) :-
+pe2term(_,X,Term) :-
 	var(X),
 	Term = X.
-pe2term(X,Term) :-
+pe2term(CLP,X,Term) :-
 	nonvar(X),
 	X =.. [F|Args],
-	pe2term_args(Args,Argst),
+	pe2term_args(Args,CLP,Argst),
 	Term =.. [F|Argst].
 
-pe2term_args([],[]).
-pe2term_args([A|As],[T|Ts]) :-
-	nf2term(A,T),
-	pe2term_args(As,Ts).
+pe2term_args([],_,[]).
+pe2term_args([A|As],CLP,[T|Ts]) :-
+	nf2term(A,CLP,T),
+	pe2term_args(As,CLP,Ts).
 
-integerp(X,I) :-
+integerp(clpcdq,X,X) :- integer(X).
+integerp(clpn,X,I) :-
         I is round(X),
         compare_d(clpn, =, X, I).
 

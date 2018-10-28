@@ -46,11 +46,9 @@
 	    delete_factor/4,
 	    mult_linear_factor/3,
 	    nf_rhs_x/4,
-	    indep/2,
 	    isolate/3,
 	    nf_substitute/4,
 	    mult_hom/3,
-	    nf2sum/3,
 	    nf_coeff_of/3,
 	    renormalize/2	
 	]).
@@ -356,62 +354,3 @@ isolate(OrdN,Lin,Lin1) :-
 	delete_factor(OrdN,Lin,Lin0,Coeff),
 	K is -1 rdiv Coeff,
 	mult_linear_factor(Lin0,K,Lin1).
-
-:- multifile
-        clpcd_project:indep/3.
-
-clpcd_project:indep(clpcdq,Lin,OrdV) :- indep(Lin,OrdV).
-
-% indep(Lin,OrdX)
-%
-% succeeds if Lin = [0,_|[l(X*1,OrdX)]]
-
-indep(Lin,OrdX) :-
-	Lin = [I,_|[l(_*K,OrdY)]],
-	OrdX == OrdY,
-	% K =:= 1.0
-        compare_d(clpcdq, =, K, 1),
-	compare_d(clpcdq, =, I, 0).
-
-% nf2sum(Lin,Sofar,Term)
-%
-% Transforms a linear expression into a sum
-% (e.g. the expression [5,_,[l(X*2,OrdX),l(Y*-1,OrdY)]] gets transformed into 5 + 2*X - Y)
-
-nf2sum([],I,I).
-nf2sum([X|Xs],I,Sum) :-
-	(   I =:= 0
-	->  X = l(Var*K,_),
- 	    (   % K =:= 1
-                compare_d(clpcdq, =, K, 1)
-	    ->  hom2sum(Xs,Var,Sum)
-	    ;   % K =:= -1
-                compare_d(clpcdq, =, K, -1)
-	    ->  hom2sum(Xs,-Var,Sum)
-	    ;	hom2sum(Xs,K*Var,Sum)
-	    )
-	;   hom2sum([X|Xs],I,Sum)
- 	).
-
-% hom2sum(Hom,Sofar,Term)
-%
-% Transforms a linear expression into a sum
-% this predicate handles all but the first term
-% (the first term does not need a concatenation symbol + or -)
-% see also nf2sum/3
-
-hom2sum([],Term,Term).
-hom2sum([l(Var*K,_)|Cs],Sofar,Term) :-
-	(   % K =:= 1
-            compare_d(clpcdq, =, K, 1)
-	->  Next = Sofar + Var
-	;   % K =:= -1
-            compare_d(clpcdq, =, K, -1)
-	->  Next = Sofar - Var
-	;   % K < 0
-            compare_d(clpcdq, <, K, 0)
-	->  Ka is -K,
-	    Next = Sofar - Ka*Var
-	;   Next = Sofar + K*Var
-	),
-	hom2sum(Cs,Next,Term).

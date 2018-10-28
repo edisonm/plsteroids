@@ -43,14 +43,6 @@
 	[
 	    fm_elim/3
 	]).
-:- use_module(bv_n,
-	[
-	    allvars/2,
-	    basis_add/2,
-	    detach_bounds/1,
-	    pivot/5,	
-	    var_with_def_intern/4
-	]).
 :- use_module(library(clpcd/class),
 	[
 	    class_allvars/2
@@ -69,7 +61,6 @@
 	[
 	    add_linear_11/3,
 	    add_linear_f1/4,
-	    indep/2,
 	    nf_coeff_of/3,
 	    normalize_scalar/2
 	]).

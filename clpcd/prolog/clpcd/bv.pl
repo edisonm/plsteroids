@@ -1,6 +1,6 @@
-/*  $Id$
+/*
 
-    Part of CLP(R) (Constraint Logic Programming over Reals)
+    Part of CLP(Q) (Constraint Logic Programming over Rationals)
 
     Author:        Leslie De Koninck
     E-mail:        Leslie.DeKoninck@cs.kuleuven.be
@@ -37,95 +37,52 @@
     the GNU General Public License.
 */
 
-:- module(bv_n,
+:- module(clpcd_bv,
 	[
 	    allvars/2,
 	    backsubst/3,
 	    backsubst_delta/4,
 	    basis_add/2,
 	    dec_step/2,
-	    deref/2,
-	    deref_var/2,
-	    detach_bounds/1,
-	    detach_bounds_vlv/5,
+	    deref/3,
+	    deref_var/3,
+	    detach_bounds/2,
+	    detach_bounds_vlv/6,
 	    determine_active_dec/1,
 	    determine_active_inc/1,
-	    dump_var/6,
-	    dump_nz/5,
 	    export_binding/1,
-	    get_or_add_class/2,
 	    inc_step/2,
 	    intro_at/3,
 	    iterate_dec/2,
-	    lb/3,
-	    pivot_a/4,
-	    pivot/5,
-	    rcbl_status/6,
-	    reconsider/1,
+	    lb/4,
+	    pivot_a/5,
+	    pivot/6,
+	    rcbl_status/7,
+	    reconsider/2,
 	    same_class/2,
-	    solve/1,
-	    solve_ord_x/3,
-	    ub/3,
+	    solve/2,
+	    solve_ord_x/4,
+	    ub/4,
 	    unconstrained/4,
-	    var_intern/2,
-	    var_intern/3,
-	    var_with_def_assign/2,
-	    var_with_def_intern/4,
-	    maximize/1,
-	    minimize/1,
-	    sup/2,
-	    sup/4,
-	    inf/2,
-	    inf/4,
-	    'solve_='/1,
-	    'solve_<'/1,
-	    'solve_=<'/1,
-	    'solve_=\\='/1,
-	    log_deref/4
+	    var_with_def_assign/3,
+	    var_with_def_intern/5,
+	    maximize/2,
+	    minimize/2,
+	    sup/3,
+	    sup/5,
+	    inf/3,
+	    inf/5,
+	    'solve_='/2,
+	    'solve_<'/2,
+	    'solve_=<'/2,
+	    'solve_=\\='/2,
+	    log_deref/5
 	]).
-:- use_module(store_n,
-	[
-	    add_linear_11/3,
-	    add_linear_f1/4,
-	    add_linear_ff/5,
-	    delete_factor/4,
-	    indep/2,
-	    isolate/3,
-	    nf2sum/3,
-	    nf_rhs_x/4,
-	    nf_substitute/4,
-	    normalize_scalar/2,
-	    mult_hom/3,
-	    mult_linear_factor/3
-	]).
-:- use_module(library(clpcd/class),
-	[
-	    class_allvars/2,
-	    class_basis/2,
-	    class_basis_add/3,
-	    class_basis_drop/2,
-	    class_basis_pivot/3,
-	    class_new/5
-	]).
-:- use_module(ineq_n,
-	[
-	    ineq/4
-	]).
-:- use_module(nf_n,
-	[
-	    {}/1,
-	    split/3,
-	    wait_linear/3
-	]).
-:- use_module(bb_n,
-	[
-	    vertex_value/2
-	]).
-:- use_module(library(ordsets),
-	[
-	    ord_add_element/3
-	]).
+
+:- use_module(library(clpcd/class)).
+:- use_module(library(ordsets)).
 :- use_module(library(clpcd/compare)).
+:- use_module(library(clpcd/ordering)).
 
 % For the rhs maint. the following events are important:
 %
@@ -149,55 +106,55 @@
 % ----------------------------------- deref -----------------------------------
 %
 
-% deref(Lin,Lind)
+% deref(CLP,Lin,Lind)
 %
 % Makes a linear equation of the form [v(I,[])|H] into a solvable linear
 % equation.
 % If the variables are new, they are initialized with the linear equation X=X.
 
-deref(Lin,Lind) :-
+deref(CLP,Lin,Lind) :-
 	split(Lin,H,I),
 	normalize_scalar(I,Nonvar),
 	length(H,Len),
-	log_deref(Len,H,[],Restd),
+	log_deref(Len,CLP,H,[],Restd),
 	add_linear_11(Nonvar,Restd,Lind).
 
-% log_deref(Len,[Vs|VsTail],VsTail,Res)
+% log_deref(Len,CLP,[Vs|VsTail],VsTail,Res)
 %
 % Logarithmically converts a linear equation in normal form ([v(_,_)|_]) into a
 % linear equation in solver form ([I,R,K*X|_]). Res contains the result, Len is
 % the length of the part to convert and [Vs|VsTail] is a difference list
 % containing the equation in normal form.
 
-log_deref(0,Vs,Vs,Lin) :-
+log_deref(0,_,Vs,Vs,Lin) :-
 	!,
 	Lin = [0,0].
-log_deref(1,[v(K,[X^1])|Vs],Vs,Lin) :-
+log_deref(1,C,[v(K,[X^1])|Vs],Vs,Lin) :-
 	!,
-	deref_var(X,Lx),
+	deref_var(C,X,Lx),
 	mult_linear_factor(Lx,K,Lin).
-log_deref(2,[v(Kx,[X^1]),v(Ky,[Y^1])|Vs],Vs,Lin) :-
+log_deref(2,C,[v(Kx,[X^1]),v(Ky,[Y^1])|Vs],Vs,Lin) :-
 	!,
-	deref_var(X,Lx),
-	deref_var(Y,Ly),
+	deref_var(C,X,Lx),
+	deref_var(C,Y,Ly),
 	add_linear_ff(Lx,Kx,Ly,Ky,Lin).
-log_deref(N,V0,V2,Lin) :-
+log_deref(N,C,V0,V2,Lin) :-
 	P is N >> 1,
 	Q is N - P,
-	log_deref(P,V0,V1,Lp),
-	log_deref(Q,V1,V2,Lq),
+	log_deref(P,C,V0,V1,Lp),
+	log_deref(Q,C,V1,V2,Lq),
 	add_linear_11(Lp,Lq,Lin).
 
-% deref_var(X,Lin)
+% deref_var(CLP,X,Lin)
 %
 % Returns the equation of variable X. If X is a new variable, a new equation
 % X = X is made.
 
-deref_var(X,Lin) :-
+deref_var(CLP,X,Lin) :-
 	(   get_attr(X,clpcd_itf,Att)
-	->  (   \+ arg(1,Att,clpn)
-	    ->  throw(error(permission_error('mix CLP(N) variables with',
-		'CLP(QR) variables:',X),context(_)))
+	->  (   \+ arg(1,Att,CLP)
+	    ->  throw(error(permission_error('mix CLPCD variables of',
+		'different domains:',X),context(_)))
 	    ;   arg(4,Att,lin(Lin))
 	    ->  true
 	    ;   setarg(2,Att,type(t_none)),
@@ -207,7 +164,7 @@ deref_var(X,Lin) :-
 		setarg(5,Att,order(Ord))
 	    )
 	;   Lin = [0,0,l(X*1,Ord)],
-	    put_attr(X,clpcd_itf,t(clpn,type(t_none),strictness(0),
+	    put_attr(X,clpcd_itf,t(CLP,type(t_none),strictness(0),
 		lin(Lin),order(Ord),n,n,n,n,n,n))
 	).
 
@@ -215,64 +172,34 @@ deref_var(X,Lin) :-
 %
 %
 
-var_with_def_assign(Var,Lin) :-
+var_with_def_assign(CLP,Var,Lin) :-
 	Lin = [I,_|Hom],
 	(   Hom = []
 	->  % X=k
 	    Var = I
 	;   Hom = [l(V*K,_)|Cs]
 	->  (   Cs = [],
-		compare_d(clpn, =, K, 1),	% K =:= 1
-		compare_d(clpn, =, 0, I)
+		compare_d(CLP, =, K, 1),	% K =:= 1
+		compare_d(CLP, =, 0, I)
 	    ->	% X=Y
 		Var = V
 	    ;	% general case
-		var_with_def_intern(t_none,Var,Lin,0)
+		var_with_def_intern(t_none,CLP,Var,Lin,0)
 	    )
 	).
 
-% var_with_def_intern(Type,Var,Lin,Strictness)
+% var_with_def_intern(Type,CLP,Var,Lin,Strictness)
 %
 % Makes Lin the linear equation of new variable Var, makes all variables of
 % Lin, and Var of the same class and bounds Var by type(Type) and
 % strictness(Strictness)
 
-var_with_def_intern(Type,Var,Lin,Strict) :-
-	put_attr(Var,clpcd_itf,t(clpn,type(Type),strictness(Strict),lin(Lin),
+var_with_def_intern(Type,CLP,Var,Lin,Strict) :-
+	put_attr(Var,clpcd_itf,t(CLP,type(Type),strictness(Strict),lin(Lin),
 	    order(_),n,n,n,n,n,n)),	% check uses
 	Lin = [_,_|Hom],
 	get_or_add_class(Var,Class),
 	same_class(Hom,Class).
-
-:- multifile
-        clpcd_ordering:var_intern/3.
-
-clpcd_ordering:var_intern(clpn, X, Class) :-
-        var_intern(X, Class).
-
-% TODO
-%
-%
-
-var_intern(Type,Var,Strict) :-
-	put_attr(Var,clpcd_itf,t(clpn,type(Type),strictness(Strict),
-	    lin([0,0,l(Var*1,Ord)]),order(Ord),n,n,n,n,n,n)),
-	get_or_add_class(Var,_Class).
-
-% TODO
-%
-%
-
-var_intern(Var,Class) :-	% for ordered/1 but otherwise free vars
-	get_attr(Var,clpcd_itf,Att),
-	arg(2,Att,type(_)),
-	arg(4,Att,lin(_)),
-	!,
-	get_or_add_class(Var,Class).
-var_intern(Var,Class) :-
-	put_attr(Var,clpcd_itf,t(clpn,type(t_none),strictness(0),
-	    lin([0,0,l(Var*1,Ord)]),order(Ord),n,n,n,n,n,n)),
-	get_or_add_class(Var,Class).
 
 % -----------------------------------------------------------------------------
 
@@ -285,25 +212,25 @@ export_binding([X-Y|Gs]) :-
 	Y = X,
 	export_binding(Gs).
 
-% 'solve_='(Nf)
+% 'solve_='(CLP,Nf)
 %
 % Solves linear equation Nf = 0 where Nf is in normal form.
 
-'solve_='(Nf) :- % Note: not used, but preserved for documentation
-	deref(Nf,Nfd),	% dereferences and turns Nf into solvable form Nfd
-	solve(Nfd).
+'solve_='(CLP,Nf) :-
+	deref(CLP,Nf,Nfd),	% dereferences and turns Nf into solvable form Nfd
+	solve(CLP,Nfd).
 
-% 'solve_=\\='(Nf)
+% 'solve_=\\='(CLP,Nf)
 %
 % Solves linear inequality Nf =\= 0 where Nf is in normal form.
 
-'solve_=\\='(Nf) :-
-	deref(Nf,Lind),	% dereferences and turns Nf into solvable form Lind
+'solve_=\\='(CLP,Nf) :-
+	deref(CLP,Nf,Lind),	% dereferences and turns Nf into solvable form Lind
 	Lind = [Inhom,_|Hom],
 	(   Hom = []
 	->  compare_d(clpn, \=, 0, Inhom)
 	;   % make new variable Nz = Lind
-	    var_with_def_intern(t_none,Nz,Lind,0),
+	    var_with_def_intern(t_none,CLP,Nz,Lind,0),
 	    % make Nz nonzero
 	    get_attr(Nz,clpcd_itf,Att),
 	    setarg(8,Att,nonzero)
@@ -313,20 +240,20 @@ export_binding([X-Y|Gs]) :-
 %
 % Solves linear inequality Nf < 0 where Nf is in normal form.
 
-'solve_<'(Nf) :-
+'solve_<'(CLP, Nf) :-
 	split(Nf,H,I),
-	ineq(H,I,Nf,strict).
+	ineq(H, CLP, I, Nf, strict).
 
 % 'solve_=<'(Nf)
 %
 % Solves linear inequality Nf =< 0 where Nf is in normal form.
 
-'solve_=<'(Nf) :-
+'solve_=<'(CLP, Nf) :-
 	split(Nf,H,I),
-	ineq(H,I,Nf,nonstrict).
+	ineq(H, CLP, I, Nf, nonstrict).
 
-maximize(Term) :-
-	minimize(-Term).
+maximize(CLP, Term) :-
+	minimize(CLP, -Term).
 
 %
 % This is NOT coded as minimize(Expr) :- inf(Expr,Expr).
@@ -353,63 +280,63 @@ maximize(Term) :-
 % outperforms the provided formulation for minimize - so be it.
 % Both forms are available to the user.
 %
-minimize(Term) :-
-	wait_linear(Term,Nf,minimize_lin(Nf)).
+minimize(CLP,Term) :-
+	wait_linear(Term,Nf,minimize_lin(CLP,Nf)).
 
-% minimize_lin(Lin)
+% minimize_lin(CLP,Lin)
 %
 % Minimizes the linear expression Lin. It does so by making a new
 % variable Dep and minimizes its value.
 
-minimize_lin(Lin) :-
-	deref(Lin,Lind),
-	var_with_def_intern(t_none,Dep,Lind,0),
+minimize_lin(CLP,Lin) :-
+	deref(CLP,Lin,Lind),
+	var_with_def_intern(t_none,CLP,Dep,Lind,0),
 	determine_active_dec(Lind),
 	iterate_dec(Dep,Inf),
 	{ Dep =:= Inf }.
 
-sup(Expression,Sup) :-
-	sup(Expression,Sup,[],[]).
+sup(CLP,Expression,Sup) :-
+	sup(CLP,Expression,Sup,[],[]).
 
-sup(Expression,Sup,Vector,Vertex) :-
-	inf(-Expression,-Sup,Vector,Vertex).
+sup(CLP,Expression,Sup,Vector,Vertex) :-
+	inf(CLP,-Expression,-Sup,Vector,Vertex).
 
-inf(Expression,Inf) :-
-	inf(Expression,Inf,[],[]).
+inf(CLP,Expression,Inf) :-
+	inf(CLP,Expression,Inf,[],[]).
 
-inf(Expression,Inf,Vector,Vertex) :-
+inf(CLP,Expression,Inf,Vector,Vertex) :-
 	% wait until Expression becomes linear, Nf contains linear Expression
 	% in normal form
-	wait_linear(Expression,Nf,inf_lin(Nf,Inf,Vector,Vertex)).
+	wait_linear(Expression,Nf,inf_lin(CLP,Nf,Inf,Vector,Vertex)).
 
-inf_lin(Lin,_,Vector,_) :-
-	deref(Lin,Lind),
-	var_with_def_intern(t_none,Dep,Lind,0),	% make new variable Dep = Lind
+inf_lin(CLP, Lin,_,Vector,_) :-
+	deref(CLP,Lin,Lind),
+	var_with_def_intern(t_none,CLP,Dep,Lind,0),	% make new variable Dep = Lind
 	determine_active_dec(Lind),	% minimizes Lind
 	iterate_dec(Dep,Inf),
 	vertex_value(Vector,Values),
 	nb_setval(inf,[Inf|Values]),
 	fail.
-inf_lin(_,Infimum,_,Vertex) :-
-	catch(nb_getval(inf,L),_,fail),
+inf_lin(CLP, _,Infimum,_,Vertex) :-
+	nb_current(inf,L),
 	nb_delete(inf),
-	assign([Infimum|Vertex],L).
+	assign([Infimum|Vertex],CLP,L).
 
-% assign(L1,L2)
+% assign(L1,CLP,L2)
 %
 % The elements of L1 are pairwise assigned to the elements of L2
 % by means of asserting {X =:= Y} where X is an element of L1 and Y
 % is the corresponding element of L2.
 
-assign([],[]).
-assign([X|Xs],[Y|Ys]) :-
-	{X =:= Y},		  % more defensive/expressive than X=Y
-	assign(Xs,Ys).
+assign([],_,[]).
+assign([X|Xs],CLP,[Y|Ys]) :-
+	CLP:{X =:= Y},		  % more defensive/expressive than X=Y
+	assign(Xs,CLP,Ys).
 
 % --------------------------------- optimization ------------------------------
 %
 % The _sn(S) =< 0 row might be temporarily infeasible.
-% We use reconsider/1 to fix this.
+% We use reconsider/2 to fix this.
 %
 %   s(S) e [_,0] = d +xi ... -xj, Rhs > 0 so we want to decrease s(S)
 %
@@ -451,14 +378,14 @@ iterate_dec(OptVar,Opt) :-
 %
 
 
-dec_step_cont([],optimum,Cont,Cont).
-dec_step_cont([l(V*K,OrdV)|Vs],Status,ContIn,ContOut) :-
+dec_step_cont([],_,optimum,Cont,Cont).
+dec_step_cont([l(V*K,OrdV)|Vs],CLP,Status,ContIn,ContOut) :-
 	get_attr(V,clpcd_itf,Att),
 	arg(2,Att,type(W)),
 	arg(6,Att,class(Class)),
-	(   dec_step_2_cont(W,l(V*K,OrdV),Class,Status,ContIn,ContOut)
+	(   dec_step_2_cont(W,CLP,l(V*K,OrdV),Class,Status,ContIn,ContOut)
 	->  true
-	;   dec_step_cont(Vs,Status,ContIn,ContOut)
+	;   dec_step_cont(Vs,CLP,Status,ContIn,ContOut)
 	).
 
 inc_step_cont([],optimum,Cont,Cont).
@@ -471,76 +398,76 @@ inc_step_cont([l(V*K,OrdV)|Vs],Status,ContIn,ContOut) :-
 	;   inc_step_cont(Vs,Status,ContIn,ContOut)
 	).
 
-dec_step_2_cont(t_U(U),l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
+dec_step_2_cont(t_U(U),CLP,l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
 	K > 0,
-	(   lb(Class,OrdV,Vub-Vb-_)
+	(   lb(Class,CLP,OrdV,Vub-Vb-_)
 	->  % found a lower bound
 	    Status = applied,
-	    pivot_a(Vub,V,Vb,t_u(U)),
+	    pivot_a(CLP,Vub,V,Vb,t_u(U)),
 	    replace_in_cont(ContIn,Vub,V,ContOut)
 	;   Status = unlimited(V,t_u(U)),
 	    ContIn = ContOut
 	).
-dec_step_2_cont(t_lU(L,U),l(V*K,OrdV),Class,applied,ContIn,ContOut) :-
+dec_step_2_cont(t_lU(L,U),CLP,l(V*K,OrdV),Class,applied,ContIn,ContOut) :-
 	K > 0,
 	Init is L - U,
 	class_basis(Class,Deps),
-	lb(Deps,OrdV,V-t_Lu(L,U)-Init,Vub-Vb-_),
-	pivot_b(Vub,V,Vb,t_lu(L,U)),
+	lb(Deps,CLP,OrdV,V-t_Lu(L,U)-Init,Vub-Vb-_),
+	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)),
 	replace_in_cont(ContIn,Vub,V,ContOut).
-dec_step_2_cont(t_L(L),l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
+dec_step_2_cont(t_L(L),CLP,l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
 	K < 0,
-	(   ub(Class,OrdV,Vub-Vb-_)
+	(   ub(Class,CLP,OrdV,Vub-Vb-_)
 	->  Status = applied,
-	    pivot_a(Vub,V,Vb,t_l(L)),
+	    pivot_a(CLP,Vub,V,Vb,t_l(L)),
 	    replace_in_cont(ContIn,Vub,V,ContOut)
 	;   Status = unlimited(V,t_l(L)),
 	    ContIn = ContOut
 	).
-dec_step_2_cont(t_Lu(L,U),l(V*K,OrdV),Class,applied,ContIn,ContOut) :-
+dec_step_2_cont(t_Lu(L,U),CLP,l(V*K,OrdV),Class,applied,ContIn,ContOut) :-
 	K < 0,
 	Init is U - L,
 	class_basis(Class,Deps),
-	ub(Deps,OrdV,V-t_lU(L,U)-Init,Vub-Vb-_),
-	pivot_b(Vub,V,Vb,t_lu(L,U)),
+	ub(Deps,CLP,OrdV,V-t_lU(L,U)-Init,Vub-Vb-_),
+	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)),
 	replace_in_cont(ContIn,Vub,V,ContOut).
-dec_step_2_cont(t_none,l(V*_,_),_,unlimited(V,t_none),Cont,Cont).
+dec_step_2_cont(t_none,_,l(V*_,_),_,unlimited(V,t_none),Cont,Cont).
 
 
 
-inc_step_2_cont(t_U(U),l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
+inc_step_2_cont(t_U(U),CLP,l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
 	K < 0,
-	(   lb(Class,OrdV,Vub-Vb-_)
+	(   lb(Class,CLP,OrdV,Vub-Vb-_)
 	->  Status = applied,
-	    pivot_a(Vub,V,Vb,t_u(U)),
+	    pivot_a(CLP,Vub,V,Vb,t_u(U)),
 	    replace_in_cont(ContIn,Vub,V,ContOut)
 	;   Status = unlimited(V,t_u(U)),
 	    ContIn = ContOut
 	).
-inc_step_2_cont(t_lU(L,U),l(V*K,OrdV),Class,applied,ContIn,ContOut) :-
+inc_step_2_cont(t_lU(L,U),CLP,l(V*K,OrdV),Class,applied,ContIn,ContOut) :-
 	K < 0,
 	Init is L - U,
 	class_basis(Class,Deps),
-	lb(Deps,OrdV,V-t_Lu(L,U)-Init,Vub-Vb-_),
-	pivot_b(Vub,V,Vb,t_lu(L,U)),
+	lb(Deps,CLP,OrdV,V-t_Lu(L,U)-Init,Vub-Vb-_),
+	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)),
 	replace_in_cont(ContIn,Vub,V,ContOut).
-inc_step_2_cont(t_L(L),l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
+inc_step_2_cont(t_L(L),CLP,l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
 	K > 0,
-	(   ub(Class,OrdV,Vub-Vb-_)
+	(   ub(Class,CLP,OrdV,Vub-Vb-_)
 	->  Status = applied,
-	    pivot_a(Vub,V,Vb,t_l(L)),
+	    pivot_a(CLP,Vub,V,Vb,t_l(L)),
 	    replace_in_cont(ContIn,Vub,V,ContOut)
 	;   Status = unlimited(V,t_l(L)),
 	    ContIn = ContOut
 	).
-inc_step_2_cont(t_Lu(L,U),l(V*K,OrdV),Class,applied,ContIn,ContOut) :-
+inc_step_2_cont(t_Lu(L,U),CLP,l(V*K,OrdV),Class,applied,ContIn,ContOut) :-
 	K > 0,
 	Init is U - L,
 	class_basis(Class,Deps),
-	ub(Deps,OrdV,V-t_lU(L,U)-Init,Vub-Vb-_),
-	pivot_b(Vub,V,Vb,t_lu(L,U)),
+	ub(Deps,CLP,OrdV,V-t_lU(L,U)-Init,Vub-Vb-_),
+	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)),
 	replace_in_cont(ContIn,Vub,V,ContOut).
-inc_step_2_cont(t_none,l(V*_,_),_,unlimited(V,t_none),Cont,Cont).
+inc_step_2_cont(t_none,_,l(V*_,_),_,unlimited(V,t_none),Cont,Cont).
 
 replace_in_cont([],_,_,[]).
 replace_in_cont([H1|T1],X,Y,[H2|T2]) :-
@@ -561,34 +488,34 @@ dec_step([l(V*K,OrdV)|Vs],Status) :-
 	;   dec_step(Vs,Status)
 	).
 
-dec_step_2(t_U(U),l(V*K,OrdV),Class,Status) :-
+dec_step_2(t_U(U),CLP,l(V*K,OrdV),Class,Status) :-
 	K > 0,
-	(   lb(Class,OrdV,Vub-Vb-_)
+	(   lb(Class,CLP,OrdV,Vub-Vb-_)
 	->  % found a lower bound
 	    Status = applied,
-	    pivot_a(Vub,V,Vb,t_u(U))
+	    pivot_a(CLP,Vub,V,Vb,t_u(U))
 	;   Status = unlimited(V,t_u(U))
 	).
-dec_step_2(t_lU(L,U),l(V*K,OrdV),Class,applied) :-
+dec_step_2(t_lU(L,U),CLP,l(V*K,OrdV),Class,applied) :-
 	K > 0,
 	Init is L - U,
 	class_basis(Class,Deps),
-	lb(Deps,OrdV,V-t_Lu(L,U)-Init,Vub-Vb-_),
-	pivot_b(Vub,V,Vb,t_lu(L,U)).
-dec_step_2(t_L(L),l(V*K,OrdV),Class,Status) :-
+	lb(Deps,CLP,OrdV,V-t_Lu(L,U)-Init,Vub-Vb-_),
+	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)).
+dec_step_2(t_L(L),CLP,l(V*K,OrdV),Class,Status) :-
 	K < 0,
-	(   ub(Class,OrdV,Vub-Vb-_)
+	(   ub(Class,CLP,OrdV,Vub-Vb-_)
 	->  Status = applied,
-	    pivot_a(Vub,V,Vb,t_l(L))
+	    pivot_a(CLP,Vub,V,Vb,t_l(L))
 	;   Status = unlimited(V,t_l(L))
 	).
-dec_step_2(t_Lu(L,U),l(V*K,OrdV),Class,applied) :-
+dec_step_2(t_Lu(L,U),CLP,l(V*K,OrdV),Class,applied) :-
 	K < 0,
 	Init is U - L,
 	class_basis(Class,Deps),
-	ub(Deps,OrdV,V-t_lU(L,U)-Init,Vub-Vb-_),
-	pivot_b(Vub,V,Vb,t_lu(L,U)).
-dec_step_2(t_none,l(V*_,_),_,unlimited(V,t_none)).
+	ub(Deps,CLP,OrdV,V-t_lU(L,U)-Init,Vub-Vb-_),
+	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)).
+dec_step_2(t_none,_,l(V*_,_),_,unlimited(V,t_none)).
 
 inc_step([],optimum).	% if status has not been set yet: no changes
 inc_step([l(V*K,OrdV)|Vs],Status) :-
@@ -600,33 +527,33 @@ inc_step([l(V*K,OrdV)|Vs],Status) :-
 	;   inc_step(Vs,Status)
 	).
 
-inc_step_2(t_U(U),l(V*K,OrdV),Class,Status) :-
+inc_step_2(t_U(U),CLP,l(V*K,OrdV),Class,Status) :-
 	K < 0,
-	(   lb(Class,OrdV,Vub-Vb-_)
+	(   lb(Class,CLP,OrdV,Vub-Vb-_)
 	->  Status = applied,
-	    pivot_a(Vub,V,Vb,t_u(U))
+	    pivot_a(CLP,Vub,V,Vb,t_u(U))
 	;   Status = unlimited(V,t_u(U))
 	).
-inc_step_2(t_lU(L,U),l(V*K,OrdV),Class,applied) :-
+inc_step_2(t_lU(L,U),CLP,l(V*K,OrdV),Class,applied) :-
 	K < 0,
 	Init is L - U,
 	class_basis(Class,Deps),
-	lb(Deps,OrdV,V-t_Lu(L,U)-Init,Vub-Vb-_),
-	pivot_b(Vub,V,Vb,t_lu(L,U)).
-inc_step_2(t_L(L),l(V*K,OrdV),Class,Status) :-
+	lb(Deps,CLP,OrdV,V-t_Lu(L,U)-Init,Vub-Vb-_),
+	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)).
+inc_step_2(t_L(L),CLP,l(V*K,OrdV),Class,Status) :-
 	K > 0,
-	(   ub(Class,OrdV,Vub-Vb-_)
+	(   ub(Class,CLP,OrdV,Vub-Vb-_)
 	->  Status = applied,
-	    pivot_a(Vub,V,Vb,t_l(L))
+	    pivot_a(CLP,Vub,V,Vb,t_l(L))
 	;   Status = unlimited(V,t_l(L))
 	).
-inc_step_2(t_Lu(L,U),l(V*K,OrdV),Class,applied) :-
+inc_step_2(t_Lu(L,U),CLP,l(V*K,OrdV),Class,applied) :-
 	K > 0,
 	Init is U - L,
 	class_basis(Class,Deps),
-	ub(Deps,OrdV,V-t_lU(L,U)-Init,Vub-Vb-_),
-	pivot_b(Vub,V,Vb,t_lu(L,U)).
-inc_step_2(t_none,l(V*_,_),_,unlimited(V,t_none)).
+	ub(Deps,CLP,OrdV,V-t_lU(L,U)-Init,Vub-Vb-_),
+	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)).
+inc_step_2(t_none,_,l(V*_,_),_,unlimited(V,t_none)).
 
 % ------------------------- find the most constraining row --------------------
 %
@@ -641,13 +568,13 @@ inc_step_2(t_none,l(V*_,_),_,unlimited(V,t_none)).
 % Nota bene: We must NOT consider infeasible rows as candidates to
 %	     leave the basis!
 %
-% ub(Class,OrdX,Ub)
+% ub(Class,CLP,OrdX,Ub)
 %
-% See lb/3: this is similar
+% See lb/4: this is similar
 
-ub(Class,OrdX,Ub) :-
+ub(Class,CLP,OrdX,Ub) :-
 	class_basis(Class,Deps),
-	ub_first(Deps,OrdX,Ub).
+	ub_first(Deps,CLP,OrdX,Ub).
 
 % ub_first(Deps,X,Dep-W-Ub)
 %
@@ -656,54 +583,54 @@ ub(Class,OrdX,Ub) :-
 % variable that generates the bound, and W is bound of that variable that has
 % to be activated to achieve this.
 
-ub_first([Dep|Deps],OrdX,Tightest) :-
+ub_first([Dep|Deps],CLP,OrdX,Tightest) :-
 	(   get_attr(Dep,clpcd_itf,Att),
 	    arg(2,Att,type(Type)),
 	    arg(4,Att,lin(Lin)),
-	    ub_inner(Type,OrdX,Lin,W,Ub),
+	    ub_inner(Type,CLP,OrdX,Lin,W,Ub),
 	    Ub >= 0
-	->  ub(Deps,OrdX,Dep-W-Ub,Tightest)
-	;   ub_first(Deps,OrdX,Tightest)
+	->  ub(Deps,CLP,OrdX,Dep-W-Ub,Tightest)
+	;   ub_first(Deps,CLP,OrdX,Tightest)
 	).
 
 % ub(Deps,OrdX,TightestIn,TightestOut)
 %
-% See lb/4: this is similar
+% See lb/5: this is similar
 
-ub([],_,T0,T0).
-ub([Dep|Deps],OrdX,T0,T1) :-
+ub([],_,_,T0,T0).
+ub([Dep|Deps],CLP,OrdX,T0,T1) :-
 	(   get_attr(Dep,clpcd_itf,Att),
 	    arg(2,Att,type(Type)),
 	    arg(4,Att,lin(Lin)),
-	    ub_inner(Type,OrdX,Lin,W,Ub),
+	    ub_inner(Type,CLP,OrdX,Lin,W,Ub),
 	    T0 = _-Ubb,
-            compare_d(clpn, <, Ub, Ubb),
-            Ub >= 0
-	->  ub(Deps,OrdX,Dep-W-Ub,T1)	% tighter bound, use new bound
-	;   ub(Deps,OrdX,T0,T1)	% no tighter bound, keep current one
+            compare_d(CLP, <, Ub, Ubb),
+	    Ub >= 0
+	->  ub(Deps,CLP,OrdX,Dep-W-Ub,T1)	% tighter bound, use new bound
+	;   ub(Deps,CLP,OrdX,T0,T1)	% no tighter bound, keep current one
 	).
 
-% ub_inner(Type,OrdX,Lin,W,Ub)
+% ub_inner(Type,CLP,OrdX,Lin,W,Ub)
 %
-% See lb_inner/5: this is similar
+% See lb_inner/6: this is similar
 
-ub_inner(t_l(L),OrdX,Lin,t_L(L),Ub) :-
+ub_inner(t_l(L),CLP,OrdX,Lin,t_L(L),Ub) :-
 	nf_rhs_x(Lin,OrdX,Rhs,K),
 	% Rhs is right hand side of lin. eq. Lin containing term X*K
 	K < 0,
-	Ub is (L-Rhs)/K.
-ub_inner(t_u(U),OrdX,Lin,t_U(U),Ub) :-
+        div_d(CLP, L - Rhs, K, Ub).
+ub_inner(t_u(U),CLP,OrdX,Lin,t_U(U),Ub) :-
 	nf_rhs_x(Lin,OrdX,Rhs,K),
 	K > 0,
-	Ub is (U-Rhs)/K.
-ub_inner(t_lu(L,U),OrdX,Lin,W,Ub) :-
+        div_d(CLP, U - Rhs, K, Ub).
+ub_inner(t_lu(L,U),CLP,OrdX,Lin,W,Ub) :-
 	nf_rhs_x(Lin,OrdX,Rhs,K),
-	(   K < 0
+	(   K < 0 % use lowerbound
 	->  W = t_Lu(L,U),
-	    Ub = (L-Rhs)/K
-	;   K > 0
+	    div_d(CLP, L - Rhs, K, Ub)
+	;   K > 0 % use upperbound
 	->  W = t_lU(L,U),
-	    Ub = (U-Rhs)/K
+	    div_d(CLP, U - Rhs, K, Ub)
 	).
 
 % lb(Class,OrdX,Lb)
@@ -715,11 +642,11 @@ ub_inner(t_lu(L,U),OrdX,Lin,W,Ub) :-
 % and Lb the amount that the upperbound can be lowered.
 % X has ordering OrdX and class Class.
 
-lb(Class,OrdX,Lb) :-
+lb(Class,CLP,OrdX,Lb) :-
 	class_basis(Class,Deps),
-	lb_first(Deps,OrdX,Lb).
+	lb_first(Deps,CLP,OrdX,Lb).
 
-% lb_first(Deps,OrdX,Tightest)
+% lb_first(Deps,CLP,OrdX,Tightest)
 %
 % Returns in Tightest how much we can lower the upperbound of X without
 % violating a bound of Deps.
@@ -728,36 +655,36 @@ lb(Class,OrdX,Lb) :-
 % activated and Lb the amount that the upperbound can be lowered. X has
 % ordering attribute OrdX.
 
-lb_first([Dep|Deps],OrdX,Tightest) :-
+lb_first([Dep|Deps],CLP,OrdX,Tightest) :-
 	(   get_attr(Dep,clpcd_itf,Att),
 	    arg(2,Att,type(Type)),
 	    arg(4,Att,lin(Lin)),
 	    lb_inner(Type,OrdX,Lin,W,Lb),
 	    Lb =< 0 % Lb > 0 means a violated bound
-	->  lb(Deps,OrdX,Dep-W-Lb,Tightest)
+	->  lb(Deps,CLP,OrdX,Dep-W-Lb,Tightest)
 	;   lb_first(Deps,OrdX,Tightest)
 	).
 
-% lb(Deps,OrdX,TightestIn,TightestOut)
+% lb(Deps,CLP,OrdX,TightestIn,TightestOut)
 %
 % See lb_first/3: this one does the same thing, but is used for the steps after
 % the first one and remembers the tightest bound so far.
 
-lb([],_,T0,T0).
-lb([Dep|Deps],OrdX,T0,T1) :-
+lb([],_,_,T0,T0).
+lb([Dep|Deps],CLP,OrdX,T0,T1) :-
 	(   get_attr(Dep,clpcd_itf,Att),
 	    arg(2,Att,type(Type)),
 	    arg(4,Att,lin(Lin)),
-	    lb_inner(Type,OrdX,Lin,W,Lb),
+	    lb_inner(Type,CLP,OrdX,Lin,W,Lb),
 	    T0 = _-Lbb,
-	    compare_d(clpn, >, Lb, Lbb), % Lb > Lbb: choose the least lowering, others
-					 % might violate bounds
-	    Lb =< 0     		 % violation of a bound (without lowering)
+	    compare_d(CLP, >, Lb, Lbb), % Lb > Lbb: choose the least lowering, others
+					% might violate bounds
+	    Lb =< 0     		% violation of a bound (without lowering)
 	->  lb(Deps,OrdX,Dep-W-Lb,T1)
 	;   lb(Deps,OrdX,T0,T1)
 	).
 
-% lb_inner(Type,X,Lin,W,Lb)
+% lb_inner(Type,CLP,X,Lin,W,Lb)
 %
 % Returns in Lb how much lower we can make X without violating a bound
 % by using the linear equation Lin of basis variable B which has type
@@ -770,24 +697,24 @@ lb([Dep|Deps],OrdX,T0,T1) :-
 % not feasible.
 % X has ordering attribute OrdX.
 
-lb_inner(t_l(L),OrdX,Lin,t_L(L),Lb) :-
+lb_inner(t_l(L),CLP,OrdX,Lin,t_L(L),Lb) :-
 	nf_rhs_x(Lin,OrdX,Rhs,K), % if linear equation Lin contains the term
 				  % X*K, Rhs is the right hand side of that
 				  % equation
 	K > 0,
-	Lb is (L - Rhs)/K.
-lb_inner(t_u(U),OrdX,Lin,t_U(U),Lb) :-
+	div_d(CLP, L - Rhs, K, Lb).
+lb_inner(t_u(U),CLP,OrdX,Lin,t_U(U),Lb) :-
 	nf_rhs_x(Lin,OrdX,Rhs,K),
-	K < 0,
-	Lb is (U - Rhs)/K.
-lb_inner(t_lu(L,U),OrdX,Lin,W,Lb) :-
+	K < 0, % K < 0
+	div_d(CLP, U - Rhs, K, Lb).
+lb_inner(t_lu(L,U),CLP,OrdX,Lin,W,Lb) :-
 	nf_rhs_x(Lin,OrdX,Rhs,K),
 	(   K < 0
 	->  W = t_lU(L,U),
-	    Lb is (U-Rhs)/K
+            div_d(CLP, U - Rhs, K, Lb)
 	;   K > 0
 	->  W = t_Lu(L,U),
-	    Lb is (L-Rhs)/K
+	    div_d(CLP, L - Rhs, K, Lb)
 	).
 
 % ---------------------------------- equations --------------------------------
@@ -798,19 +725,19 @@ lb_inner(t_lu(L,U),OrdX,Lin,W,Lb) :-
 %	-) special case X=Y during bs -> get rid of dependend var(s), alias
 %
 
-solve(Lin) :-
+solve(CLP,Lin) :-
 	Lin = [I,_|H],
-	solve(H,Lin,I,Bindings,[]),
+	solve(H,CLP,Lin,I,Bindings,[]),
 	export_binding(Bindings).
 
 % solve(Hom,Lin,I,Bind,BindT)
 %
 % Solves a linear equation Lin = [I,_|H] = 0 and exports the generated bindings
 
-solve([],_,I,Bind0,Bind0) :-
+solve([],_,_,I,Bind0,Bind0) :-
 	!,
 	I =:= 0. % redundant or trivially unsat
-solve(H,Lin,_,Bind0,BindT) :-
+solve(H,CLP,Lin,_,Bind0,BindT) :-
 	sd(H,[],ClassesUniq,9-9-0,Category-Selected-_,NV,NVT),
 	get_attr(Selected,clpcd_itf,Att),
 	arg(5,Att,order(Ord)),
@@ -841,7 +768,7 @@ solve(H,Lin,_,Bind0,BindT) :-
 	    Lin1 = [Inhom,_|Hom],
 	    bs_collect_binding(Hom,Selected,Inhom,Bind0,Bind1),	% only if
 								% Hom = []
-	    rcbl(Basis,Bind1,BindT) % reconsider entire basis
+	    rcbl(Basis,CLP,Bind1,BindT) % reconsider entire basis
 	;   Category = 4 % class variable, all variables in Lin and Selected
 			 % are bounded
 	->  arg(2,Att,type(Type)),
@@ -858,23 +785,23 @@ solve(H,Lin,_,Bind0,BindT) :-
 	    %  4 -> var(NV)
 	    equate(ClassesUniq,_),
 	    undet_active(Lin1),
-	    rcbl(Basis,Bind1,BindT)
+	    rcbl(Basis,CLP,Bind1,BindT)
 	).
 
-% solve_ord_x(Lin,OrdX,ClassX)
+% solve_ord_x(CLP,Lin,OrdX,ClassX)
 %
 % Much like solve, but we solve for a particular variable of type t_none, it has
 % the ordering of X and its class as input. This also means that X has a class
 % which is not sure in solve_x/2.
 
-solve_ord_x(Lin,OrdX,ClassX) :-
+solve_ord_x(CLP,Lin,OrdX,ClassX) :-
 	Lin = [I,_|H],
-	solve_ord_x(H,Lin,I,OrdX,ClassX,Bindings,[]),
+	solve_ord_x(H,CLP,Lin,I,OrdX,ClassX,Bindings,[]),
 	export_binding(Bindings).
 
-solve_ord_x([],_,I,_,_,Bind0,Bind0) :-
+solve_ord_x([],_,_,I,_,_,Bind0,Bind0) :-
 	I =:= 0.
-solve_ord_x([_|_],Lin,_,OrdX,ClassX,Bind0,BindT) :-
+solve_ord_x([_|_],CLP,Lin,_,OrdX,ClassX,Bind0,BindT) :-
 	isolate(OrdX,Lin,Lin1),
 	Lin1 = [_,_|H1],
 	sd(H1,[],ClassesUniq1,9-9-0,_,NV,NVT), % do sd on Lin without X, then
@@ -886,7 +813,7 @@ solve_ord_x([_|_],Lin,_,OrdX,ClassX,Bind0,BindT) :-
 	;   Bind0 = BindT,
 	    bs(Deps,OrdX,Lin1)
 	),
-	eq_classes(NV,NVT,ClassesUniq).
+	eq_classes(CLP,NV,NVT,ClassesUniq).
 
 % sd(H,[],ClassesUniq,9-9-0,Category-Selected-_,NV,NVT)
 
@@ -931,19 +858,19 @@ preference(A,B,Pref) :-
 	;   Pref = B
 	).
 
-% eq_classes(NV,NVTail,Cs)
+% eq_classes(CLP,NV,NVTail,Cs)
 %
 % Attaches all classless variables NV to a new class and equates all other
 % classes with this class. The equate operation only happens after attach_class
 % because the unification of classes can bind the tail of the AllVars attribute
 % to a nonvar and then the attach_class operation wouldn't work.
 
-eq_classes(NV,_,Cs) :-
+eq_classes(_,NV,_,Cs) :-
 	var(NV),
 	!,
 	equate(Cs,_).
-eq_classes(NV,NVT,Cs) :-
-	class_new(Su,clpn,NV,NVT,[]), % make a new class Su with NV as the variables
+eq_classes(CLP,NV,NVT,Cs) :-
+	class_new(Su,CLP,NV,NVT,[]), % make a new class Su with NV as the variables
 	attach_class(NV,Su), % attach the variables NV to Su
 	equate(Cs,Su).
 
@@ -983,20 +910,6 @@ same_class([l(X*_,_)|Xs],Class) :-
 	get_or_add_class(X,Class),
 	same_class(Xs,Class).
 
-% get_or_add_class(X,Class)
-%
-% Returns in Class the class of X if X has one, or a new class where X now
-% belongs to if X didn't have one.
-
-get_or_add_class(X,Class) :-
-	get_attr(X,clpcd_itf,Att),
-	arg(1,Att,CLP),
-	(   arg(6,Att,class(ClassX))
-	->  ClassX = Class
-	;   setarg(6,Att,class(Class)),
-	    class_new(Class,CLP,[X|Tail],Tail,[])
-	).
-
 % allvars(X,Allvars)
 %
 % Allvars is a list of all variables in the class to which X belongs.
@@ -1027,11 +940,6 @@ deactivate_bound(t_U(U),X) :-
 deactivate_bound(t_lU(L,U),X) :-
 	get_attr(X,clpcd_itf,Att),
 	setarg(2,Att,type(t_lu(L,U))).
-
-:- multifile
-        clpcd_redund:intro_at/4.
-
-clpcd_redund:intro_at(clpn,A,B,C) :- intro_at(A,B,C).
 
 % intro_at(X,Value,Type)
 %
@@ -1089,7 +997,7 @@ undet_active(t_lu(L,U),X) :- intro_at(X,L,t_Lu(L,U)).
 % Activates inactive bounds on the variables of Lin if such bounds exist.
 % If the type of a variable is t_none, this fails. This version is aimed
 % to make the R component of Lin as small as possible in order not to violate
-% an upperbound (see reconsider/1)
+% an upperbound (see reconsider/2)
 
 determine_active_dec([_,_|H]) :-
 	determine_active(H,-1).
@@ -1099,7 +1007,7 @@ determine_active_dec([_,_|H]) :-
 % Activates inactive bounds on the variables of Lin if such bounds exist.
 % If the type of a variable is t_none, this fails. This version is aimed
 % to make the R component of Lin as large as possible in order not to violate
-% a lowerbound (see reconsider/1)
+% a lowerbound (see reconsider/2)
 
 determine_active_inc([_,_|H]) :-
 	determine_active(H,1).
@@ -1132,16 +1040,11 @@ determine_active(t_lu(L,U),X,K,S) :-
 	->  intro_at(X,U,t_lU(L,U))
 	).
 
-:- multifile
-        clpcd_redund:detach_bounds/2.
-
-clpcd_redund:detach_bounds(clpn,V) :- detach_bounds(V).
-
 %
 % Careful when an indep turns into t_none !!!
 %
 
-detach_bounds(V) :-
+detach_bounds(CLP, V) :-
 	get_attr(V,clpcd_itf,Att),
 	arg(2,Att,type(Type)),
 	arg(4,Att,lin(Lin)),
@@ -1150,11 +1053,11 @@ detach_bounds(V) :-
 	setarg(2,Att,type(t_none)),
 	setarg(3,Att,strictness(0)),
 	(   indep(Lin,OrdV)
-	->  (   ub(Class,OrdV,Vub-Vb-_)
+	->  (   ub(Class,CLP,OrdV,Vub-Vb-_)
 	    ->	% exchange against thightest
 		class_basis_drop(Class,Vub),
 		pivot(Vub,Class,OrdV,Vb,Type)
-	    ;   lb(Class,OrdV,Vlb-Vb-_)
+	    ;   lb(Class,CLP,OrdV,Vlb-Vb-_)
 	    ->  class_basis_drop(Class,Vlb),
 		pivot(Vlb,Class,OrdV,Vb,Type)
 	    ;   true
@@ -1162,15 +1065,15 @@ detach_bounds(V) :-
 	;   class_basis_drop(Class,V)
 	).
 
-detach_bounds_vlv(OrdV,Lin,Class,Var,NewLin) :-
+detach_bounds_vlv(CLP,OrdV,Lin,Class,Var,NewLin) :-
 	(   indep(Lin,OrdV)
 	->  Lin = [_,R|_],
-	    (   ub(Class,OrdV,Vub-Vb-_)
+	    (   ub(Class,CLP,OrdV,Vub-Vb-_)
 	    ->  % in verify_lin, class might contain two occurrences of Var,
 		% but it doesn't matter which one we delete
 		class_basis_drop(Class,Var),
 		pivot_vlv(Vub,Class,OrdV,Vb,R,NewLin)
-	    ;   lb(Class,OrdV,Vlb-Vb-_)
+	    ;   lb(Class,CLP,OrdV,Vlb-Vb-_)
 	    ->  class_basis_drop(Class,Var),
 		pivot_vlv(Vlb,Class,OrdV,Vb,R,NewLin)
 	    ;   NewLin = Lin
@@ -1211,17 +1114,17 @@ basis_pivot(Leave,Enter) :-
 % gets activated)
 
 
-pivot_a(Dep,Indep,Vb,Wd) :-
+pivot_a(CLP,Dep,Indep,Vb,Wd) :-
 	basis_pivot(Dep,Indep),
 	get_attr(Indep,clpcd_itf,Att),
 	arg(2,Att,type(Type)),
 	arg(5,Att,order(Ord)),
 	arg(6,Att,class(Class)),
-	pivot(Dep,Class,Ord,Vb,Type),
+	pivot(CLP,Dep,Class,Ord,Vb,Type),
 	get_attr(Indep,clpcd_itf,Att2), %changed?
 	setarg(2,Att2,type(Wd)).
 
-pivot_b(Vub,V,Vb,Wd) :-
+pivot_b(CLP,Vub,V,Vb,Wd) :-
 	(   Vub == V
 	->  get_attr(V,clpcd_itf,Att),
 	    arg(5,Att,order(Ord)),
@@ -1229,7 +1132,7 @@ pivot_b(Vub,V,Vb,Wd) :-
 	    setarg(2,Att,type(Vb)),
 	    pivot_b_delta(Vb,Delta), % nonzero(Delta)
 	    backsubst_delta(Class,Ord,V,Delta)
-	;   pivot_a(Vub,V,Vb,Wd)
+	;   pivot_a(CLP,Vub,V,Vb,Wd)
 	).
 
 pivot_b_delta(t_Lu(L,U),Delta) :- Delta is L-U.
@@ -1251,11 +1154,6 @@ select_active_bound(t_l(_),0).
 select_active_bound(t_u(_),0).
 select_active_bound(t_lu(_,_),0).
 
-:- multifile
-        clpcd_project:pivot/6.
-
-clpcd_project:pivot(clpn,T,Class,Ord,Type,IndAct) :- pivot(T,Class,Ord,Type,IndAct).
-
 % pivot(Dep,Class,IndepOrd,DepAct,IndAct)
 %
 % See pivot/2.
@@ -1265,24 +1163,31 @@ clpcd_project:pivot(clpn,T,Class,Ord,Type,IndAct) :- pivot(T,Class,Ord,Type,IndA
 %
 % Pivot taking care of rhs and active states
 %
-pivot(Dep,Class,IndepOrd,DepAct,IndAct) :-
+pivot(CLP,Dep,Class,IndepOrd,DepAct,IndAct) :-
 	get_attr(Dep,clpcd_itf,Att),
 	arg(4,Att,lin(H)),
 	arg(5,Att,order(DepOrd)),
 	setarg(2,Att,type(DepAct)),
 	select_active_bound(DepAct,AbvD), % New current value for Dep
-	select_active_bound(IndAct,AbvI), % New current value of Indep
+	select_active_bound(IndAct,AbvI), % Old current value of Indep
 	delete_factor(IndepOrd,H,H0,Coeff), % Dep = ... + Coeff*Indep + ...
 	AbvDm is -AbvD,
 	AbvIm is -AbvI,
 	add_linear_f1([0,AbvIm],Coeff,H0,H1),
-	K is -1/Coeff,
+	div_d(CLP, -1, Coeff, K),
 	add_linear_ff(H1,K,[0,AbvDm,l(Dep* -1,DepOrd)],K,H2),
 	    % Indep = -1/Coeff*... + 1/Coeff*Dep
 	add_linear_11(H2,[0,AbvIm],Lin),
 	backsubst(Class,IndepOrd,Lin).
 
-pivot_vlv(Dep,Class,IndepOrd,DepAct,AbvI,Lin) :-
+% Rewrite Dep = ... + Coeff*Indep + ...
+% into Indep = ... + -1/Coeff*Dep + ...
+%
+% For backsubstitution, old current value of Indep must be removed from RHS
+% New current value of Dep must be added to RHS
+% For solving: old current value of Indep should be out of RHS
+
+pivot_vlv(CLP,Dep,Class,IndepOrd,DepAct,AbvI,Lin) :-
 	get_attr(Dep,clpcd_itf,Att),
 	arg(4,Att,lin(H)),
 	arg(5,Att,order(DepOrd)),
@@ -1292,7 +1197,7 @@ pivot_vlv(Dep,Class,IndepOrd,DepAct,AbvI,Lin) :-
 	AbvDm is -AbvD,
 	AbvIm is -AbvI,
 	add_linear_f1([0,AbvIm],Coeff,H0,H1),
-	K is -1/Coeff,
+	div_d(CLP, -1, Coeff, K),
 	add_linear_ff(H1,K,[0,AbvDm,l(Dep* -1,DepOrd)],K,Lin),
 	    % Indep = -1/Coeff*... + 1/Coeff*Dep
 	add_linear_11(Lin,[0,AbvIm],SubstLin),
@@ -1381,50 +1286,48 @@ bs_collect_binding([_|_],_,_) --> [].
 %
 %
 
-rcbl([],Bind0,Bind0).
-rcbl([X|Continuation],Bind0,BindT) :-
-	(   rcb_cont(X,Status,Violated,Continuation,NewContinuation) % have a culprit
-	->  rcbl_status(Status,X,NewContinuation,Bind0,BindT,Violated)
-	;   rcbl(Continuation,Bind0,BindT)
+rcbl([],_,Bind0,Bind0).
+rcbl([X|Continuation],CLP,Bind0,BindT) :-
+	(   rcb_cont(CLP,X,Status,Violated,Continuation,NewContinuation) % have a culprit
+	->  rcbl_status(Status,CLP,X,NewContinuation,Bind0,BindT,Violated)
+	;   rcbl(Continuation,CLP,Bind0,BindT)
 	).
 
-rcb_cont(X,Status,Violated,ContIn,ContOut) :-
+rcb_cont(CLP,X,Status,Violated,ContIn,ContOut) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(2,Att,type(Type)),
 	arg(4,Att,lin([I,R|H])),
 	(   Type = t_l(L) % case 1: lowerbound: R + I should always be larger
 			  % than the lowerbound
-	->  compare_d(clpn, =<, R + I, L),
+	->  compare_d(CLP, =<, R + I, L),
 	    Violated = l(L),
 	    inc_step_cont(H,Status,ContIn,ContOut)
 	;   Type = t_u(U) % case 2: upperbound: R + I should always be smaller
 			  % than the upperbound
-	->  compare_d(clpn, >, R + I, U),
+	->  compare_d(CLP, >, R + I, U),
 	    Violated = u(U),
-	    dec_step_cont(H,Status,ContIn,ContOut)
+	    dec_step_cont(H,CLP,Status,ContIn,ContOut)
 	;   Type = t_lu(L,U) % case 3: check both
 	->  At is R + I,
-	    (   compare_d(clpn, =<, At, L)
+	    (   compare_d(CLP, =<, At, L)
 	    ->	Violated = l(L),
 		inc_step_cont(H,Status,ContIn,ContOut)
-	    ;   compare_d(clpn, >=, At, U)
+	    ;   compare_d(CLP, >=, At, U)
 	    ->	Violated = u(U),
-		dec_step_cont(H,Status,ContIn,ContOut)
+		dec_step_cont(H,CLP,Status,ContIn,ContOut)
 	    )
 	). % other types imply nonbasic variable or unbounded variable
-
-
 
 %
 % reconsider one element of the basis
 % later: lift the binds
 %
-reconsider(X) :-
-	rcb(X,Status,Violated),
+reconsider(CLP,X) :-
+	rcb(CLP,X,Status,Violated),
 	!,
-	rcbl_status(Status,X,[],Binds,[],Violated),
+	rcbl_status(Status,CLP,X,[],Binds,[],Violated),
 	export_binding(Binds).
-reconsider(_).
+reconsider(_,_).
 
 %
 % Find a basis variable out of its bound or at its bound
@@ -1442,39 +1345,39 @@ reconsider(_).
 % upperbounds, which are of course larger). So checking this can show the
 % violation of a bound of V. A similar case works for the upperbound.
 
-rcb(X,Status,Violated) :-
+rcb(CLP,X,Status,Violated) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(2,Att,type(Type)),
 	arg(4,Att,lin([I,R|H])),
 	(   Type = t_l(L) % case 1: lowerbound: R + I should always be larger
 			  % than the lowerbound
-	->  compare_d(clpn, =<, R + I, L),
+	->  compare_d(CLP, =<, R + I, L),
 	    Violated = l(L),
 	    inc_step(H,Status)
 	;   Type = t_u(U) % case 2: upperbound: R + I should always be smaller
 			  % than the upperbound
-	->  compare_d(clpn, >=, R + I, U),
+	->  compare_d(CLP, >=, R + I, U),
 	    Violated = u(U),
 	    dec_step(H,Status)
 	;   Type = t_lu(L,U) % case 3: check both
 	->  At is R + I,
-	    (   compare_d(clpn, =<, At, L)
+	    (   compare_d(CLP, =<, At, L)
 	    ->	Violated = l(L),
 		inc_step(H,Status)
-	    ;   compare_d(clpn, >=, At, U)
+	    ;   compare_d(CLP, >=, At, U)
 	    ->	Violated = u(U),
 		dec_step(H,Status)
 	    )
 	). % other types imply nonbasic variable or unbounded variable
 
-% rcbl_status(Status,X,Continuation,[Bind|BindT],BindT,Violated)
+% rcbl_status(Status,CLP,X,Continuation,[Bind|BindT],BindT,Violated)
 %
 %
 
-rcbl_status(optimum,X,Cont,B0,Bt,Violated) :- rcbl_opt(Violated,X,Cont,B0,Bt).
-rcbl_status(applied,X,Cont,B0,Bt,Violated) :- rcbl_app(Violated,X,Cont,B0,Bt).
-rcbl_status(unlimited(Indep,DepT),X,Cont,B0,Bt,Violated) :-
-	rcbl_unl(Violated,X,Cont,B0,Bt,Indep,DepT).
+rcbl_status(optimum,CLP,X,Cont,B0,Bt,Violated) :- rcbl_opt(Violated,CLP,X,Cont,B0,Bt).
+rcbl_status(applied,CLP,X,Cont,B0,Bt,Violated) :- rcbl_app(Violated,CLP,X,Cont,B0,Bt).
+rcbl_status(unlimited(Indep,DepT),CLP,X,Cont,B0,Bt,Violated) :-
+	rcbl_unl(Violated,CLP,X,Cont,B0,Bt,Indep,DepT).
 
 %
 % Might reach optimum immediately without changing the basis,
@@ -1483,77 +1386,77 @@ rcbl_status(unlimited(Indep,DepT),X,Cont,B0,Bt,Violated) :-
 % value, solve will call us again to check for further implied
 % values or unsatisfiability in the rank increased system.
 %
-rcbl_opt(l(L),X,Continuation,B0,B1) :-
+rcbl_opt(l(L),CLP,X,Continuation,B0,B1) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(2,Att,type(Type)),
 	arg(3,Att,strictness(Strict)),
 	arg(4,Att,lin(Lin)),
 	Lin = [I,R|_],
 	Opt is R + I,
-	(   compare_d(clpn, <, L, Opt)
+	(   compare_d(CLP, <, L, Opt)
 	->  narrow_u(Type,X,Opt), % { X =< Opt }
-	    rcbl(Continuation,B0,B1)
-	;   compare_d(clpn, =, L, Opt),
+	    rcbl(Continuation,CLP,B0,B1)
+	;   compare_d(CLP, =, L, Opt),
 	    Strict /\ 2 =:= 0, % meets lower
 	    Mop is -Opt,
 	    normalize_scalar(Mop,MopN),
 	    add_linear_11(MopN,Lin,Lin1),
 	    Lin1 = [Inhom,_|Hom],
 	    (   Hom = []
-	    ->  rcbl(Continuation,B0,B1) % would not callback
-	    ;   solve(Hom,Lin1,Inhom,B0,B1)
+	    ->  rcbl(Continuation,CLP,B0,B1) % would not callback
+	    ;   solve(Hom,CLP,Lin1,Inhom,B0,B1)
 	    )
 	).
-rcbl_opt(u(U),X,Continuation,B0,B1) :-
+rcbl_opt(u(U),CLP,X,Continuation,B0,B1) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(2,Att,type(Type)),
 	arg(3,Att,strictness(Strict)),
 	arg(4,Att,lin(Lin)),
 	Lin = [I,R|_],
 	Opt is R + I,
-	(   compare_d(clpn, >, U, Opt)
+	(   compare_d(CLP, >, U, Opt)
 	->  narrow_l(Type,X,Opt), % { X >= Opt }
-	    rcbl(Continuation,B0,B1)
-	;   compare_d(clpn, =, U, Opt),
+	    rcbl(Continuation,CLP,B0,B1)
+	;   compare_d(CLP, =, U, Opt),
 	    Strict /\ 1 =:= 0, % meets upper
 	    Mop is -Opt,
 	    normalize_scalar(Mop,MopN),
 	    add_linear_11(MopN,Lin,Lin1),
 	    Lin1 = [Inhom,_|Hom],
 	    (   Hom = []
-	    ->  rcbl(Continuation,B0,B1) % would not callback
-	    ;   solve(Hom,Lin1,Inhom,B0,B1)
+	    ->  rcbl(Continuation,CLP,B0,B1) % would not callback
+	    ;   solve(Hom,CLP,Lin1,Inhom,B0,B1)
 	    )
 	).
 
 %
 % Basis has already changed when this is called
 %
-rcbl_app(l(L),X,Continuation,B0,B1) :-
+rcbl_app(l(L),CLP,X,Continuation,B0,B1) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(4,Att,lin([I,R|H])),
-	(   compare_d(clpn, >, R + I, L) % within bound now
-	->  rcbl(Continuation,B0,B1)
+	(   compare_d(CLP, >, R + I, L) % within bound now
+	->  rcbl(Continuation,CLP,B0,B1)
 	;   inc_step(H,Status),
-	    rcbl_status(Status,X,Continuation,B0,B1,l(L))
+	    rcbl_status(Status,CLP,X,Continuation,B0,B1,l(L))
 	).
-rcbl_app(u(U),X,Continuation,B0,B1) :-
+rcbl_app(u(U),CLP,X,Continuation,B0,B1) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(4,Att,lin([I,R|H])),
-	(   compare_d(clpn, <, R + I, U) % within bound now
-	->  rcbl(Continuation,B0,B1)
+	(   compare_d(CLP, <, R + I, U) % within bound now
+	->  rcbl(Continuation,CLP,B0,B1)
 	;   dec_step(H,Status),
-	    rcbl_status(Status,X,Continuation,B0,B1,u(U))
+	    rcbl_status(Status,CLP,X,Continuation,B0,B1,u(U))
 	).
 %
 % This is never called for a t_lu culprit
 %
-rcbl_unl(l(L),X,Continuation,B0,B1,Indep,DepT) :-
-	pivot_a(X,Indep,t_L(L),DepT), % changes the basis
-	rcbl(Continuation,B0,B1).
-rcbl_unl(u(U),X,Continuation,B0,B1,Indep,DepT) :-
-	pivot_a(X,Indep,t_U(U),DepT), % changes the basis
-	rcbl(Continuation,B0,B1).
+rcbl_unl(l(L),CLP,X,Continuation,B0,B1,Indep,DepT) :-
+	pivot_a(CLP,X,Indep,t_L(L),DepT), % changes the basis
+	rcbl(Continuation,CLP,B0,B1).
+rcbl_unl(u(U),CLP,X,Continuation,B0,B1,Indep,DepT) :-
+	pivot_a(CLP,X,Indep,t_U(U),DepT), % changes the basis
+	rcbl(Continuation,CLP,B0,B1).
 
 % narrow_u(Type,X,U)
 %
@@ -1580,130 +1483,15 @@ narrow_l( t_lu(_,U), X, L) :-
 	get_attr(X,clpcd_itf,Att),
 	setarg(2,Att,type(t_lu(L,U))).
 
-% ----------------------------------- dump ------------------------------------
-
-:- multifile
-        clpcd_itf:dump_v//5.
-
-clpcd_itf:dump_v(clpn,Type,V,I,H) --> dump_var(Type,V,I,H).
-
-% dump_var(Type,Var,I,H,Dump,DumpTail)
-%
-% Returns in Dump a representation of the linear constraint on variable
-% Var which has linear equation H + I and has type Type.
-
-dump_var(t_none,V,I,H) -->
-	!,
-	(   {
-		H = [l(W*K,_)],
-		V == W,
-                compare_d(clpn, =, 0, I),
-                compare_d(clpn, =, K, 1)
-	    }
-	->  % indep var
-	    []
-	;   {nf2sum(H,I,Sum)},
-	    [V = Sum]
-	).
-dump_var(t_L(L),V,I,H) -->
-	!,
-	dump_var(t_l(L),V,I,H).
-% case lowerbound: V >= L or V > L
-% say V >= L, and V = K*V1 + ... + I, then K*V1 + ... + I >= L
-% and K*V1 + ... >= L-I and V1 + .../K = (L-I)/K
-dump_var(t_l(L),V,I,H) -->
-	!,
-	{
-	    H = [l(_*K,_)|_], % avoid 1 >= 0
-	    get_attr(V,clpcd_itf,Att),
-	    arg(3,Att,strictness(Strict)),
-	    Sm is Strict /\ 2,
-	    Kr is 1.0/K,
-	    Li is Kr*(L - I),
-	    mult_hom(H,Kr,H1),
-	    nf2sum(H1,0,Sum),
-	    (   K > 0 % K > 0
-	    ->	dump_strict(Sm,Sum >= Li,Sum > Li,Result)
-	    ;   dump_strict(Sm,Sum =< Li,Sum < Li,Result)
-	    )
-	},
-	[Result].
-dump_var(t_U(U),V,I,H) -->
-	!,
-	dump_var(t_u(U),V,I,H).
-dump_var(t_u(U),V,I,H) -->
-	!,
-	{
-	    H = [l(_*K,_)|_], % avoid 0 =< 1
-	    get_attr(V,clpcd_itf,Att),
-	    arg(3,Att,strictness(Strict)),
-	    Sm is Strict /\ 1,
-	    Kr is 1/K,
-	    Ui is Kr*(U-I),
-	    mult_hom(H,Kr,H1),
-	    nf2sum(H1,0,Sum),
-	    (   K > 0
-	    ->	dump_strict(Sm,Sum =< Ui,Sum < Ui,Result)
-	    ;   dump_strict(Sm,Sum >= Ui,Sum > Ui,Result)
-	    )
-	},
-	[Result].
-dump_var(t_Lu(L,U),V,I,H) -->
-	!,
-	dump_var(t_l(L),V,I,H),
-	dump_var(t_u(U),V,I,H).
-dump_var(t_lU(L,U),V,I,H) -->
-	!,
-	dump_var(t_l(L),V,I,H),
-	dump_var(t_u(U),V,I,H).
-dump_var(t_lu(L,U),V,I,H) -->
-	!,
-	dump_var(t_l(L),V,I,H),
-	dump_var(t_U(U),V,I,H).
-dump_var(T,V,I,H) --> % should not happen
-	[V:T:I+H].
-
-% dump_strict(FilteredStrictness,Nonstrict,Strict,Res)
-%
-% Unifies Res with either Nonstrict or Strict depending on FilteredStrictness.
-% FilteredStrictness is the component of strictness related to the bound: 0
-% means nonstrict, 1 means strict upperbound, 2 means strict lowerbound,
-% 3 is filtered out to either 1 or 2.
-
-dump_strict(0,Result,_,Result).
-dump_strict(1,_,Result,Result).
-dump_strict(2,_,Result,Result).
-
-:- multifile
-        clpcd_itf:dump_nz//4.
-
-clpcd_itf:dump_nz(clpn,V,H,I) --> dump_nz(V,H,I).
-
-% dump_nz(V,H,I,Dump,DumpTail)
-%
-% Returns in Dump a representation of the nonzero constraint of variable V
-% which has linear
-% equation H + I.
-
-dump_nz(_,H,I) -->
-	{
-	    H = [l(_*K,_)|_],
-	    Kr is 1/K,
-	    I1 is -Kr*I,
-	    mult_hom(H,Kr,H1),
-	    nf2sum(H1,0,Sum)
-	},
-	[Sum =\= I1].
-
 		 /*******************************
 		 *	       SANDBOX		*
 		 *******************************/
 :- multifile
 	sandbox:safe_primitive/1.
 
-sandbox:safe_primitive(bv_n:inf(_,_)).
-sandbox:safe_primitive(bv_n:inf(_,_,_,_)).
-sandbox:safe_primitive(bv_n:sup(_,_)).
-sandbox:safe_primitive(bv_n:sup(_,_,_,_)).
-sandbox:safe_primitive(bv_n:maximize(_)).
-sandbox:safe_primitive(bv_n:minimize(_)).
+sandbox:safe_primitive(clpcd_bv:inf(_,_,_)).
+sandbox:safe_primitive(clpcd_bv:inf(_,_,_,_,_)).
+sandbox:safe_primitive(clpcd_bv:sup(_,_,_)).
+sandbox:safe_primitive(clpcd_bv:sup(_,_,_,_,_)).
+sandbox:safe_primitive(clpcd_bv:maximize(_)).
+sandbox:safe_primitive(clpcd_bv:minimize(_)).

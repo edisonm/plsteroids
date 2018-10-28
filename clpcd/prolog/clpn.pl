@@ -71,13 +71,13 @@ user:portray_message(warning,import(_,_,clpn,private)).
 
 :- load_files(
 	[
-	    'clpn/bb_n',
-	    'clpn/bv_n',
 	    'clpn/fourmotz_n',
-	    'clpn/ineq_n',
 	    'clpn/itf_n',
-	    'clpn/nf_n',
 	    'clpn/store_n',
+	    library(clpcd/bb),
+	    library(clpcd/ineq),
+	    library(clpcd/nf),
+            library(clpcd/bv),
 	    library(clpcd/class),
 	    library(clpcd/dump),
 	    library(clpcd/geler),
@@ -108,9 +108,18 @@ user:portray_message(warning,import(_,_,clpn,private)).
 %	['~@'-[chr:print_all_stores]],
 %         '$messages':prolog_message(query(YesNo)).
 
-
 clpcd_compare:compare_d(clpn, Op, A, B) :-
     near_compare(Op, A, B).
+
+clpcd_compare:div_d(clpn, A, B, C) :- C is A/B.
+
+clpcd_compare:cast_d(clpn, A, B) :-
+    ( number(A)
+    ->B = A
+    ; rational(A),
+      A = X rdiv Y,
+      B is X / Y
+    ).
 
 clpcd_highlight:clpcd_module(clpn).
 
@@ -119,7 +128,8 @@ prolog_colour:syntax_message(constraint(clpcd(Sub))) -->
 prolog_colour:syntax_message(type_error(constraint(clpcd(Sub)))) -->
 	[ 'Only clp(~w) constraints may appear inside {}'-[Sub] ].
 
-prolog:message(query(YesNo,Bindings)) --> !,
+prolog:message(query(YesNo,Bindings)) -->
+        !,
 	{dump_toplevel_bindings(Bindings,Constraints)},
 	{dump_format(Constraints,Format)},
 	Format,
@@ -154,3 +164,35 @@ memberchk_eq(X,[Y|Ys]) :-
 	->  true
 	;   memberchk_eq(X,Ys)
 	).
+
+inf(Expression, Inf) :-
+        inf(clpn, Expression, Inf).
+
+inf(Expression, Inf, Vector, Vertex) :-
+        inf(clpn, Expression, Inf, Vector, Vertex).
+
+sup(Expression, Sup) :-
+        sup(clpn, Expression, Sup).
+
+sup(Expression, Sup, Vector, Vertex) :-
+        sup(clpn, Expression, Sup, Vector, Vertex).
+
+maximize(Term) :-
+        maximize(clpn, Term).
+
+minimize(Term) :-
+        minimize(clpcdq, Term).
+
+{Rel} :-
+        add_constraint(Rel, clpn).
+
+entailed(C) :- entailed(clpn, C).
+
+		 /*******************************
+		 *	       SANDBOX		*
+		 *******************************/
+:- multifile
+	sandbox:safe_primitive/1.
+
+sandbox:safe_primitive(clpn:{_}).
+sandbox:safe_primitive(clpn:entailed(_)).

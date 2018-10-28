@@ -37,7 +37,7 @@
     the GNU General Public License.
 */
 
-:- module(clpq,
+:- module(clpcdq,
 	  [ {}/1,
 	    maximize/1,
 	    minimize/1,
@@ -66,12 +66,12 @@
 user:portray_message(warning,import(_,_,clpcdq,private)).
 
 :- use_module([ clpcdq/bb_q,
-		clpcdq/bv_q,
 		clpcdq/fourmotz_q,
-		clpcdq/ineq_q,
 		clpcdq/itf_q,
-		clpcdq/nf_q,
 		clpcdq/store_q,
+		library(clpcd/nf),
+		library(clpcd/ineq),
+		library(clpcd/bv),
 		library(clpcd/class),
 		library(clpcd/dump),
 		library(clpcd/geler),
@@ -98,6 +98,15 @@ compare_q(>=, A, B) :- A >= B.
 compare_q(<,  A, B) :- A < B.
 compare_q(>,  A, B) :- A > B.
 compare_q(\=, A, B) :- A =\= B.
+
+clpcd_compare:div_d(clpcdq, A, B, C) :- C is A rdiv B.
+
+clpcd_compare:cast_d(clpcdq, A, B) :-
+    ( number(A)
+    ; rational(A)
+    ),
+    !,
+    B is rationalize(A).
 
 prolog:message(query(YesNo,Bindings)) --> !,
 	{dump_toplevel_bindings(Bindings,Constraints)},
@@ -134,3 +143,35 @@ memberchk_eq(X,[Y|Ys]) :-
 	->  true
 	;   memberchk_eq(X,Ys)
 	).
+
+inf(Expression, Inf) :-
+        inf(clpcdq, Expression, Inf).
+
+inf(Expression, Inf, Vector, Vertex) :-
+        inf(clpcdq, Expression, Inf, Vector, Vertex).
+
+sup(Expression, Sup) :-
+        sup(clpcdq, Expression, Sup).
+
+sup(Expression, Sup, Vector, Vertex) :-
+        sup(clpcdq, Expression, Sup, Vector, Vertex).
+
+maximize(Term) :-
+        maximize(clpcdq, Term).
+
+minimize(Term) :-
+        minimize(clpcdq, Term).
+
+{Rel} :-
+        add_constraint(Rel, clpcdq).
+
+entailed(C) :- entailed(clpcdq, C).
+
+		 /*******************************
+		 *	       SANDBOX		*
+		 *******************************/
+:- multifile
+	sandbox:safe_primitive/1.
+
+sandbox:safe_primitive(clpcdq:{_}).
+sandbox:safe_primitive(clpcdq:entailed(_)).

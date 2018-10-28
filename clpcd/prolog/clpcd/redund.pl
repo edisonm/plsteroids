@@ -152,7 +152,7 @@ redundant(t_L(L),X,Strict) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(1,Att,CLP),
 	Bound is -L,
-	intro_at(CLP,X,Bound,t_none),	% drop temporarily
+	intro_at(X,Bound,t_none),	% drop temporarily
 	detach_bounds(CLP,X),
 	negate_l(Strict,CLP,L,X),
 	red_t_L.
@@ -160,7 +160,7 @@ redundant(t_U(U),X,Strict) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(1,Att,CLP),
 	Bound is -U,
-	intro_at(CLP,X,Bound,t_none),	% drop temporarily
+	intro_at(X,Bound,t_none),	% drop temporarily
 	detach_bounds(CLP,X),
 	negate_u(Strict,CLP,U,X),
 	red_t_U.
@@ -169,7 +169,7 @@ redundant(t_Lu(L,U),X,Strict) :-
 	(   Bound is -L,
 	    get_attr(X,clpcd_itf,Att),
 	    arg(1,Att,CLP),
-	    intro_at(CLP,X,Bound,t_u(U)),
+	    intro_at(X,Bound,t_u(U)),
 	    get_attr(X,clpcd_itf,Att2), % changed?
 	    setarg(3,Att2,strictness(Su)),
 	    negate_l(Strict,CLP,L,X)
@@ -201,7 +201,7 @@ redundant(t_lU(L,U),X,Strict) :-
 	;   get_attr(X,clpcd_itf,Att),
 	    arg(1,Att,CLP),
 	    Bound is -U,
-	    intro_at(CLP,X,Bound,t_l(L)),
+	    intro_at(X,Bound,t_l(L)),
 	    get_attr(X,clpcd_itf,Att2), % changed?
 	    setarg(3,Att2,strictness(Sl)),
 	    negate_u(Strict,CLP,U,X)
@@ -267,8 +267,7 @@ negate_u(3,CLP,U,X) :-
 negate_u(_,_,_,_).
 
 :- multifile
-        detach_bounds/2,
-        intro_at/4.
+        detach_bounds/2.
 
 % Profiling: these predicates are called during redundant and can be used
 % to count the number of redundant bounds.

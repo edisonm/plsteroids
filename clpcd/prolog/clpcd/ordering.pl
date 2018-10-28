@@ -41,7 +41,9 @@
 :- module(clpcd_ordering,
 	[
 	    combine/3,
+	    get_or_add_class/2,
 	    ordering/1,
+            var_intern/4,
 	    arrangement/2
 	]).
 :- use_module(class,
@@ -101,8 +103,44 @@ arrangement(Class,Arr) :-
 	!.
 arrangement(_,_) :- throw(unsatisfiable_ordering).
 
-:- multifile
-        var_intern/3.
+% TODO
+%
+%
+
+var_intern(CLP,Type,Var,Strict) :-
+        var_intern(CLP,Type,Var,Strict,_Class).
+
+var_intern(CLP,Type,Var,Strict,Class) :-
+	put_attr(Var,clpcd_itf,t(CLP,type(Type),strictness(Strict),
+	    lin([0,0,l(Var*1,Ord)]),order(Ord),n,n,n,n,n,n)),
+	get_or_add_class(Var,Class).
+
+% TODO
+%
+%
+
+var_intern(_CLP,Var,Class) :-	% for ordered/1 but otherwise free vars
+	get_attr(Var,clpcd_itf,Att),
+	arg(2,Att,type(_)),
+	arg(4,Att,lin(_)),
+	!,
+	get_or_add_class(Var,Class).
+var_intern(CLP,Var,Class) :-
+        var_intern(CLP,t_none,Var,0,Class).
+
+% get_or_add_class(X,Class)
+%
+% Returns in Class the class of X if X has one, or a new class where X now
+% belongs to if X didn't have one.
+
+get_or_add_class(X,Class) :-
+	get_attr(X,clpcd_itf,Att),
+	arg(1,Att,CLP),
+	(   arg(6,Att,class(ClassX))
+	->  ClassX = Class
+	;   setarg(6,Att,class(Class)),
+	    class_new(Class,CLP,[X|Tail],Tail,[])
+	).
 
 join_class([],_).
 join_class([X|Xs],Class) :-

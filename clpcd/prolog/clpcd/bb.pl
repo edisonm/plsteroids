@@ -38,30 +38,13 @@
     the GNU General Public License.
 */
 
-:- module(bb_n,
+:- module(clpcd_bb,
 	[
 	    bb_inf/3,
 	    bb_inf/4,
 	    vertex_value/2
 	]).
-:- use_module(bv_n,
-	[
-	    deref/2,
-	    deref_var/2,
-	    determine_active_dec/1,
-	    inf/2,
-	    iterate_dec/2,
-	    sup/2,
-	    var_with_def_assign/2
-	]).
-:- use_module(nf_n,
-	[
-	    {}/1,
-	    entailed/1,
-	    nf/2,
-	    repair/2,
-	    wait_linear/3
-	]).
+
 :- use_module(library(clpcd/compare)).
 :- use_module(library(near_utils)).
 
@@ -74,7 +57,7 @@ bb_inf(Is,Term,Inf) :-
 	bb_inf(Is,Term,Inf,_).
 
 bb_inf(Is,Term,Inf,Vertex) :-
-	wait_linear(Term,Nf,bb_inf_internal(Is,Nf,Inf,Vertex)).
+	wait_linear(Term,Nf,bb_inf_internal(CLP, Is, Nf, Inf, Vertex)).
 
 % ---------------------------------------------------------------------
 
@@ -83,18 +66,18 @@ bb_inf(Is,Term,Inf,Vertex) :-
 % Finds an infimum Inf for linear expression in normal form Lin, where
 % all variables in Is are to be integers.
 
-bb_inf_internal(Is,Lin,_,_) :-
+bb_inf_internal(CLP, Is, Lin, _, _) :-
 	bb_intern(Is,IsNf),
 	nb_delete(prov_opt),
-	repair(Lin,LinR),	% bb_narrow ...
+	repair(CLP, Lin, LinR),	% bb_narrow ...
 	deref(LinR,Lind),
 	var_with_def_assign(Dep,Lind),
 	determine_active_dec(Lind),
 	bb_loop(Dep,IsNf),
 	fail.
-bb_inf_internal(_,_,Inf,Vertex) :-
-	catch(nb_getval(prov_opt,InfVal-Vertex),_,fail),
-	{Inf =:= InfVal},
+bb_inf_internal(CLP, _, _, Inf, Vertex) :-
+	nb_current(prov_opt,InfVal-Vertex),
+	add_constraint(Inf =:= InfVal, CLP),
 	nb_delete(prov_opt).
 
 % bb_loop(Opt,Is)
@@ -131,14 +114,16 @@ bb_reoptimize(Obj,Inf) :-
 % Checks if the new infimum Inf is better than the previous one (if such exists).
 
 bb_better_bound(Inf) :-
-	catch((nb_getval(prov_opt,Inc-_),Inf - Inc < -1.0e-10),_,true).
+	nb_current(prov_opt,Inc-_), !,
+	compare_d(CLP, <, Inf, Inc).
+bb_better_bound(_).
 
 % bb_branch(V,U,L)
 %
 % Stores that V =< U or V >= L, can be used for different strategies within bb_loop/3.
 
-bb_branch(V,U,_) :- {V =< U}.
-bb_branch(V,_,L) :- {V >= L}.
+bb_branch(V,U,_) :- add_constraint(V =< U, CLP).
+bb_branch(V,_,L) :- add_constraint(V >= L, CLP).
 
 % vertex_value(Vars,Values)
 %
@@ -170,7 +155,7 @@ rhs_value(Xn,Value) :-
 % Viol. The floor and ceiling of its actual bound is returned in Floor and Ceiling.
 
 bb_first_nonint([I|Is],[Rhs|Rhss],Viol,F,C) :-
-	(   compare_d(clpn, =, Rhs, integer(Rhs))
+	(   compare_d(CLP, =, Rhs, integer(Rhs))
 	->  bb_first_nonint(Is,Rhss,Viol,F,C)
         ;   Viol = I,
 	    F is floor(Rhs),
@@ -193,7 +178,7 @@ round_values([X|Xs],[Y|Ys]) :-
 
 bb_intern([],[]).
 bb_intern([X|Xs],[Xi|Xis]) :-
-	nf(X,Xnf),
+	nf(X, CLP, Xnf),
 	bb_intern(Xnf,Xi,X),
 	bb_intern(Xs,Xis).
 
@@ -211,7 +196,7 @@ bb_intern([],X,_) :-
 bb_intern([v(I,[])],X,_) :-
 	!,
 	X = I,
-        compare_d(clpn, =, I, integer(I)).
+        compare_d(CLP, =, I, integer(I)).
 bb_intern([v(One,[V^1])],X,_) :-
         compare_d(clpn, =, One, 1),
 	!,

@@ -47,6 +47,7 @@
 	[
 	    drop_dep/1,
 	    drop_dep_one/1,
+            indep/3,
 	    make_target_indep/2,
 	    project_attributes/2
 	]).
@@ -67,6 +68,7 @@
 	[
 	    arrangement/2
 	]).
+:- use_module(library(clpcd/compare)).
 
 :- multifile
         fm_elim/4.
@@ -192,9 +194,18 @@ drop_dep_one(V) :-
 drop_dep_one(_).
 
 :- multifile
-        indep/3,
-        pivot/6,
         renormalize/3.
+
+% indep(Lin,OrdX)
+%
+% succeeds if Lin = [0,_|[l(X*1,OrdX)]]
+
+indep(CLP, Lin,OrdX) :-
+	Lin = [I,_|[l(_*K,OrdY)]],
+	OrdX == OrdY,
+	% K =:= 1.0
+        compare_d(CLP, =, K, 1),
+	compare_d(CLP, =, I, 0).
 
 % drop_lin_atts(Vs)
 %
