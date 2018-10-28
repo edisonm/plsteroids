@@ -194,7 +194,7 @@ log_deref(N,V0,V2,Lin) :-
 
 deref_var(X,Lin) :-
 	(   get_attr(X,clpcd_itf,Att)
-	->  (   \+ arg(1,Att,clpq)
+	->  (   \+ arg(1,Att,clpcdq)
 	    ->  throw(error(permission_error('mix CLP(Q) variables with',
 		'CLP(R) variables:',X),context(_)))
 	    ;   arg(4,Att,lin(Lin))
