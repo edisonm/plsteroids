@@ -49,9 +49,11 @@
 	]).
 
 :- use_module(library(clpcd/class)).
-:- use_module(library(clpcd/compare)).
+:- use_module(library(clpcd/domain_ops)).
 :- use_module(library(clpcd/project)).
 :- use_module(library(clpcd/bv)).
+:- use_module(library(clpcd/nf)).
+:- use_module(library(clpcd/store)).
 
 % ----------------------------------- dump ------------------------------------
 
@@ -404,18 +406,18 @@ verify_lin(order(OrdX),CLP,class(Class),lin(LinX),Y) :-
 	    % if there were bounds, they are requeued already
 	    class_drop(Class,Y),
 	    nf(-Y, CLP, NfY),
-	    deref(NfY,LinY),
-	    add_linear_11(NewLinX,LinY,Lind),
+	    deref(CLP,NfY,LinY),
+	    add_linear_11(CLP, NewLinX, LinY, Lind),
 	    (   nf_coeff_of(Lind,OrdX,_)
 	    ->	% X is element of Lind
-		solve_ord_x(Lind,OrdX,Class)
-	    ;	solve(Lind)	% X is gone, can safely solve Lind
+		solve_ord_x(CLP, Lind, OrdX, Class)
+	    ;	solve(CLP, Lind)	% X is gone, can safely solve Lind
 	    )
 	;   class_drop(Class,Y),
 	    nf(-Y, CLP, NfY),
-	    deref(NfY,LinY),
-	    add_linear_11(LinX,LinY,Lind),
-	    solve(Lind)
+	    deref(CLP,NfY,LinY),
+	    add_linear_11(CLP, LinX, LinY, Lind),
+	    solve(CLP, Lind)
 	).
 verify_lin(_,_,_,_,_).
 

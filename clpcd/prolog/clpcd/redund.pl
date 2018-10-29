@@ -43,6 +43,8 @@
 	    systems/3
 	]).
 
+:- use_module(library(clpcd/bv)).
+
 %
 % redundancy removal (semantic definition)
 %
@@ -265,9 +267,6 @@ negate_u(3,CLP,U,X) :-
 	!,
 	fail.
 negate_u(_,_,_,_).
-
-:- multifile
-        detach_bounds/2.
 
 % Profiling: these predicates are called during redundant and can be used
 % to count the number of redundant bounds.

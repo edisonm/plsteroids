@@ -1,19 +1,20 @@
 /*  $Id$
 
-    Part of CLP(Q) (Constraint Logic Programming over Rationals)
+    Part of CLP(R) (Constraint Logic Programming over Reals)
 
     Author:        Leslie De Koninck
     E-mail:        Leslie.DeKoninck@cs.kuleuven.be
     WWW:           http://www.swi-prolog.org
 		   http://www.ai.univie.ac.at/cgi-bin/tr-online?number+95-09
-    Copyright (C): 2006, K.U. Leuven and
+    Copyright (C): 2004, K.U. Leuven and
 		   1992-1995, Austrian Research Institute for
 		              Artificial Intelligence (OFAI),
 			      Vienna, Austria
 
-    This software is based on CLP(Q,R) by Christian Holzbaur for SICStus
-    Prolog and distributed under the license details below with permission from
-    all mentioned authors.
+    This software is part of Leslie De Koninck's master thesis, supervised
+    by Bart Demoen and daily advisor Tom Schrijvers.  It is based on CLP(Q,R)
+    by Christian Holzbaur for SICStus Prolog and distributed under the
+    license details below with permission from all mentioned authors.
 
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public License
@@ -37,34 +38,29 @@
     the GNU General Public License.
 */
 
-:- module(store_q,
+:- module(clpcd_store,
 	[
-	    add_linear_11/3,
-	    add_linear_f1/4,
-	    add_linear_ff/5,
+	    add_linear_11/4,
+	    add_linear_f1/5,
+	    add_linear_ff/6,
 	    normalize_scalar/2,
 	    delete_factor/4,
-	    mult_linear_factor/3,
+	    mult_linear_factor/4,
 	    nf_rhs_x/4,
-	    isolate/3,
-	    nf_substitute/4,
+	    isolate/4,
+	    nf_substitute/5,
 	    mult_hom/3,
 	    nf_coeff_of/3,
-	    renormalize/2	
+	    renormalize/3	
 	]).
 
-:- use_module(library(clpcd/compare)).
+:- use_module(library(clpcd/domain_ops)).
 
 % normalize_scalar(S,[N,Z])
 %
 % Transforms a scalar S into a linear expression [S,0]
 
 normalize_scalar(S,[S,0]).
-
-:- multifile
-        clpcd_project:renormalize/3.
-
-clpcd_project:renormalize(clpcdq,Lin,New) :- renormalize(Lin,New).
 
 % renormalize(List,Lin)
 %
@@ -74,33 +70,33 @@ clpcd_project:renormalize(clpcdq,Lin,New) :- renormalize(Lin,New).
 % the constant part of the linear expression; when a variable X is bound to
 % another variable Y, the scalars of both are added)
 
-renormalize([I,R|Hom],Lin) :-
+renormalize(CLP, [I,R|Hom], Lin) :-
 	length(Hom,Len),
-	renormalize_log(Len,Hom,[],Lin0),
-	add_linear_11([I,R],Lin0,Lin).
+	renormalize_log(Len, CLP, Hom, [], Lin0),
+	add_linear_11(CLP, [I,R], Lin0, Lin).
 
 % renormalize_log(Len,Hom,HomTail,Lin)
 %
 % Logarithmically renormalizes the homogene part of a not normalized
 % linear expression. See also renormalize/2.
 
-renormalize_log(1,[Term|Xs],Xs,Lin) :-
+renormalize_log(1, _, [Term|Xs], Xs, Lin) :-
 	!,
 	Term = l(X*_,_),
 	renormalize_log_one(X,Term,Lin).
-renormalize_log(2,[A,B|Xs],Xs,Lin) :-
+renormalize_log(2, CLP, [A,B|Xs], Xs, Lin) :-
 	!,
 	A = l(X*_,_),
 	B = l(Y*_,_),
 	renormalize_log_one(X,A,LinA),
 	renormalize_log_one(Y,B,LinB),
-	add_linear_11(LinA,LinB,Lin).
-renormalize_log(N,L0,L2,Lin) :-
+	add_linear_11(CLP, LinA, LinB, Lin).
+renormalize_log(N, CLP, L0, L2, Lin) :-
 	P is N>>1,
 	Q is N-P,
-	renormalize_log(P,L0,L1,Lp),
-	renormalize_log(Q,L1,L2,Lq),
-	add_linear_11(Lp,Lq,Lin).
+	renormalize_log(P, CLP, L0, L1, Lp),
+	renormalize_log(Q, CLP, L1, L2, Lq),
+	add_linear_11(CLP, Lp, Lq, Lin).
 
 % renormalize_log_one(X,Term,Res)
 %
@@ -125,132 +121,134 @@ renormalize_log_one(X,Term,Res) :-
 % Linear expression LinC is the result of the addition of the 2 linear expressions
 % LinA and LinB, each one multiplied by a scalar (Ka for LinA and Kb for LinB).
 
-add_linear_ff(LinA,Ka,LinB,Kb,LinC) :-
+add_linear_ff(CLP, LinA, Ka, LinB, Kb, LinC) :-
 	LinA = [Ia,Ra|Ha],
 	LinB = [Ib,Rb|Hb],
 	LinC = [Ic,Rc|Hc],
 	Ic is Ia*Ka+Ib*Kb,
 	Rc is Ra*Ka+Rb*Kb,
- 	add_linear_ffh(Ha,Ka,Hb,Kb,Hc).
+ 	add_linear_ffh(Ha, CLP, Ka, Hb, Kb, Hc).
 
 % add_linear_ffh(Ha,Ka,Hb,Kb,Hc)
 %
 % Homogene part Hc is the result of the addition of the 2 homogene parts Ha and Hb,
 % each one multiplied by a scalar (Ka for Ha and Kb for Hb)
 
-add_linear_ffh([],_,Ys,Kb,Zs) :- mult_hom(Ys,Kb,Zs).
-add_linear_ffh([l(X*Kx,OrdX)|Xs],Ka,Ys,Kb,Zs) :-
-	add_linear_ffh(Ys,X,Kx,OrdX,Xs,Zs,Ka,Kb).
+add_linear_ffh([], _, _, Ys, Kb, Zs) :- mult_hom(Ys,Kb,Zs).
+add_linear_ffh([l(X*Kx,OrdX)|Xs], CLP, Ka, Ys, Kb, Zs) :-
+	add_linear_ffh(Ys, CLP, X, Kx, OrdX, Xs, Zs, Ka, Kb).
 
 % add_linear_ffh(Ys,X,Kx,OrdX,Xs,Zs,Ka,Kb)
 %
 % Homogene part Zs is the result of the addition of the 2 homogene parts Ys and
 % [l(X*Kx,OrdX)|Xs], each one multiplied by a scalar (Ka for [l(X*Kx,OrdX)|Xs] and Kb for Ys)
 
-add_linear_ffh([],X,Kx,OrdX,Xs,Zs,Ka,_) :- mult_hom([l(X*Kx,OrdX)|Xs],Ka,Zs).
-add_linear_ffh([l(Y*Ky,OrdY)|Ys],X,Kx,OrdX,Xs,Zs,Ka,Kb) :-
+add_linear_ffh([], _, X, Kx, OrdX, Xs, Zs, Ka, _) :- mult_hom([l(X*Kx,OrdX)|Xs],Ka,Zs).
+add_linear_ffh([l(Y*Ky,OrdY)|Ys], CLP, X, Kx, OrdX, Xs, Zs, Ka, Kb) :-
 	compare(Rel,OrdX,OrdY),
 	(   Rel = (=)
 	->  Kz is Kx*Ka+Ky*Kb,
-	    (   compare_d(clpcdq, =, Kx*Ka, -Ky*Kb)
-	    ->  add_linear_ffh(Xs,Ka,Ys,Kb,Zs)
+	    (   % Kz =:= 0
+                compare_d(CLP, =, Kx*Ka, -Ky*Kb)
+	    ->  add_linear_ffh(Xs, CLP, Ka, Ys, Kb, Zs)
 	    ;   Zs = [l(X*Kz,OrdX)|Ztail],
-		add_linear_ffh(Xs,Ka,Ys,Kb,Ztail)
+		add_linear_ffh(Xs, CLP, Ka, Ys, Kb, Ztail)
 	    )
 	;   Rel = (<)
 	->  Zs = [l(X*Kz,OrdX)|Ztail],
 	    Kz is Kx*Ka,
-	    add_linear_ffh(Xs,Y,Ky,OrdY,Ys,Ztail,Kb,Ka)
+	    add_linear_ffh(Xs, CLP, Y, Ky, OrdY, Ys, Ztail, Kb, Ka)
 	;   Rel = (>)
 	->  Zs = [l(Y*Kz,OrdY)|Ztail],
 	    Kz is Ky*Kb,
-	    add_linear_ffh(Ys,X,Kx,OrdX,Xs,Ztail,Ka,Kb)
+	    add_linear_ffh(Ys, CLP, X, Kx, OrdX, Xs, Ztail, Ka, Kb)
      	).
 
 % add_linear_f1(LinA,Ka,LinB,LinC)
 %
 % special case of add_linear_ff with Kb = 1
 
-add_linear_f1(LinA,Ka,LinB,LinC) :-
+add_linear_f1(CLP, LinA, Ka, LinB, LinC) :-
 	LinA = [Ia,Ra|Ha],
 	LinB = [Ib,Rb|Hb],
 	LinC = [Ic,Rc|Hc],
 	Ic is Ia*Ka+Ib,
 	Rc is Ra*Ka+Rb,
-	add_linear_f1h(Ha,Ka,Hb,Hc).
+	add_linear_f1h(Ha, CLP, Ka, Hb, Hc).
 
 % add_linear_f1h(Ha,Ka,Hb,Hc)
 %
 % special case of add_linear_ffh/5 with Kb = 1
 
-add_linear_f1h([],_,Ys,Ys).
-add_linear_f1h([l(X*Kx,OrdX)|Xs],Ka,Ys,Zs) :-
-	add_linear_f1h(Ys,X,Kx,OrdX,Xs,Zs,Ka).
+add_linear_f1h([], _, _, Ys, Ys).
+add_linear_f1h([l(X*Kx,OrdX)|Xs], CLP, Ka, Ys, Zs) :-
+	add_linear_f1h(Ys, CLP, X, Kx, OrdX, Xs, Zs, Ka).
 
 % add_linear_f1h(Ys,X,Kx,OrdX,Xs,Zs,Ka)
 %
 % special case of add_linear_ffh/8 with Kb = 1
 
-add_linear_f1h([],X,Kx,OrdX,Xs,Zs,Ka) :- mult_hom([l(X*Kx,OrdX)|Xs],Ka,Zs).
-add_linear_f1h([l(Y*Ky,OrdY)|Ys],X,Kx,OrdX,Xs,Zs,Ka) :-
+add_linear_f1h([], _, X, Kx, OrdX, Xs, Zs, Ka) :- mult_hom([l(X*Kx,OrdX)|Xs],Ka,Zs).
+add_linear_f1h([l(Y*Ky,OrdY)|Ys], CLP, X, Kx, OrdX, Xs, Zs, Ka) :-
 	compare(Rel,OrdX,OrdY),
 	(   Rel = (=)
 	->  Kz is Kx*Ka+Ky,
-	    (   compare_d(clpcdq, =, Kx*Ka, -Ky)
-	    ->  add_linear_f1h(Xs,Ka,Ys,Zs)
+	    (   % Kz =:= 0.0
+                compare_d(CLP, =, Kx*Ka, -Ky)
+	    ->  add_linear_f1h(Xs, CLP, Ka, Ys, Zs)
 	    ;   Zs = [l(X*Kz,OrdX)|Ztail],
-		add_linear_f1h(Xs,Ka,Ys,Ztail)
+		add_linear_f1h(Xs, CLP, Ka, Ys, Ztail)
 	    )
 	;   Rel = (<)
 	->  Zs = [l(X*Kz,OrdX)|Ztail],
 	    Kz is Kx*Ka,
-	    add_linear_f1h(Xs,Ka,[l(Y*Ky,OrdY)|Ys],Ztail)
+	    add_linear_f1h(Xs, CLP, Ka, [l(Y*Ky,OrdY)|Ys], Ztail)
  	;   Rel = (>)
 	->  Zs = [l(Y*Ky,OrdY)|Ztail],
-	    add_linear_f1h(Ys,X,Kx,OrdX,Xs,Ztail,Ka)
+	    add_linear_f1h(Ys, CLP, X, Kx, OrdX, Xs, Ztail, Ka)
 	).
 
 % add_linear_11(LinA,LinB,LinC)
 %
 % special case of add_linear_ff with Ka = 1 and Kb = 1
 
-add_linear_11(LinA,LinB,LinC) :-
+add_linear_11(CLP, LinA, LinB, LinC) :-
 	LinA = [Ia,Ra|Ha],
 	LinB = [Ib,Rb|Hb],
 	LinC = [Ic,Rc|Hc],
 	Ic is Ia+Ib,
 	Rc is Ra+Rb,
-	add_linear_11h(Ha,Hb,Hc).
+	add_linear_11h(Ha, CLP, Hb, Hc).
 
 % add_linear_11h(Ha,Hb,Hc)
 %
 % special case of add_linear_ffh/5 with Ka = 1 and Kb = 1
 
-add_linear_11h([],Ys,Ys).
-add_linear_11h([l(X*Kx,OrdX)|Xs],Ys,Zs) :-
-	add_linear_11h(Ys,X,Kx,OrdX,Xs,Zs).
+add_linear_11h([], _, Ys, Ys).
+add_linear_11h([l(X*Kx,OrdX)|Xs], CLP, Ys, Zs) :-
+	add_linear_11h(Ys, CLP, X, Kx, OrdX, Xs, Zs).
 
 % add_linear_11h(Ys,X,Kx,OrdX,Xs,Zs)
 %
 % special case of add_linear_ffh/8 with Ka = 1 and Kb = 1
 
-add_linear_11h([],X,Kx,OrdX,Xs,[l(X*Kx,OrdX)|Xs]).
-add_linear_11h([l(Y*Ky,OrdY)|Ys],X,Kx,OrdX,Xs,Zs) :-
+add_linear_11h([], _, X, Kx, OrdX, Xs, [l(X*Kx,OrdX)|Xs]).
+add_linear_11h([l(Y*Ky,OrdY)|Ys], CLP, X, Kx, OrdX, Xs, Zs) :-
 	compare(Rel,OrdX,OrdY),
 	(   Rel = (=)
 	->  Kz is Kx+Ky,
 	    (   % Kz =:= 0
-                compare_d(clpcdq, =, Kx, -Ky)
-	    ->  add_linear_11h(Xs,Ys,Zs)
+		compare_d(CLP, =, Kx, -Ky)
+	    ->  add_linear_11h(Xs, CLP, Ys, Zs)
 	    ;   Zs = [l(X*Kz,OrdX)|Ztail],
-		add_linear_11h(Xs,Ys,Ztail)
+		add_linear_11h(Xs, CLP, Ys, Ztail)
 	    )
 	;   Rel = (<)
 	->  Zs = [l(X*Kx,OrdX)|Ztail],
-	    add_linear_11h(Xs,Y,Ky,OrdY,Ys,Ztail)
+	    add_linear_11h(Xs, CLP, Y, Ky, OrdY, Ys, Ztail)
 	;   Rel = (>)
 	->  Zs = [l(Y*Ky,OrdY)|Ztail],
-	    add_linear_11h(Ys,X,Kx,OrdX,Xs,Ztail)
+	    add_linear_11h(Ys, CLP, X, Kx, OrdX, Xs, Ztail)
 	).
 
 % mult_linear_factor(Lin,K,Res)
@@ -258,11 +256,11 @@ add_linear_11h([l(Y*Ky,OrdY)|Ys],X,Kx,OrdX,Xs,Zs) :-
 % Linear expression Res is the result of multiplication of linear
 % expression Lin by scalar K
 
-mult_linear_factor(Lin,K,Mult) :-
-        compare_d(clpcdq, =, K, 1),
+mult_linear_factor(CLP, Lin, K, Mult) :-
+        compare_d(CLP, =, K, 1),
 	!,
 	Mult = Lin.
-mult_linear_factor(Lin,K,Res) :-
+mult_linear_factor(_, Lin, K, Res) :-
 	Lin = [I,R|Hom],
 	Res = [Ik,Rk|Mult],
 	Ik is I*K,
@@ -285,9 +283,9 @@ mult_hom([l(A*Fa,OrdA)|As],F,[l(A*Fan,OrdA)|Afs]) :-
 % linear expression Lin, by its definition in the form of linear
 % expression Def
 
-nf_substitute(OrdV,LinV,LinX,LinX1) :-
+nf_substitute(CLP, OrdV, LinV, LinX, LinX1) :-
 	delete_factor(OrdV,LinX,LinW,K),
-	add_linear_f1(LinV,K,LinW,LinX1).
+	add_linear_f1(CLP, LinV, K, LinW, LinX1).
 
 % delete_factor(Ord,Lin,Res,Coeff)
 %
@@ -350,7 +348,7 @@ nf_rhs_x(Lin,OrdX,Rhs,K) :-
 % Linear expression Lin1 is the result of the transformation of linear expression
 % Lin = 0 which contains the term l(New*K,OrdN) into an equivalent expression Lin1 = New.
 
-isolate(OrdN,Lin,Lin1) :-
+isolate(CLP, OrdN, Lin, Lin1) :-
 	delete_factor(OrdN,Lin,Lin0,Coeff),
-	K is -1 rdiv Coeff,
-	mult_linear_factor(Lin0,K,Lin1).
+	div_d(CLP, -1, Coeff, K),
+	mult_linear_factor(CLP, Lin0, K, Lin1).

@@ -39,41 +39,21 @@
 */
 
 
-:- module(fourmotz_n,
+:- module(clpcd_fourmotz,
 	[
-	    fm_elim/3
-	]).
-:- use_module(library(clpcd/class),
-	[
-	    class_allvars/2
-	]).
-:- use_module(library(clpcd/project),
-	[
-	    drop_dep/1,
-	    drop_dep_one/1,
-	    make_target_indep/2
-	]).
-:- use_module(library(clpcd/redund),
-	[
-	    redundancy_vars/1
-	]).
-:- use_module(store_n,
-	[
-	    add_linear_11/3,
-	    add_linear_f1/4,
-	    nf_coeff_of/3,
-	    normalize_scalar/2
+	    fm_elim/4
 	]).
 
-:- multifile
-        clpcd_project:fm_elim/4.
+:- use_module(library(clpcd/class)).
+:- use_module(library(clpcd/project)).
+:- use_module(library(clpcd/redund)).
+:- use_module(library(clpcd/store)).
+:- use_module(library(clpcd/bv)).
+:- use_module(library(clpcd/domain_ops)).
 
-clpcd_project:fm_elim(clpn,Avs,Tvs,Pivots) :-
-    fm_elim(Avs,Tvs,Pivots).
-
-fm_elim(Vs,Target,Pivots) :-
+fm_elim(CLP,Vs,Target,Pivots) :-
 	prefilter(Vs,Vsf),
-	fm_elim_int(Vsf,Target,Pivots).
+	fm_elim_int(Vsf, CLP, Target, Pivots).
 
 % prefilter(Vars,Res)
 %
@@ -96,26 +76,26 @@ prefilter([V|Vs],Res) :-
 % the target variables are marked with an attribute, and we get a list
 % of them as an argument too
 %
-fm_elim_int([],_,Pivots) :-	% done
+fm_elim_int([], _, _, Pivots) :-	% done
 	unkeep(Pivots).
-fm_elim_int(Vs,Target,Pivots) :-
+fm_elim_int(Vs, CLP, Target, Pivots) :-
 	Vs = [_|_],
-	(   best(Vs,Best,Rest)
+	(   best(CLP, Vs, Best, Rest)
 	->  occurences(Best,Occ),
-	    elim_min(Best,Occ,Target,Pivots,NewPivots)
+	    elim_min(CLP, Best, Occ, Target, Pivots, NewPivots)
 	;   % give up
 	    NewPivots = Pivots,
 	    Rest = []
 	),
-	fm_elim_int(Rest,Target,NewPivots).
+	fm_elim_int(Rest, CLP, Target, NewPivots).
 
 % best(Vs,Best,Rest)
 %
 % Finds the variable with the best result (lowest Delta) in fm_cp_filter
 % and returns the other variables in Rest.
 
-best(Vs,Best,Rest) :-
-	findall(Delta-N,fm_cp_filter(Vs,Delta,N),Deltas),
+best(CLP, Vs, Best, Rest) :-
+	findall(Delta-N,fm_cp_filter(CLP, Vs, Delta, N),Deltas),
 	keysort(Deltas,[_-N|_]),
 	select_nth(Vs,N,Best,Rest).
 
@@ -126,14 +106,14 @@ best(Vs,Best,Rest) :-
 % Note that target variables and variables that only occur in unbounded equations
 % should have been removed from Vs via prefilter/2
 
-fm_cp_filter(Vs,Delta,N) :-
+fm_cp_filter(CLP, Vs, Delta, N) :-
 	length(Vs,Len),	% Len = number of variables in Vs
 	mem(Vs,X,Vst),	% Selects a variable X in Vs, Vst is the list of elements after X in Vs
 	get_attr(X,clpcd_itf,Att),
 	arg(4,Att,lin(Lin)),
 	arg(5,Att,order(OrdX)),
 	arg(9,Att,n),	% no target variable
-	indep(Lin,OrdX),	% X is an independent variable
+	indep(CLP, Lin, OrdX),	% X is an independent variable
 	occurences(X,Occ),	
 	Occ = [_|_],
 	cp_card(Occ,0,Lnew),
@@ -165,11 +145,11 @@ select_nth([Y|Ys],M,N,X,[Y|Xs]) :-
 % fm_detach + reverse_pivot introduce indep t_none, which
 % invalidates the invariants
 %
-elim_min(V,Occ,Target,Pivots,NewPivots) :-
-	crossproduct(Occ,New,[]),
-	activate_crossproduct(New),
-	reverse_pivot(Pivots),
-	fm_detach(Occ),
+elim_min(CLP, V, Occ, Target, Pivots, NewPivots) :-
+	crossproduct(Occ, CLP, New, []),
+	activate_crossproduct(New, CLP),
+	reverse_pivot(Pivots, CLP),
+	fm_detach(Occ, CLP),
 	allvars(V,All),
 	redundancy_vars(All),			% only for New \== []
 	make_target_indep(Target,NewPivots),
@@ -178,8 +158,8 @@ elim_min(V,Occ,Target,Pivots,NewPivots) :-
 %
 % restore NF by reverse pivoting
 %
-reverse_pivot([]).
-reverse_pivot([I:D|Ps]) :-
+reverse_pivot([], _).
+reverse_pivot([I:D|Ps], CLP) :-
 	get_attr(D,clpcd_itf,AttD),
 	arg(2,AttD,type(Dt)),
 	setarg(11,AttD,n), % no longer
@@ -187,8 +167,8 @@ reverse_pivot([I:D|Ps]) :-
 	arg(2,AttI,type(It)),
 	arg(5,AttI,order(OrdI)),
 	arg(6,AttI,class(ClI)),
-	pivot(D,ClI,OrdI,Dt,It),
-	reverse_pivot(Ps).
+	pivot(CLP, D, ClI, OrdI, Dt, It),
+	reverse_pivot(Ps, CLP).
 
 % unkeep(Pivots)
 %
@@ -205,22 +185,22 @@ unkeep([_:D|Ps]) :-
 %
 % All we drop are bounds
 %
-fm_detach( []).
-fm_detach([V:_|Vs]) :-
-	detach_bounds(V),
-	fm_detach(Vs).
+fm_detach([], _).
+fm_detach([V:_|Vs], CLP) :-
+	detach_bounds(CLP, V),
+	fm_detach(Vs, CLP).
 
 % activate_crossproduct(Lst)
 %
 % For each inequality Lin =< 0 (or Lin < 0) in Lst, a new variable is created:
 % Var = Lin and Var =< 0 (or Var < 0). Var is added to the basis.
 
-activate_crossproduct([]).
-activate_crossproduct([lez(Strict,Lin)|News]) :-
-	var_with_def_intern(t_u(0),Var,Lin,Strict),
+activate_crossproduct([], _).
+activate_crossproduct([lez(Strict,Lin)|News], CLP) :-
+	var_with_def_intern(t_u(0), CLP, Var, Lin, Strict),
 	% Var belongs to same class as elements in Lin
 	basis_add(Var,_),
-	activate_crossproduct(News).
+	activate_crossproduct(News, CLP).
 
 % ------------------------------------------------------------------------------
 
@@ -230,10 +210,10 @@ activate_crossproduct([lez(Strict,Lin)|News]) :-
 % This predicate each time puts the next element of Lst as First in crossproduct/4
 % and lets the rest be Next.
 
-crossproduct([]) --> [].
-crossproduct([A|As]) -->
-	crossproduct(As,A),
-	crossproduct(As).
+crossproduct([], _) --> [].
+crossproduct([A|As], CLP) -->
+	crossproduct(As, CLP, CLP, A),
+	crossproduct(As, CLP).
 
 % crossproduct(Next,First,Res,ResTail)
 %
@@ -247,8 +227,8 @@ crossproduct([A|As]) -->
 % from the bounds of A and B, via cross_lower/7 and cross_upper/7, new inequalities
 % are generated. Then the same is done for B:K2 = next element in Next.
 
-crossproduct([],_) --> [].
-crossproduct([B:Kb|Bs],A:Ka) -->
+crossproduct([], CLP, CLP, _) --> [].
+crossproduct([B:Kb|Bs], CLP, CLP, A:Ka) -->
 	{
 	    get_attr(A,clpcd_itf,AttA),
 	    arg(2,AttA,type(Ta)),
@@ -258,23 +238,23 @@ crossproduct([B:Kb|Bs],A:Ka) -->
 	    arg(2,AttB,type(Tb)),
 	    arg(3,AttB,strictness(Sb)),
 	    arg(4,AttB,lin(LinB)),
-	    K is -Kb/Ka,
-	    add_linear_f1(LinA,K,LinB,Lin)	% Lin doesn't contain the target variable anymore
+	    div_d(CLP, -Kb, Ka, K),
+	    add_linear_f1(CLP, LinA, K, LinB, Lin)	% Lin doesn't contain the target variable anymore
 	},
 	(   { K > 0 }	% K > 0: signs were opposite
 	->  { Strict is Sa \/ Sb },
-	    cross_lower(Ta,Tb,K,Lin,Strict),
-	    cross_upper(Ta,Tb,K,Lin,Strict)
+	    cross_lower(CLP, Ta, Tb, K, Lin, Strict),
+	    cross_upper(CLP, Ta, Tb, K, Lin, Strict)
 	;   % La =< A =< Ua -> -Ua =< -A =< -La
     	    {
 		flip(Ta,Taf),
 		flip_strict(Sa,Saf),
 		Strict is Saf \/ Sb
 	    },
-	    cross_lower(Taf,Tb,K,Lin,Strict),
-	    cross_upper(Taf,Tb,K,Lin,Strict)
+	    cross_lower(CLP, Taf, Tb, K, Lin, Strict),
+	    cross_upper(CLP, Taf, Tb, K, Lin, Strict)
 	),
-	crossproduct(Bs,A:Ka).
+	crossproduct(Bs, CLP, CLP, A:Ka).
 
 % cross_lower(Ta,Tb,K,Lin,Strict,Res,ResTail)
 %
@@ -290,18 +270,18 @@ crossproduct([B:Kb|Bs],A:Ka) -->
 % with Sl being the strictness and Lhs the lefthandside of the equation.
 % See also cross_upper/7
 
-cross_lower(Ta,Tb,K,Lin,Strict) -->
+cross_lower(CLP, Ta, Tb, K, Lin, Strict) -->
 	{
 	    lower(Ta,La),
 	    lower(Tb,Lb),
 	    !,
 	    L is K*La+Lb,
 	    normalize_scalar(L,Ln),
-	    add_linear_f1(Lin,-1,Ln,Lhs),
+	    add_linear_f1(CLP, Lin, -1, Ln, Lhs),
 	    Sl is Strict >> 1			% normalize to upper bound
 	},
 	[ lez(Sl,Lhs) ].
-cross_lower(_,_,_,_,_) --> [].
+cross_lower(_, _, _, _, _, _) --> [].
 
 % cross_upper(Ta,Tb,K,Lin,Strict,Res,ResTail)
 %
@@ -309,18 +289,18 @@ cross_lower(_,_,_,_,_) --> [].
 % This predicate handles the second inequality:
 % -(K*Ua + Ub) + K*A + B =< 0 or -(K*La + Ub) + K*A + B =< 0
 
-cross_upper(Ta,Tb,K,Lin,Strict) -->
+cross_upper(CLP, Ta, Tb, K, Lin, Strict) -->
 	{
 	    upper(Ta,Ua),
 	    upper(Tb,Ub),
 	    !,
 	    U is -(K*Ua+Ub),
 	    normalize_scalar(U,Un),
-	    add_linear_11(Un,Lin,Lhs),
+	    add_linear_11(CLP, Un, Lin, Lhs),
 	    Su is Strict /\ 1			% normalize to upper bound
 	},
 	[ lez(Su,Lhs) ].
-cross_upper(_,_,_,_,_) --> [].
+cross_upper(_, _, _, _, _, _) --> [].
 
 % lower(Type,Lowerbound)
 %

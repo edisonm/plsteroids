@@ -46,26 +46,11 @@
             var_intern/4,
 	    arrangement/2
 	]).
-:- use_module(class,
-	[
-	    class_get_prio/2,
-	    class_put_prio/2
-	]).
-:- use_module(itf,
-	[
-	    clp_type/2
-	]).
-:- use_module(library(ugraphs),
-	[
-	    add_edges/3,
-	    add_vertices/3,
-	    top_sort/2,
-	    ugraph_union/3
-	]).
-:- use_module(library(lists),
-	[
-	    append/3
-	]).
+
+:- use_module(library(clpcd/class)).
+:- use_module(library(clpcd/itf)).
+:- use_module(library(ugraphs)).
+:- use_module(library(lists)).
 
 ordering(X) :-
 	var(X),

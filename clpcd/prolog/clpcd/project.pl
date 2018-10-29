@@ -51,27 +51,15 @@
 	    make_target_indep/2,
 	    project_attributes/2
 	]).
-:- use_module(class,
-	[
-	    class_allvars/2
-	]).
-:- use_module(geler,
-	[
-	    project_nonlin/3
-	]).
-:- use_module(redund,
-	[
-	    redundancy_vars/1,
-	    systems/3
-	]).
-:- use_module(ordering,
-	[
-	    arrangement/2
-	]).
-:- use_module(library(clpcd/compare)).
 
-:- multifile
-        fm_elim/4.
+:- use_module(library(clpcd/class)).
+:- use_module(library(clpcd/geler)).
+:- use_module(library(clpcd/redund)).
+:- use_module(library(clpcd/ordering)).
+:- use_module(library(clpcd/bv)).
+:- use_module(library(clpcd/fourmotz)).
+:- use_module(library(clpcd/store)).
+:- use_module(library(clpcd/domain_ops)).
 
 %
 % interface predicate
@@ -192,9 +180,6 @@ drop_dep_one(V) :-
 	setarg(5,Att,n),
 	setarg(6,Att,n).
 drop_dep_one(_).
-
-:- multifile
-        renormalize/3.
 
 % indep(Lin,OrdX)
 %

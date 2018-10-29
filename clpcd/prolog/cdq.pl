@@ -1,4 +1,4 @@
-/*  $Id$
+/*
 
     Part of CLP(Q) (Constraint Logic Programming over Rationals)
 
@@ -37,42 +37,85 @@
     the GNU General Public License.
 */
 
-:- module(bb_q,
-	[
-	]).
+:- module(cdq,
+	  [ {}/1,
+	    maximize/1,
+	    minimize/1,
+	    inf/2, inf/4, sup/2, sup/4,
+	    bb_inf/3,
+	    bb_inf/4,
+	    ordering/1,
+	    entailed/1
+	  ]).
 
+:- license(gpl_swipl, 'CLP(CDQ)').
+:- use_module(library(clpcd/bb)).
 :- use_module(library(clpcd/nf)).
+:- use_module(library(clpcd/bv)).
+:- reexport(library(clpcd/dump),
+            [ dump/3 %, projecting_assert/1
+            ]).
+:- reexport(library(clpcd/itf), [clp_type/2]).
+:- use_module(library(clpcd)).
+:- reexport(library(clpcd/ordering), [ordering/1]).
 
-% bb_narrow_lower(X)
-%
-% Narrows the lower bound so that it is an integer bound.
-% We do this by finding the infimum of X and asserting that X
-% is larger than the first integer larger or equal to the infimum
-% (second integer if X is to be strict larger than the first integer).
+clpcd_domain_ops:compare_d(cdq, Op, A, B) :-
+    compare_q(Op, A, B).
 
-bb_narrow_lower(X) :-
-	(   inf(X,Inf)
-	->  Bound is ceiling(Inf),
-	    (   entailed(CLP, X > Bound)
-	    ->  {X >= Bound+1}
-	    ;   {X >= Bound}
-	    )
-	;   true
-	).
+compare_q(=,  A, B) :- A =:= B.
+compare_q(=<, A, B) :- A =< B.
+compare_q(>=, A, B) :- A >= B.
+compare_q(<,  A, B) :- A < B.
+compare_q(>,  A, B) :- A > B.
+compare_q(\=, A, B) :- A =\= B.
 
-% bb_narrow_upper(X)
-%
-% See bb_narrow_lower/1. This predicate handles the upper bound.
+clpcd_domain_ops:div_d(cdq, A, B, C) :- C is A rdiv B.
 
-bb_narrow_upper(X) :-
-	(   sup(X,Sup)
-	->  Bound is floor(Sup),
-	    (   entailed(X < Bound)
-	    ->  {X =< Bound-1}
-	    ;   {X =< Bound}
-	    )
-	;   true
-	).
+clpcd_domain_ops:cast_d(cdq, A, B) :-
+    ( number(A)
+    ; rational(A)
+    ),
+    !,
+    B is rationalize(A).
+
+clpcd_domain_ops:floor_d(cdq, A, B) :- B is floor(A).
+
+clpcd_domain_ops:ceiling_d(cdq, A, B) :- B is ceiling(A).
+
+clpcd_domain_ops:integerp(cdq, A, A) :- integer(A).
+
+clpcd_itf:numbers_only(cdq, Y) :-
+	(   var(Y)
+	;   rational(Y)
+	;   throw(type_error(_X = Y,2,'a rational number',Y))
+	),
+	!.
+
+inf(Expression, Inf) :-
+        inf(cdq, Expression, Inf).
+
+inf(Expression, Inf, Vector, Vertex) :-
+        inf(cdq, Expression, Inf, Vector, Vertex).
+
+sup(Expression, Sup) :-
+        sup(cdq, Expression, Sup).
+
+sup(Expression, Sup, Vector, Vertex) :-
+        sup(cdq, Expression, Sup, Vector, Vertex).
+
+maximize(Term) :-
+        maximize(cdq, Term).
+
+minimize(Term) :-
+        minimize(cdq, Term).
+
+{Rel} :-
+        add_constraint(Rel, cdq).
+
+entailed(C) :- entailed(cdq, C).
+
+bb_inf(Is, Term, Inf) :- bb_inf(cdq, Is, Term, Inf, _).
+bb_inf(Is, Term, Inf, Vertex) :- bb_inf(cdq, Is, Term, Inf, Vertex).
 
 		 /*******************************
 		 *	       SANDBOX		*
@@ -80,5 +123,5 @@ bb_narrow_upper(X) :-
 :- multifile
 	sandbox:safe_primitive/1.
 
-sandbox:safe_primitive(bb_q:bb_inf(_,_,_)).
-sandbox:safe_primitive(bb_q:bb_inf(_,_,_,_)).
+sandbox:safe_primitive(cdq:{_}).
+sandbox:safe_primitive(cdq:entailed(_)).

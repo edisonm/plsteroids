@@ -49,8 +49,10 @@
 	    ineq_one_s_p_0/2
 	]).
 
-:- use_module(library(clpcd/compare)).
+:- use_module(library(clpcd/domain_ops)).
 :- use_module(library(clpcd/ordering)).
+:- use_module(library(clpcd/bv)).
+:- use_module(library(clpcd/store)).
 
 % ineq(H,I,Nf,Strictness)
 %
@@ -64,7 +66,7 @@ ineq([v(K,[X^1])|Tail], CLP, I, Lin, Strictness) :-
 ineq_cases([], CLP, I, _, Strictness, X, K) :-	% K*X + I < 0 or K*X + I =< 0
 	ineq_one(Strictness, CLP, X, K, I).
 ineq_cases([_|_], CLP, _, Lin, Strictness, _, _) :-
-	deref(Lin,Lind),	% Id+Hd =< 0
+	deref(CLP, Lin, Lind),	% Id+Hd =< 0
 	Lind = [Inhom,_|Hom],
 	ineq_more(Hom, CLP, Inhom, Lind, Strictness).
 
@@ -411,18 +413,18 @@ ineq_more(strict, CLP, Lind) :-
 	    get_attr(S,clpcd_itf,AttS),
 	    arg(5,AttS,order(OrdS)),
 	    div_d(CLP, -1, K, Ki),
-	    add_linear_ff(Rest,Ki,[0,0,l(S*1,OrdS)],Ki,LinU),	% U = (-1/K)*Rest + (-1/K)*S
+	    add_linear_ff(CLP, Rest, Ki, [0,0,l(S*1,OrdS)], Ki, LinU),	% U = (-1/K)*Rest + (-1/K)*S
 	    LinU = [_,_|Hu],
 	    get_or_add_class(U,Class),
 	    same_class(Hu,Class),	% put all variables of new lin. eq. of U in the same class
 	    get_attr(U,clpcd_itf,AttU),
 	    arg(5,AttU,order(OrdU)),
 	    arg(6,AttU,class(ClassU)),
-	    backsubst(ClassU,OrdU,LinU)	% substitute U by new lin. eq. everywhere in the class
-	;   var_with_def_intern(t_u(0),S,Lind,1),	% Lind < 0 => Lind = S with S < 0
+	    backsubst(CLP, ClassU, OrdU, LinU)	% substitute U by new lin. eq. everywhere in the class
+	;   var_with_def_intern(t_u(0), CLP, S, Lind, 1),	% Lind < 0 => Lind = S with S < 0
 	    basis_add(S,_),			% adds S to the basis
 	    determine_active_dec(Lind),		% activate bounds
-	    reconsider(S)			% reconsider basis
+	    reconsider(CLP, S)			% reconsider basis
 	).
 ineq_more(nonstrict, CLP, Lind) :-
 	(   unconstrained(Lind,U,K,Rest)
@@ -432,19 +434,19 @@ ineq_more(nonstrict, CLP, Lind) :-
 	    div_d(CLP, -1, K, Ki),
 	    get_attr(S,clpcd_itf,AttS),
 	    arg(5,AttS,order(OrdS)),
-	    add_linear_ff(Rest,Ki,[0,0,l(S*1,OrdS)],Ki,LinU),	% U = (-1K)*Rest + (-1/K)*S
+	    add_linear_ff(CLP, Rest, Ki, [0,0,l(S*1,OrdS)], Ki, LinU),	% U = (-1K)*Rest + (-1/K)*S
 	    LinU = [_,_|Hu],
 	    get_or_add_class(U,Class),
 	    same_class(Hu,Class),	% put all variables of new lin. eq of U in the same class
 	    get_attr(U,clpcd_itf,AttU),
 	    arg(5,AttU,order(OrdU)),
 	    arg(6,AttU,class(ClassU)),
-	    backsubst(ClassU,OrdU,LinU)	% substitute U by new lin. eq. everywhere in the class
+	    backsubst(CLP, ClassU, OrdU, LinU)	% substitute U by new lin. eq. everywhere in the class
 	;   % all variables are constrained
-	    var_with_def_intern(t_u(0),S,Lind,0),	% Lind =< 0 => Lind = S with S =< 0
+	    var_with_def_intern(t_u(0), CLP, S, Lind, 0),	% Lind =< 0 => Lind = S with S =< 0
 	    basis_add(S,_),				% adds S to the basis
 	    determine_active_dec(Lind),
-	    reconsider(S)
+	    reconsider(CLP, S)
 	).
 
 
@@ -516,15 +518,15 @@ udl(t_none, CLP, X, Lin, Bound, _Sold) :-
 	(   unconstrained(Lin,Uc,Kuc,Rest)
 	->  % X = Lin => -1/K*Rest + 1/K*X = U where U has no bounds
 	    div_d(CLP, -1, Kuc, Ki),
-	    add_linear_ff(Rest,Ki,[0,0,l(X* -1,Ord)],Ki,LinU),
+	    add_linear_ff(CLP, Rest, Ki, [0,0,l(X* -1,Ord)], Ki, LinU),
 	    get_attr(Uc,clpcd_itf,AttU),
 	    arg(5,AttU,order(OrdU)),
 	    arg(6,AttU,class(Class)),
-	    backsubst(Class,OrdU,LinU)
+	    backsubst(CLP, Class, OrdU, LinU)
 	;   % no unconstrained variables in Lin: make X part of basis and reconsider
 	    basis_add(X,_),
 	    determine_active_inc(Lin),
-	    reconsider(X)
+	    reconsider(CLP, X)
 	).
 udl(t_l(L), CLP, X, Lin, Bound, Sold) :-
 	(   compare_d(CLP, >, Bound, L)
@@ -578,15 +580,15 @@ udls(t_none, CLP, X, Lin, Bound, _Sold) :-
 	(   unconstrained(Lin,Uc,Kuc,Rest)
 	->  % X = Lin => U = -1/K*Rest + 1/K*X with U an unconstrained variable
 	    div_d(CLP, -1, Kuc, Ki),
-	    add_linear_ff(Rest,Ki,[0,0,l(X* -1,Ord)],Ki,LinU),
+	    add_linear_ff(CLP, Rest, Ki, [0,0,l(X* -1,Ord)], Ki, LinU),
 	    get_attr(Uc,clpcd_itf,AttU),
 	    arg(5,AttU,order(OrdU)),
 	    arg(6,AttU,class(Class)),
-	    backsubst(Class,OrdU,LinU)
+	    backsubst(CLP, Class, OrdU, LinU)
 	;   % no unconstrained variables: add X to basis and reconsider basis
 	    basis_add(X,_),
 	    determine_active_inc(Lin),
-	    reconsider(X)
+	    reconsider(CLP, X)
 	).
 udls(t_l(L), CLP, X, Lin, Bound, Sold) :-
 	(   compare_d(CLP, <, Bound, L)
@@ -641,15 +643,15 @@ udu(t_none, CLP, X, Lin, Bound, _Sold) :-
 	(   unconstrained(Lin,Uc,Kuc,Rest)
 	->  % X = Lin => U = -1/K*Rest + 1/K*X with U an unconstrained variable
 	    div_d(CLP, -1, Kuc, Ki),
-	    add_linear_ff(Rest,Ki,[0,0,l(X* -1,Ord)],Ki,LinU),
+	    add_linear_ff(CLP, Rest, Ki, [0,0,l(X* -1,Ord)], Ki, LinU),
 	    get_attr(Uc,clpcd_itf,AttU),
 	    arg(5,AttU,order(OrdU)),
 	    arg(6,AttU,class(Class)),
-	    backsubst(Class,OrdU,LinU)
+	    backsubst(CLP, Class, OrdU, LinU)
 	;   % no unconstrained variables: add X to basis and reconsider basis
 	    basis_add(X,_),
 	    determine_active_dec(Lin),	% try to lower R
-	    reconsider(X)
+	    reconsider(CLP, X)
 	).
 udu(t_u(U), CLP, X, Lin, Bound, Sold) :-
 	(   compare_d(CLP, <, Bound, U)
@@ -702,15 +704,15 @@ udus(t_none, CLP, X, Lin, Bound, _Sold) :-
 	(   unconstrained(Lin,Uc,Kuc,Rest)
 	->   % X = Lin => U = -1/K*Rest + 1/K*X with U an unconstrained variable
 	    div_d(CLP, -1, Kuc, Ki),
-	    add_linear_ff(Rest,Ki,[0,0,l(X* -1,Ord)],Ki,LinU),
+	    add_linear_ff(CLP, Rest, Ki, [0,0,l(X* -1,Ord)], Ki, LinU),
 	    get_attr(Uc,clpcd_itf,AttU),
 	    arg(5,AttU,order(OrdU)),
 	    arg(6,AttU,class(Class)),
-	    backsubst(Class,OrdU,LinU)
+	    backsubst(CLP, Class, OrdU, LinU)
 	;   % no unconstrained variables: add X to basis and reconsider basis
 	    basis_add(X,_),
 	    determine_active_dec(Lin),
-	    reconsider(X)
+	    reconsider(CLP, X)
 	).
 udus(t_u(U), CLP, X, Lin, Bound, Sold) :-
 	(   compare_d(CLP, <, U, Bound)
@@ -822,20 +824,20 @@ uiu(t_U(U), CLP, X, _Lin, Bound, Sold) :-
 	    (   get_attr(X,clpcd_itf,Att),
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
-		lb(ClassX,OrdX,Vlb-Vb-Lb),
+		lb(ClassX, CLP, OrdX, Vlb-Vb-Lb),
 		compare_d(CLP, =<, Bound, Lb + U)
 	    ->  get_attr(X,clpcd_itf,Att2), % changed?
 		setarg(2,Att2,type(t_U(Bound))),
 		setarg(3,Att2,strictness(Strict)),
-		pivot_a(Vlb,X,Vb,t_u(Bound)),
-		reconsider(X)
+		pivot_a(CLP, Vlb, X, Vb, t_u(Bound)),
+		reconsider(CLP, X)
 	    ;   get_attr(X,clpcd_itf,Att),
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
 		setarg(2,Att,type(t_U(Bound))),
 		setarg(3,Att,strictness(Strict)),
 		Delta is Bound - U,
-		backsubst_delta(ClassX,OrdX,X,Delta)
+		backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 	    )
 	;   true	% equal to upperbound and non-strict: keep
 	).
@@ -847,20 +849,20 @@ uiu(t_lU(L,U), CLP, X, Lin, Bound, Sold) :-
 		(   get_attr(X,clpcd_itf,Att),
 		    arg(5,Att,order(OrdX)),
 		    arg(6,Att,class(ClassX)),
-		    lb(ClassX,OrdX,Vlb-Vb-Lb),
+		    lb(ClassX, CLP, OrdX, Vlb-Vb-Lb),
 		    Bound - (Lb + U) < 1.0e-10
 		->  get_attr(X,clpcd_itf,Att2), % changed?
 		    setarg(2,Att2,type(t_lU(L,Bound))),
 		    setarg(3,Att2,strictness(Strict)),
-		    pivot_a(Vlb,X,Vb,t_lu(L,Bound)),
-		    reconsider(X)
+		    pivot_a(CLP, Vlb, X, Vb, t_lu(L,Bound)),
+		    reconsider(CLP, X)
 		;   get_attr(X,clpcd_itf,Att),
 		    arg(5,Att,order(OrdX)),
 		    arg(6,Att,class(ClassX)),
 		    setarg(2,Att,type(t_lU(L,Bound))),
 		    setarg(3,Att,strictness(Strict)),
 		    Delta is Bound - U,
-		    backsubst_delta(ClassX,OrdX,X,Delta)
+		    backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 		)
 	    ;	% equal to lowerbound: check strictness and solve
                 compare_d(CLP, =, L, Bound),
@@ -939,20 +941,20 @@ uius(t_U(U), CLP, X, _Lin, Bound, Sold) :-
 	    (   get_attr(X,clpcd_itf,Att),
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
-		lb(ClassX,OrdX,Vlb-Vb-Lb),
+		lb(ClassX, CLP, OrdX, Vlb-Vb-Lb),
 		Bound - (Lb + U) < 1.0e-10
 	    ->  get_attr(X,clpcd_itf,Att2), % changed?
 		setarg(2,Att2,type(t_U(Bound))),
 		setarg(3,Att2,strictness(Strict)),
-		pivot_a(Vlb,X,Vb,t_u(Bound)),
-		reconsider(X)
+		pivot_a(CLP, Vlb, X, Vb, t_u(Bound)),
+		reconsider(CLP, X)
 	    ;   get_attr(X,clpcd_itf,Att),
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
 		setarg(2,Att,type(t_U(Bound))),
 		setarg(3,Att,strictness(Strict)),
 		Delta is Bound - U,
-		backsubst_delta(ClassX,OrdX,X,Delta)
+		backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 	    )
 	;   Strict is Sold \/ 1,
 	    get_attr(X,clpcd_itf,Att),
@@ -967,20 +969,20 @@ uius(t_lU(L,U), CLP, X, _Lin, Bound, Sold) :-
 	    (   get_attr(X,clpcd_itf,Att),
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
-		lb(ClassX,OrdX,Vlb-Vb-Lb),
+		lb(ClassX, CLP, OrdX, Vlb-Vb-Lb),
 		Bound - (Lb + U) < 1.0e-10
 	    ->  get_attr(X,clpcd_itf,Att2), % changed?
 		setarg(2,Att2,type(t_lU(L,Bound))),
 		setarg(3,Att2,strictness(Strict)),
-		pivot_a(Vlb,X,Vb,t_lu(L,Bound)),
-		reconsider(X)
+		pivot_a(CLP, Vlb, X, Vb, t_lu(L,Bound)),
+		reconsider(CLP, X)
 	    ;	get_attr(X,clpcd_itf,Att),
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
 		setarg(2,Att,type(t_lU(L,Bound))),
 		setarg(3,Att,strictness(Strict)),
 		Delta is Bound - U,
-		backsubst_delta(ClassX,OrdX,X,Delta)
+		backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 	    )
 	;   Strict is Sold \/ 1,
 	    get_attr(X,clpcd_itf,Att),
@@ -1052,20 +1054,20 @@ uil(t_L(L), CLP, X, _Lin, Bound, Sold) :-
 	    (   get_attr(X,clpcd_itf,Att),
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
-		ub(ClassX,OrdX,Vub-Vb-Ub),
+		ub(ClassX, CLP, OrdX, Vub-Vb-Ub),
 		compare_d(CLP, >=, Bound, Ub + L)
 	    ->  get_attr(X,clpcd_itf,Att2), % changed?
 		setarg(2,Att2,type(t_L(Bound))),
 		setarg(3,Att2,strictness(Strict)),
-		pivot_a(Vub,X,Vb,t_l(Bound)),
-		reconsider(X)
+		pivot_a(CLP, Vub, X, Vb, t_l(Bound)),
+		reconsider(CLP, X)
 	    ;   get_attr(X,clpcd_itf,Att),
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
 		setarg(2,Att,type(t_L(Bound))),
 		setarg(3,Att,strictness(Strict)),
 		Delta is Bound - L,
-		backsubst_delta(ClassX,OrdX,X,Delta)
+		backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 	    )
 	;   true
 	).
@@ -1076,20 +1078,20 @@ uil(t_Lu(L,U), CLP, X, Lin, Bound, Sold) :-
 		(   get_attr(X,clpcd_itf,Att),
 		    arg(5,Att,order(OrdX)),
 		    arg(6,Att,class(ClassX)),
-		    ub(ClassX,OrdX,Vub-Vb-Ub),
+		    ub(ClassX, CLP, OrdX, Vub-Vb-Ub),
 		    compare_d(CLP, >=, Bound, Ub + L)
 		->  get_attr(X,clpcd_itf,Att2), % changed?
 		    setarg(2,Att2,t_Lu(Bound,U)),
 		    setarg(3,Att2,strictness(Strict)),
-		    pivot_a(Vub,X,Vb,t_lu(Bound,U)),
-		    reconsider(X)
+		    pivot_a(CLP, Vub, X, Vb, t_lu(Bound,U)),
+		    reconsider(CLP, X)
 		;   get_attr(X,clpcd_itf,Att),
 		    arg(5,Att,order(OrdX)),
 		    arg(6,Att,class(ClassX)),
 		    setarg(2,Att,type(t_Lu(Bound,U))),
 		    setarg(3,Att,strictness(Strict)),
 		    Delta is Bound - L,
-		    backsubst_delta(ClassX,OrdX,X,Delta)
+		    backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 		)
 	    ;	compare_d(CLP, =, Bound, U),
                 Sold /\ 1 =:= 0,
@@ -1166,20 +1168,20 @@ uils(t_L(L), CLP, X, _Lin, Bound, Sold) :-
 	    (   get_attr(X,clpcd_itf,Att),
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
-		ub(ClassX,OrdX,Vub-Vb-Ub),
+		ub(ClassX, CLP, OrdX, Vub-Vb-Ub),
 		compare_d(CLP, >=, Bound, Ub + L)
 	    ->  get_attr(X,clpcd_itf,Att2), % changed?
 		setarg(2,Att2,type(t_L(Bound))),
 		setarg(3,Att2,strictness(Strict)),
-		pivot_a(Vub,X,Vb,t_l(Bound)),
-		reconsider(X)
+		pivot_a(CLP, Vub, X, Vb, t_l(Bound)),
+		reconsider(CLP, X)
 	    ;   get_attr(X,clpcd_itf,Att),
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
 		setarg(2,Att,type(t_L(Bound))),
 		setarg(3,Att,strictness(Strict)),
 		Delta is Bound - L,
-		backsubst_delta(ClassX,OrdX,X,Delta)
+		backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 	    )
 	;   Strict is Sold \/ 2,
 	    get_attr(X,clpcd_itf,Att),
@@ -1194,20 +1196,20 @@ uils(t_Lu(L,U), CLP, X, _Lin, Bound, Sold) :-
 	    (   get_attr(X,clpcd_itf,Att),
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
-		ub(ClassX,OrdX,Vub-Vb-Ub),
+		ub(ClassX, CLP, OrdX, Vub-Vb-Ub),
 		compare_d(CLP, >=, Bound, Ub + L)
 	    ->  get_attr(X,clpcd_itf,Att2), % changed?
 		setarg(2,Att2,type(t_Lu(Bound,U))),
 		setarg(3,Att2,strictness(Strict)),
-		pivot_a(Vub,X,Vb,t_lu(Bound,U)),
-		reconsider(X)
+		pivot_a(CLP, Vub, X, Vb, t_lu(Bound,U)),
+		reconsider(CLP, X)
 	    ;   get_attr(X,clpcd_itf,Att),
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
 		setarg(2,Att,type(t_Lu(Bound,U))),
 		setarg(3,Att,strictness(Strict)),
 		Delta is Bound - L,
-		backsubst_delta(ClassX,OrdX,X,Delta)
+		backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 	    )
 	;   Strict is Sold \/ 2,
 	    get_attr(X,clpcd_itf,Att),
@@ -1226,8 +1228,8 @@ uils(t_Lu(L,U), CLP, X, _Lin, Bound, Sold) :-
 reconsider_upper(CLP, X, [I,R|H], U) :-
 	compare_d(CLP, >=, R + I, U),	% violation
 	!,
-	dec_step(H,Status),	% we want to decrement R
-	rcbl_status(Status,X,[],Binds,[],u(U)),
+	dec_step(H, CLP, Status),	% we want to decrement R
+	rcbl_status(Status, CLP, X, [], Binds, [], u(U)),
 	export_binding(Binds).
 reconsider_upper(_, _, _, _).
 
@@ -1243,8 +1245,8 @@ reconsider_upper(_, _, _, _).
 reconsider_lower(CLP, X, [I,R|H], L) :-
 	compare_d(CLP, =<, R + I, L),	% violation
 	!,
-	inc_step(H,Status),	% we want to increment R
-	rcbl_status(Status,X,[],Binds,[],l(L)),
+	inc_step(H, CLP, Status),	% we want to increment R
+	rcbl_status(Status, CLP, X, [], Binds, [], l(L)),
 	export_binding(Binds).
 reconsider_lower(_, _, _, _).
 
@@ -1264,5 +1266,5 @@ solve_bound(CLP, Lin, Bound) :-
 solve_bound(CLP, Lin, Bound) :-
 	Nb is -Bound,
 	normalize_scalar(Nb,Nbs),
-	add_linear_11(Nbs,Lin,Eq),
+	add_linear_11(CLP, Nbs, Lin, Eq),
 	solve(CLP, Eq).

@@ -40,24 +40,21 @@
 
 :- module(clpcd_bb,
 	[
-	    bb_inf/3,
-	    bb_inf/4,
-	    vertex_value/2
+	    bb_inf/5,
+	    vertex_value/3
 	]).
 
-:- use_module(library(clpcd/compare)).
-:- use_module(library(near_utils)).
+:- use_module(library(clpcd/domain_ops)).
+:- use_module(library(clpcd/bv)).
+:- use_module(library(clpcd/nf)).
 
 % bb_inf(Ints,Term,Inf)
 %
 % Finds the infimum of Term where the variables Ints are to be integers.
 % The infimum is stored in Inf.
 
-bb_inf(Is,Term,Inf) :-
-	bb_inf(Is,Term,Inf,_).
-
-bb_inf(Is,Term,Inf,Vertex) :-
-	wait_linear(Term,Nf,bb_inf_internal(CLP, Is, Nf, Inf, Vertex)).
+bb_inf(CLP, Is, Term, Inf, Vertex) :-
+	wait_linear(CLP, Term, Nf, bb_inf_internal(CLP, Is, Nf, Inf, Vertex)).
 
 % ---------------------------------------------------------------------
 
@@ -67,31 +64,31 @@ bb_inf(Is,Term,Inf,Vertex) :-
 % all variables in Is are to be integers.
 
 bb_inf_internal(CLP, Is, Lin, _, _) :-
-	bb_intern(Is,IsNf),
+	bb_intern(Is, CLP, IsNf),
 	nb_delete(prov_opt),
 	repair(CLP, Lin, LinR),	% bb_narrow ...
-	deref(LinR,Lind),
-	var_with_def_assign(Dep,Lind),
+	deref(CLP,LinR,Lind),
+	var_with_def_assign(CLP, Dep, Lind),
 	determine_active_dec(Lind),
-	bb_loop(Dep,IsNf),
+	bb_loop(CLP, Dep, IsNf),
 	fail.
 bb_inf_internal(CLP, _, _, Inf, Vertex) :-
 	nb_current(prov_opt,InfVal-Vertex),
 	add_constraint(Inf =:= InfVal, CLP),
 	nb_delete(prov_opt).
 
-% bb_loop(Opt,Is)
+% bb_loop(CLP, Opt, Is)
 %
 % Minimizes the value of Opt where variables Is have to be integer values.
 % This predicate can be backtracked to try different strategies.
 
-bb_loop(Opt,Is) :-
-	bb_reoptimize(Opt,Inf),
-	bb_better_bound(Inf),
-	vertex_value(Is,Ivs),
-	(   bb_first_nonint(Is,Ivs,Viol,Floor,Ceiling)
-	->  bb_branch(Viol,Floor,Ceiling),
-	    bb_loop(Opt,Is)
+bb_loop(CLP, Opt, Is) :-
+	bb_reoptimize(CLP, Opt, Inf),
+	bb_better_bound(CLP, Inf),
+	vertex_value(Is, CLP, Ivs),
+	(   bb_first_nonint(CLP, Is, Ivs, Viol, Floor, Ceiling)
+	->  bb_branch(CLP, Viol, Floor, Ceiling),
+	    bb_loop(CLP, Opt, Is)
 	;   round_values(Ivs,RoundVertex),
 	    nb_setval(prov_opt,Inf-RoundVertex) % new provisional optimum
 	).
@@ -102,10 +99,10 @@ bb_loop(Opt,Is) :-
 % This new minimization is necessary as making a bound integer may yield a
 % different optimum. The added inequalities may also have led to binding.
 
-bb_reoptimize(Obj,Inf) :-
+bb_reoptimize(CLP, Obj, Inf) :-
 	var(Obj),
-	iterate_dec(Obj,Inf).
-bb_reoptimize(Obj,Inf) :-
+	iterate_dec(CLP, Obj, Inf).
+bb_reoptimize(_, Obj, Inf) :-
 	nonvar(Obj),
 	Inf = Obj.
 
@@ -113,36 +110,36 @@ bb_reoptimize(Obj,Inf) :-
 %
 % Checks if the new infimum Inf is better than the previous one (if such exists).
 
-bb_better_bound(Inf) :-
+bb_better_bound(CLP, Inf) :-
 	nb_current(prov_opt,Inc-_), !,
 	compare_d(CLP, <, Inf, Inc).
-bb_better_bound(_).
+bb_better_bound(_, _).
 
 % bb_branch(V,U,L)
 %
 % Stores that V =< U or V >= L, can be used for different strategies within bb_loop/3.
 
-bb_branch(V,U,_) :- add_constraint(V =< U, CLP).
-bb_branch(V,_,L) :- add_constraint(V >= L, CLP).
+bb_branch(CLP, V, U, _) :- add_constraint(V =< U, CLP).
+bb_branch(CLP, V, _, L) :- add_constraint(V >= L, CLP).
 
 % vertex_value(Vars,Values)
 %
 % Returns in <Values> the current values of the variables in <Vars>.
 
-vertex_value([],[]).
-vertex_value([X|Xs],[V|Vs]) :-
-	rhs_value(X,V),
-	vertex_value(Xs,Vs).
+vertex_value([], _, []).
+vertex_value([X|Xs], CLP, [V|Vs]) :-
+	rhs_value(CLP, X, V),
+	vertex_value(Xs, CLP, Vs).
 
 % rhs_value(X,Value)
 %
 % Returns in <Value> the current value of variable <X>.
 
-rhs_value(Xn,Value) :-
+rhs_value(CLP, Xn, Value) :-
 	(   nonvar(Xn)
 	->  Value = Xn
 	;   var(Xn)
-	->  deref_var(Xn,Xd),
+	->  deref_var(CLP, Xn, Xd),
 	    Xd = [I,R|_],
 	    Value is R+I
 	).
@@ -154,9 +151,9 @@ rhs_value(Xn,Value) :-
 % The first variable that hasn't got an active integer bound, is returned in
 % Viol. The floor and ceiling of its actual bound is returned in Floor and Ceiling.
 
-bb_first_nonint([I|Is],[Rhs|Rhss],Viol,F,C) :-
+bb_first_nonint(CLP, [I|Is], [Rhs|Rhss], Viol, F, C) :-
 	(   compare_d(CLP, =, Rhs, integer(Rhs))
-	->  bb_first_nonint(Is,Rhss,Viol,F,C)
+	->  bb_first_nonint(CLP, Is, Rhss, Viol, F, C)
         ;   Viol = I,
 	    F is floor(Rhs),
 	    C is ceiling(Rhs)
@@ -176,11 +173,11 @@ round_values([X|Xs],[Y|Ys]) :-
 % Turns the elements of the first list into integers into the second
 % list via bb_intern/3.
 
-bb_intern([],[]).
-bb_intern([X|Xs],[Xi|Xis]) :-
+bb_intern([], _, []).
+bb_intern([X|Xs], CLP, [Xi|Xis]) :-
 	nf(X, CLP, Xnf),
-	bb_intern(Xnf,Xi,X),
-	bb_intern(Xs,Xis).
+	bb_intern(Xnf, CLP, Xi, X),
+	bb_intern(Xs, CLP, Xis).
 
 
 % bb_intern(Nf,X,Term)
@@ -190,21 +187,21 @@ bb_intern([X|Xs],[Xi|Xis]) :-
 % then its bounds are hightened or lowered to the next integer.
 % Otherwise, it is checked it Term is integer.
 
-bb_intern([],X,_) :-
+bb_intern([], _, X, _) :-
 	!,
 	X = 0.
-bb_intern([v(I,[])],X,_) :-
+bb_intern([v(I,[])], CLP, X, _) :-
 	!,
 	X = I,
         compare_d(CLP, =, I, integer(I)).
-bb_intern([v(One,[V^1])],X,_) :-
-        compare_d(clpn, =, One, 1),
+bb_intern([v(One,[V^1])], CLP, X, _) :-
+        compare_d(CLP, =, One, 1),
 	!,
 	V = X,
-	bb_narrow_lower(X),
-	bb_narrow_upper(X).
-bb_intern(_,_,Term) :-
-	throw(instantiation_error(bb_inf(Term,_,_),1)).
+	bb_narrow_lower(CLP, X),
+	bb_narrow_upper(CLP, X).
+bb_intern(_, CLP, _, Term) :-
+	throw(instantiation_error(bb_inf(CLP, Term, _, _),1)).
 
 % bb_narrow_lower(X)
 %
@@ -213,13 +210,12 @@ bb_intern(_,_,Term) :-
 % is larger than the first integer larger or equal to the infimum
 % (second integer if X is to be strict larger than the first integer).
 
-bb_narrow_lower(X) :-
-	(   inf(X,Inf)
-	->  epsilon(abs(Inf), E),
-            Bound is ceiling(Inf-E),
-	    (   entailed(X > Bound)
-	    ->  {X >= Bound+1}
-	    ;   {X >= Bound}
+bb_narrow_lower(CLP, X) :-
+	(   inf(CLP, X, Inf)
+	->  floor_d(CLP, Inf, Bound),
+	    (   entailed(CLP, X > Bound)
+	    ->  add_constraint(X >= Bound+1, CLP)
+	    ;   add_constraint(X >= Bound,   CLP)
 	    )
 	;   true
 	).
@@ -228,22 +224,12 @@ bb_narrow_lower(X) :-
 %
 % See bb_narrow_lower/1. This predicate handles the upper bound.
 
-bb_narrow_upper(X) :-
-	(   sup(X,Sup)
-	->  epsilon(abs(Sup), E),
-            Bound is floor(Sup+E),
-	    (   entailed(X < Bound)
-	    ->  {X =< Bound-1}
-	    ;   {X =< Bound}
+bb_narrow_upper(CLP, X) :-
+	(   sup(CLP, X, Sup)
+	->  floor_d(CLP, Sup, Bound),
+	    (   entailed(CLP, X < Bound)
+	    ->  add_constraint(X =< Bound-1, CLP)
+	    ;   add_constraint(X =< Bound,   CLP)
 	    )
 	;   true
 	).
-
-		 /*******************************
-		 *	       SANDBOX		*
-		 *******************************/
-:- multifile
-	sandbox:safe_primitive/1.
-
-sandbox:safe_primitive(bb_n:bb_inf(_,_,_)).
-sandbox:safe_primitive(bb_n:bb_inf(_,_,_,_)).

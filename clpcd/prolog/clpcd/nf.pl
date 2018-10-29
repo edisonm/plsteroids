@@ -51,15 +51,12 @@
 	    nf2term/3
 	]).
 
-:- use_module(library(clpcd/geler),
-	[
-	    geler/3
-	]).
+:- use_module(library(clpcd/geler)).
 :- use_module(library(clpcd/ineq)).
-:- use_module(library(clpcd/compare)).
+:- use_module(library(clpcd/domain_ops)).
+:- use_module(library(clpcd/bv)).
+:- use_module(library(clpcd/store)).
 :- use_module(library(clpcd/highlight), []).
-
-goal_expansion(geler(X,Y),geler(clpn,X,Y)).
 
 % -------------------------------------------------------------------------
 
@@ -78,7 +75,7 @@ add_constraint(Rel, CLP) :-
 add_constraint((R,Rs), CLP) :-
 	!,
 	add_constraint(R, CLP),
-        all_constraint(Rs, CLP).
+        add_constraint(Rs, CLP).
 add_constraint((R;Rs), CLP) :-
 	!,
 	( add_constraint(R, CLP)
@@ -226,13 +223,19 @@ submit_eq_c(A,CLP,B,Rest) :-	% c2
 	Hom = [A,B|Rest],
 	% 'solve_='(Hom).
 	nf_length(Hom,0,Len),
-	log_deref(Len,Hom,[],HomD),
+	log_deref(Len, CLP, Hom, [], HomD),
 	solve(CLP,HomD).
 % case c3: A, B or Rest is non-linear => geler
 submit_eq_c(A,CLP,B,Rest) :-
 	Norm = [A,B|Rest],
 	term_variables(Norm,Vs),
 	geler(CLP,Vs,resubmit_eq(CLP, Norm)).
+
+root_d(CLP, I, K, P, R) :-
+        div_d(CLP, I, K, Base),
+        div_d(CLP, 1, P, Exp),
+        N is Base ** Exp,
+        cast_d(CLP, N, R).
 
 % submit_eq_c1(Rest,CLP,B,K)
 %
@@ -242,27 +245,26 @@ submit_eq_c(A,CLP,B,Rest) :-
 % i+kX^p=0 if p is an odd integer
 % special case: one solution if P is negativ but also for a negative X
 submit_eq_c1([], CLP, v(K,[X^P]), I) :-
-        CLP = clpn,
 	var(X),
         P =\= 0,
         compare_d(CLP, =, integer(P), P),
-        0 > (-I/K),
+        0 > sign(-I)*sign(K),
         1 =:= integer(P) mod 2,
         !,
-        Val is -((I/K) ** (1/P)),
+        root_d(CLP, I, K, P, R),
+        Val is -R,
         X = Val.
 % case c11b:
 % i+kX^p=0 for p =\= 0, integer(P) =:= P
 % special case: generate 2 solutions if p is a positive even integer
 submit_eq_c1([], CLP, v(K,[X^P]), I) :-
-        CLP = clpn,
 	var(X),
         P =\= 0,
         compare_d(CLP, =, integer(P), P),
-        0 =< (-I/K),
+        0 =< sign(-I)*sign(K),
         0 =:= integer(P) mod 2,
 	!,
-	Val is (-I/K) ** (1/P),
+        root_d(CLP, -I, K, P, Val),
 	( X = Val
 	; ValNeg is -Val,
           X = ValNeg
@@ -270,27 +272,24 @@ submit_eq_c1([], CLP, v(K,[X^P]), I) :-
 % case c11c:
 % i+kX^p=0 for p =\= 0, 0 =< (-I/K)
 submit_eq_c1([], CLP, v(K,[X^P]), I) :-
-        CLP = clpn,
         var(X),
         P =\= 0,
-        0 =< (-I/K),
+        0 =< sign(-I)*sign(K),
 	!,
-	Val is (-I/K) ** (1/P),
+        root_d(CLP, -I, K, P, Val),
         X = Val.
 % case c11d: fail if var(X) and none of the above.
-submit_eq_c1([], CLP, v(_K,[X^_P]), _I) :-
-        CLP = clpn,
+submit_eq_c1([], _, v(_K,[X^_P]), _I) :-
         var(X),
         !,
         fail.
 % case c11e: fail for { -25 = _X^2.5 } and { -25 = _X^(-2.5) } and may be others!
-%			 if you uncomment this case { -25 = _X^2.5 } throw an error(evaluation_error(undefined))
-%			 and { -25 = _X^(-2.5) } succeed with an unbound X
+% 			 if you uncomment this case { -25 = _X^2.5 } throw an error(evaluation_error(undefined))
+% 			 and { -25 = _X^(-2.5) } succeed with an unbound X
 submit_eq_c1([], CLP, v(K,[X^P]), I) :-
-        CLP = clpn,
         nonvar(X),
         X = exp(_,_),   % TLS added 03/12
-        1 =:= abs(P),
+        compare_d(CLP, =, 1, abs(P)),
         0 >= I,
         0 >= K,
         !,
@@ -319,8 +318,8 @@ submit_eq_c1(Rest,CLP,B,I) :-
 	Hom = [B|Rest],
 	nf_length(Hom,0,Len),
 	normalize_scalar(I,Nonvar),
-	log_deref(Len,Hom,[],HomD),
-	add_linear_11(Nonvar,HomD,LinD),
+	log_deref(Len, CLP, Hom, [], HomD),
+	add_linear_11(CLP, Nonvar, HomD, LinD),
 	solve(CLP,LinD).
 % case c14: other cases => geler
 submit_eq_c1(Rest,CLP,B,I) :-
@@ -384,7 +383,7 @@ submit_lt_c([],CLP,A,B) :-
 submit_lt_c(Rest,CLP,A,B) :-
 	Norm = [A,B|Rest],
 	(   linear(Norm)
-	->  'solve_<'(Norm)
+	->  'solve_<'(CLP, Norm)
 	;   term_variables(Norm,Vs),
 	    geler(CLP,Vs,resubmit_lt(CLP, Norm))
 	).
@@ -493,7 +492,7 @@ wait_linear(CLP,Term,Var,Goal) :-
 	->  Var = Nf,
 	    call(Goal)
 	;   term_variables(Nf,Vars),
-	    geler(CLP,Vars,wait_linear_retry(Nf,Var,Goal))
+	    geler(CLP,Vars,wait_linear_retry(CLP, Nf, Var, Goal))
 	).
 %
 % geler clients
@@ -517,7 +516,7 @@ wait_linear_retry(CLP,Nf0,Var,Goal) :-
 	->  Var = Nf,
 	    call(Goal)
 	;   term_variables(Nf,Vars),
-	    geler(CLP,Vars,wait_linear_retry(Nf,Var,Goal))
+	    geler(CLP,Vars,wait_linear_retry(CLP, Nf, Var, Goal))
 	).
 % -----------------------------------------------------------------------
 
@@ -603,7 +602,7 @@ nf(Term,CLP,Norm) :-
 	nonlin_1(Term,Arg,Skel,Sa1),
 	!,
 	nf(Arg,CLP,An),
-	nf_nonlin_1(Skel,An,Sa1,Norm).
+	nf_nonlin_1(CLP, Skel, An, Sa1, Norm).
 % non-linear function, two arguments: Term = f(A1,A2) equals f'(Sa1,Sa2) = Skel
 nf(Term,CLP,Norm) :-
 	nonlin_2(Term,A1,A2,Skel,Sa1,Sa2),
@@ -625,6 +624,17 @@ nf_number(CLP, N, Res) :-
 	->  Res = []
 	;   Res = [v(Num,[])]
 	).
+
+nonlin_1(abs(X),X,abs(Y),Y).
+nonlin_1(sin(X),X,sin(Y),Y).
+nonlin_1(cos(X),X,cos(Y),Y).
+nonlin_1(tan(X),X,tan(Y),Y).
+nonlin_2(min(A,B),A,B,min(X,Y),X,Y).
+nonlin_2(max(A,B),A,B,max(X,Y),X,Y).
+nonlin_2(exp(A,B),A,B,exp(X,Y),X,Y).
+nonlin_2(pow(A,B),A,B,exp(X,Y),X,Y).	% pow->exp
+nonlin_2(A^B,A,B,exp(X,Y),X,Y).
+nonlin_2(A**B,A,B,exp(X,Y),X,Y).
 
 nf_nonlin_1(CLP,Skel,An,S1,Norm) :-
 	(   nf_constant(An,S1)
@@ -998,7 +1008,7 @@ repair_p_one(Term, CLP, TermN) :-
 	nonlin_1(Term,Arg,Skel,Sa),
 	repair(CLP, Arg, An),
 	!,
-	nf_nonlin_1(Skel,An,Sa,TermN).
+	nf_nonlin_1(CLP, Skel, An, Sa, TermN).
 repair_p_one(Term, CLP, TermN) :-
 	nonlin_2(Term,A1,A2,Skel,Sa1,Sa2),
 	repair(CLP, A1, A1n),
@@ -1100,11 +1110,6 @@ pe2term_args([],_,[]).
 pe2term_args([A|As],CLP,[T|Ts]) :-
 	nf2term(A,CLP,T),
 	pe2term_args(As,CLP,Ts).
-
-integerp(clpcdq,X,X) :- integer(X).
-integerp(clpn,X,I) :-
-        I is round(X),
-        compare_d(clpn, =, X, I).
 
 		 /*******************************
 		 *	       SANDBOX		*
