@@ -1136,13 +1136,3 @@ pe2term_args([],_,[]).
 pe2term_args([A|As],CLP,[T|Ts]) :-
 	nf2term(A,CLP,T),
 	pe2term_args(As,CLP,Ts).
-
-		 /*******************************
-		 *	       SANDBOX		*
-		 *******************************/
-:- multifile
-	sandbox:safe_primitive/1.
-
-sandbox:safe_primitive(nf_r:{_}).
-sandbox:safe_primitive(nf_r:entailed(_)).
-

@@ -38,11 +38,8 @@
     the GNU General Public License.
 */
 
-
-
 :- module(cdr,
-	[
-	    {}/1,
+	  [ {}/1,
 	    maximize/1,
 	    minimize/1,
 	    inf/2,
@@ -52,13 +49,12 @@
 	    bb_inf/3,
 	    bb_inf/4,
 	    entailed/1
-	]).
+	  ]).
 
 :- license(gpl_swipl, 'CLP(CDR)').
 :- use_module(library(clpcd/bb)).
 :- use_module(library(clpcd/nf)).
 :- use_module(library(clpcd/bv)).
-:- use_module(library(clpcd/domain_ops)).
 :- reexport(library(clpcd/dump),
             [ dump/3 %, projecting_assert/1
             ]).
@@ -90,7 +86,7 @@ clpcd_domain_ops:ceiling_d(cdr, A, B) :-
 
 clpcd_domain_ops:integerp(cdr, X, I) :-
     I is round(X),
-    compare_d(cdr, =, X, I).
+    near_compare(=, X, I).
 
 clpcd_itf:numbers_only(cdr,Y) :-
 	(   var(Y)
@@ -137,5 +133,11 @@ bb_inf(Is, Term, Inf, Vertex) :- bb_inf(cdr, Is, Term, Inf, Vertex).
 
 sandbox:safe_primitive(cdr:{_}).
 sandbox:safe_primitive(cdr:entailed(_)).
-sandbox:safe_primitive(clpcd_bb:bb_inf(_, _, _)).
-sandbox:safe_primitive(clpcd_bb:bb_inf(_, _, _, _)).
+sandbox:safe_primitive(cdr:bb_inf(_, _, _)).
+sandbox:safe_primitive(cdr:bb_inf(_, _, _, _)).
+sandbox:safe_primitive(cdr:maximize(_)).
+sandbox:safe_primitive(cdr:minimize(_)).
+sandbox:safe_primitive(cdr:inf(_,_)).
+sandbox:safe_primitive(cdr:inf(_,_,_,_)).
+sandbox:safe_primitive(cdr:sup(_,_)).
+sandbox:safe_primitive(cdr:sup(_,_,_,_)).

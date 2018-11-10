@@ -41,10 +41,12 @@
 	  [ {}/1,
 	    maximize/1,
 	    minimize/1,
-	    inf/2, inf/4, sup/2, sup/4,
+	    inf/2,
+            inf/4,
+            sup/2,
+            sup/4,
 	    bb_inf/3,
 	    bb_inf/4,
-	    ordering/1,
 	    entailed/1
 	  ]).
 
@@ -91,6 +93,8 @@ clpcd_itf:numbers_only(cdq, Y) :-
 	),
 	!.
 
+clpcd_highlight:clpcd_module(cdq).
+
 inf(Expression, Inf) :-
         inf(cdq, Expression, Inf).
 
@@ -125,3 +129,11 @@ bb_inf(Is, Term, Inf, Vertex) :- bb_inf(cdq, Is, Term, Inf, Vertex).
 
 sandbox:safe_primitive(cdq:{_}).
 sandbox:safe_primitive(cdq:entailed(_)).
+sandbox:safe_primitive(cdq:bb_inf(_, _, _)).
+sandbox:safe_primitive(cdq:bb_inf(_, _, _, _)).
+sandbox:safe_primitive(cdq:maximize(_)).
+sandbox:safe_primitive(cdq:minimize(_)).
+sandbox:safe_primitive(cdq:inf(_,_)).
+sandbox:safe_primitive(cdq:inf(_,_,_,_)).
+sandbox:safe_primitive(cdq:sup(_,_)).
+sandbox:safe_primitive(cdq:sup(_,_,_,_)).

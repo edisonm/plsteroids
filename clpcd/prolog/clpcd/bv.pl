@@ -1487,16 +1487,3 @@ narrow_l( t_l(_),    X, L) :-
 narrow_l( t_lu(_,U), X, L) :-
 	get_attr(X,clpcd_itf,Att),
 	setarg(2,Att,type(t_lu(L,U))).
-
-		 /*******************************
-		 *	       SANDBOX		*
-		 *******************************/
-:- multifile
-	sandbox:safe_primitive/1.
-
-sandbox:safe_primitive(clpcd_bv:inf(_,_,_)).
-sandbox:safe_primitive(clpcd_bv:inf(_,_,_,_,_)).
-sandbox:safe_primitive(clpcd_bv:sup(_,_,_)).
-sandbox:safe_primitive(clpcd_bv:sup(_,_,_,_,_)).
-sandbox:safe_primitive(clpcd_bv:maximize(_)).
-sandbox:safe_primitive(clpcd_bv:minimize(_)).
