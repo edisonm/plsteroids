@@ -194,8 +194,9 @@ submit_eq_b(v(_,[X^P]), _) :-
 % case b2: non-linear is invertible: NL(X) = 0 => X - inv(NL)(0) = 0
 submit_eq_b(v(_,[NL^1]), CLP) :-
 	nonvar(NL),
-	nl_invertible(CLP,NL,X,0,Inv),
+	nl_invertible(CLP,NL),
 	!,
+	nl_invert(CLP,NL,X,0,Inv),
 	nf(-Inv,CLP,S),
 	nf_add(X, CLP, S, New),
 	submit_eq(New, CLP).
@@ -314,7 +315,7 @@ submit_eq_c1([], _, v(_K,[X^_P]), _I) :-
 % 			 and { -25 = _X^(-2.5) } succeed with an unbound X
 submit_eq_c1([], CLP, v(K,[X^P]), I) :-
         nonvar(X),
-        X = exp(_,_),   % TLS added 03/12
+        X = _^_,   % TLS added 03/12
         compare_d(CLP, =, 1, abs(P)),
         0 >= I,
         0 >= K,
@@ -329,8 +330,9 @@ submit_eq_c1([],CLP,v(K,[NL^P]),I) :-
 	;   compare_d(CLP, =, P, -1),
             div_d(CLP, -K, I, Y)
 	),
-	nl_invertible(CLP,NL,X,Y,Inv),
+	nl_invertible(CLP,NL),
 	!,
+	nl_invert(CLP,NL,X,Y,Inv),
 	nf(-Inv,CLP,S),
 	nf_add(X, CLP, S, New),
 	submit_eq(New, CLP).
@@ -546,32 +548,15 @@ wait_linear_retry(CLP,Nf0,Var,Goal) :-
 	).
 % -----------------------------------------------------------------------
 
+
 % nl_invertible(F,X,Y,Res)
 %
 % Res is the evaluation of the inverse of nonlinear function F in variable X
 % where X is Y
 
-nl_invertible_(sin(X),_,X,Y,Res) :- Res is asin(Y).
-nl_invertible_(cos(X),_,X,Y,Res) :- Res is acos(Y).
-nl_invertible_(tan(X),_,X,Y,Res) :- Res is atan(Y).
-nl_invertible_(exp(B,C),CLP,X,A,Res) :-
-	(   nf_constant(B,Kb)
-	->  A > 0,
-	    Kb > 0,
-            % Kb =\= 1.0
-            compare_d(CLP, \=, Kb, 1),
-	    X = C, % note delayed unification
-	    Res is log(A)/log(Kb)
-	;   nf_constant(C,Kc),
-            A =\= 0,
-	    Kc > 0,
-	    X = B, % note delayed unification
-	    Res is A**(1/Kc)
-	).
-
-nl_invertible(C,F,X,Y,Res) :-
-        nl_invertible_(F,C,X,Y,N),
-        cast_d(C,N,Res).
+:- multifile
+        nl_invertible/2.
+        nl_inver/4.
 
 % -----------------------------------------------------------------------
 
@@ -624,21 +609,17 @@ nf(A/B,CLP,Norm) :-
 	nf(B,CLP,Bn),
 	nf_div(Bn,An,Norm).
 % non-linear function, one argument: Term = f(Arg) equals f'(Sa1) = Skel
-nf(Term,CLP,Norm) :-
-	nonlin_1(Term,Arg,Skel,Sa1),
-	!,
-	nf(Arg,CLP,An),
-	nf_nonlin_1(CLP, Skel, An, Sa1, Norm).
 % non-linear function, two arguments: Term = f(A1,A2) equals f'(Sa1,Sa2) = Skel
 nf(Term,CLP,Norm) :-
-	nonlin_2(Term,A1,A2,Skel,Sa1,Sa2),
-	!,
-	nf(A1, CLP, A1n),
-	nf(A2, CLP, A2n),
-	nf_nonlin_2(CLP,Skel,A1n,A2n,Sa1,Sa2,Norm).
+        nonlin(CLP, Term, AL, Skel, SaL),
+        !,
+        maplist(nf_(CLP), AL, AnL),
+        nf_nonlin(CLP, Skel, AnL, SaL, Norm).
 %
 nf(Term,CLP,_) :-
 	throw(type_error(nf(Term,CLP,_),1,'a numeric expression',Term)).
+
+nf_(CLP, Term, Norm) :- nf(Term, CLP, Norm).
 
 % nf_number(N,Res)
 %
@@ -651,47 +632,24 @@ nf_number(CLP, N, Res) :-
 	;   Res = [v(Num,[])]
 	).
 
-nonlin_1(abs(X),X,abs(Y),Y).
-nonlin_1(sin(X),X,sin(Y),Y).
-nonlin_1(cos(X),X,cos(Y),Y).
-nonlin_1(tan(X),X,tan(Y),Y).
-nonlin_2(min(A,B),A,B,min(X,Y),X,Y).
-nonlin_2(max(A,B),A,B,max(X,Y),X,Y).
-nonlin_2(exp(A,B),A,B,exp(X,Y),X,Y).
-nonlin_2(pow(A,B),A,B,exp(X,Y),X,Y).	% pow->exp
-nonlin_2(A^B,A,B,exp(X,Y),X,Y).
-nonlin_2(A**B,A,B,exp(X,Y),X,Y).
+% evaluates non-linear functions where the variables are bound
 
-nf_nonlin_1(CLP,Skel,An,S1,Norm) :-
-	(   nf_constant(An,S1)
-	->  nl_eval(Skel,Res),
+:- multifile
+        nonlin/5,
+        nl_eval/3.
+
+nf_nonlin(CLP, Skel, AnL, SL, Norm) :-
+	(   maplist(nf_constant, AnL,SL)
+	->  nl_eval(CLP,Skel,Res),
 	    nf_number(CLP,Res,Norm)
-	;   S1 = An,
-	    Norm = [v(1,[Skel^1])]).
-nf_nonlin_2(CLP,Skel,A1n,A2n,S1,S2,Norm) :-
-	(   nf_constant(A1n,S1),
-	    nf_constant(A2n,S2)
-	->  nl_eval(Skel,Res),
-	    nf_number(CLP,Res,Norm)
-	;   Skel=exp(_,_),
+	;   Skel=_^_,
+            AnL = [A1n, A2n],
 	    nf_constant(A2n,Exp),
 	    integerp(CLP,Exp,I)
 	->  nf_power(CLP, I, A1n, Norm)
-	;   S1 = A1n,
-	    S2 = A2n,
+	;   SL = AnL,
 	    Norm = [v(1,[Skel^1])]
 	).
-
-% evaluates non-linear functions in one variable where the variable is bound
-nl_eval(abs(X),R) :- R is abs(X).
-nl_eval(sin(X),R) :- R is sin(X).
-nl_eval(cos(X),R) :- R is cos(X).
-nl_eval(tan(X),R) :- R is tan(X).
-% evaluates non-linear functions in two variables where both variables are
-% bound
-nl_eval(min(X,Y),R) :- R is min(X,Y).
-nl_eval(max(X,Y),R) :- R is max(X,Y).
-nl_eval(exp(X,Y),R) :- R is X**Y.
 
 %
 % check if a Nf consists of just a constant
@@ -974,7 +932,7 @@ sum_powers(N, CLP, S, Prev, L0, Lt) :-
 repair(CLP, Sum, Norm) :-
 	nf_length(Sum,0,Len),
 	repair_log(Len, CLP, Sum, [], Norm).
-repair_log(0, -, As, As, []) :- !.
+repair_log(0, _, As, As, []) :- !.
 repair_log(1, CLP, [v(Ka,Pa)|As], As, R) :-
 	!,
 	repair_term(CLP, Ka, Pa, R).
@@ -992,27 +950,27 @@ repair_log(N, CLP, A0, A2, R) :-
 
 repair_term(CLP, K, P, Norm) :-
 	length(P,Len),
-	repair_p_log(Len,P,[],Pr,[v(1,[])],Sum),
+	repair_p_log(Len,CLP,P,[],Pr,[v(1,[])],Sum),
 	nf_mul_factor(v(K,Pr), CLP, Sum, Norm).
 
-repair_p_log(0,Ps,Ps,[],L0,L0) :- !.
-repair_p_log(1,[X^P|Ps],Ps,R,L0,L1) :-
+repair_p_log(0,_,Ps,Ps,[],L0,L0) :- !.
+repair_p_log(1,CLP,[X^P|Ps],Ps,R,L0,L1) :-
 	!,
-	repair_p(X,P,R,L0,L1).
-repair_p_log(2,[X^Px,Y^Py|Ps],Ps,R,L0,L2) :-
+	repair_p(X,CLP,P,R,L0,L1).
+repair_p_log(2,CLP,[X^Px,Y^Py|Ps],Ps,R,L0,L2) :-
 	!,
-	repair_p(X,Px,Rx,L0,L1),
-	repair_p(Y,Py,Ry,L1,L2),
+	repair_p(X,CLP,Px,Rx,L0,L1),
+	repair_p(Y,CLP,Py,Ry,L1,L2),
 	pmerge(Rx,Ry,R).
-repair_p_log(N,P0,P2,R,L0,L2) :-
+repair_p_log(N,CLP,P0,P2,R,L0,L2) :-
 	P is N>>1,
 	Q is N-P,
-	repair_p_log(P,P0,P1,Rp,L0,L1),
-	repair_p_log(Q,P1,P2,Rq,L1,L2),
+	repair_p_log(P,CLP,P0,P1,Rp,L0,L1),
+	repair_p_log(Q,CLP,P1,P2,Rq,L1,L2),
 	pmerge(Rp,Rq,R).
 
-repair_p(Term,P,[Term^P],L0,L0) :- var(Term).
-repair_p(Term,P,[],L0,L1) :-
+repair_p(Term,_,P,[Term^P],L0,L0) :- var(Term), !.
+repair_p(Term,CLP,P,[],L0,L1) :-
 	nonvar(Term),
 	repair_p_one(Term, CLP, TermN),
 	nf_power(CLP, P, TermN, TermNP),
@@ -1031,16 +989,10 @@ repair_p_one(A1/A2, CLP, TermN) :-
 	!,
 	nf_div(A2n,A1n,TermN).
 repair_p_one(Term, CLP, TermN) :-
-	nonlin_1(Term,Arg,Skel,Sa),
-	repair(CLP, Arg, An),
-	!,
-	nf_nonlin_1(CLP, Skel, An, Sa, TermN).
-repair_p_one(Term, CLP, TermN) :-
-	nonlin_2(Term,A1,A2,Skel,Sa1,Sa2),
-	repair(CLP, A1, A1n),
-	repair(CLP, A2, A2n),
-	!,
-	nf_nonlin_2(CLP,Skel,A1n,A2n,Sa1,Sa2,TermN).
+        nonlin(CLP, Term, AL, Skel, SaL),
+        maplist(repair(CLP), AL, AnL),
+        !,
+        nf_nonlin(CLP, Skel, AnL, SaL, TermN).
 repair_p_one(Term, CLP, TermN) :-
 	nf(Term, CLP, TermN).
 
@@ -1136,3 +1088,40 @@ pe2term_args([],_,[]).
 pe2term_args([A|As],CLP,[T|Ts]) :-
 	nf2term(A,CLP,T),
 	pe2term_args(As,CLP,Ts).
+
+% transg(Goal,[OutList|OutListTail],OutListTail)
+%
+% puts the equalities and inequalities that are implied by the elements in Goal
+% in the difference list OutList
+%
+% called by geler.pl for project.pl
+
+transg(resubmit_eq(CLP, Nf)) -->
+	{
+	    nf2term([],CLP,Z),
+	    nf2term(Nf,CLP,Term)
+	},
+	[CLP:{Term=Z}].
+transg(resubmit_lt(CLP, Nf)) -->
+	{
+	    nf2term([],CLP,Z),
+	    nf2term(Nf,CLP,Term)
+	},
+	[CLP:{Term<Z}].
+transg(resubmit_le(CLP, Nf)) -->
+	{
+	    nf2term([],CLP,Z),
+	    nf2term(Nf,CLP,Term)
+	},
+	[CLP:{Term=<Z}].
+transg(resubmit_ne(CLP, Nf)) -->
+	{
+	    nf2term([],CLP,Z),
+	    nf2term(Nf,CLP,Term)
+	},
+	[CLP:{Term=\=Z}].
+transg(wait_linear_retry(CLP,Nf,Res,Goal)) -->
+	{
+	    nf2term(Nf,CLP,Term)
+	},
+	[CLP:{Term=Res}, Goal].

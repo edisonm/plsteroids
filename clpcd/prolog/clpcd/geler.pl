@@ -131,7 +131,7 @@ transg(G) --> [G].
 % that when X = Y and X and Y are in the same goal, that goal
 % is called only once.
 
-run(Mutex,_) :- nonvar(Mutex).
+run(Mutex,_) :- nonvar(Mutex), !.
 run(Mutex,G) :-
 	var(Mutex),
 	Mutex = done,

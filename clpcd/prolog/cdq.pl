@@ -54,6 +54,7 @@
 :- use_module(library(clpcd/bb)).
 :- use_module(library(clpcd/nf)).
 :- use_module(library(clpcd/bv)).
+:- use_module(library(cdqr)).
 :- reexport(library(clpcd/dump),
             [ dump/3 %, projecting_assert/1
             ]).
