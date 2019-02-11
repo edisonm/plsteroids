@@ -19,7 +19,7 @@ compile:
 	swipl -q -s qcompile.pl -t halt
 
 clean:
-	$(RM) -rf target
+	$(RM) -rf target assertions/tests/foreign/*{.o,.so,_so.pl,_impl.h,_intf.c,_intf.h}
 	mkdir -p target/bin
 
 $(PLSTEROIDS):
