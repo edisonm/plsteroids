@@ -3,6 +3,7 @@
 
 :- use_module(library(arithmetic)).
 :- use_module(library(mapnargs)).
+:- use_module(library(lists)).
 :- use_module(library(neck)).
 :- use_module(library(clpcd/domain_ops)).
 :- use_module(library(clpcd/nf)).
@@ -35,10 +36,9 @@ cdqr_nl_eval(F, R) :-
     neck,
     R is F.
 
-cdqr_nonlin(pow(A, B), [A, B], X^Y, [X, Y]).
-cdqr_nonlin(A^B,       [A, B], X^Y, [X, Y]).
-cdqr_nonlin(A**B,      [A, B], X^Y, [X, Y]).
-cdqr_nonlin(Term, AL, Skel, SL) :-
+:- public curr_cdqr_nonlin_af/4.
+
+curr_cdqr_nonlin_af(Term, AL, Skel, SL) :-
     num_arithmetic_function(Term),
     \+ member(Term, [_^_, _**_, +_, -_, _-_, _+_, _/_, _*_,
                      abs(_), copysign(_, _), pow(_, _), float(_), eval(_), max(_, _), min(_, _)]),
@@ -46,7 +46,13 @@ cdqr_nonlin(Term, AL, Skel, SL) :-
     functor(Skel, F, A),
     A > 0,
     Term =.. [_|AL],
-    Skel =.. [_|SL],
+    Skel =.. [_|SL].
+
+cdqr_nonlin(pow(A, B), [A, B], X^Y, [X, Y]).
+cdqr_nonlin(A^B,       [A, B], X^Y, [X, Y]).
+cdqr_nonlin(A**B,      [A, B], X^Y, [X, Y]).
+cdqr_nonlin(Term, AL, Skel, SL) :-
+    curr_cdqr_nonlin_af(Term, AL, Skel, SL),
     neck.
 
 cdqr_nl_invertible(sin(_)).
@@ -98,6 +104,8 @@ cdqr_nl_invert(B^C,CLP,X,A,Res) :-
 	    X = B, % note delayed unification
 	    Res is A**(1/Kc)
 	).
+
+:- public cdqr/1.
 
 cdqr(cdq).
 cdqr(cdr).

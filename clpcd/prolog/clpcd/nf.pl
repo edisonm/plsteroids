@@ -555,8 +555,8 @@ wait_linear_retry(CLP,Nf0,Var,Goal) :-
 % where X is Y
 
 :- multifile
-        nl_invertible/2.
-        nl_inver/4.
+        nl_invertible/2,
+        nl_invert/5.
 
 % -----------------------------------------------------------------------
 
@@ -1095,6 +1095,9 @@ pe2term_args([A|As],CLP,[T|Ts]) :-
 % in the difference list OutList
 %
 % called by geler.pl for project.pl
+
+:- public
+    transg/3.
 
 transg(resubmit_eq(CLP, Nf)) -->
 	{
