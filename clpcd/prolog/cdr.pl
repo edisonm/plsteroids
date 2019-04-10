@@ -60,6 +60,7 @@
             ]).
 :- reexport(library(clpcd/itf), [clp_type/2]).
 :- use_module(library(clpcd)).
+:- use_module(library(cdqr), []).
 :- reexport(library(clpcd/ordering), [ordering/1]).
 :- use_module(library(near_utils)).
 

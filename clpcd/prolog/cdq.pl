@@ -59,6 +59,7 @@
             ]).
 :- reexport(library(clpcd/itf), [clp_type/2]).
 :- use_module(library(clpcd)).
+:- use_module(library(cdqr), []).
 :- reexport(library(clpcd/ordering), [ordering/1]).
 
 clpcd_domain_ops:compare_d(cdq, Op, A, B) :-
