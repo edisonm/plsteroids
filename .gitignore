@@ -6,3 +6,4 @@ target
 *_so.pl
 *.so
 *.diff
+*.o
