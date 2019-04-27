@@ -6,6 +6,9 @@
 :- use_module(library(assrt_lib)).
 :- use_module(library(metaprops)).
 :- use_module(library(refactor)).
+:- use_module(library(rtchecks)).
+:- use_module(library(assertions)).
+:- use_module(library(andorra/andorra)).
 :- use_module(library(rtchecks_tracer)).
 :- use_module(library(assrt_meta)).
 :- use_module(library(checkers)).
