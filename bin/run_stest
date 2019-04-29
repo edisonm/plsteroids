@@ -7,7 +7,7 @@ swi_cmd () {
 }
 
 run_cmd () {
-    echo -e "time((infer_meta_if_required,checkeach([dir(pltool(prolog))],${1%.*})))->halt(0);halt(1).\n"
+    echo -e "time((infer_meta:infer_meta_if_required,checkeach([dir(pltool(prolog))],${1%.*})))->halt(0);halt(1).\n"
 }
 
 run_test $1
