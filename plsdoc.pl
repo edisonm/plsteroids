@@ -1,7 +1,5 @@
 :- use_module(library(doc_http)).
 :- doc_server(4000).
 :- [loadall].
-:- working_directory(W,W),
-   directory_file_path(W, 'index.html', Request),
-   format(string(URL), 'http://localhost:~w/doc~w', [4000, Request]),
+:- format(string(URL), 'http://localhost:~w/pldoc/doc/_CWD_/index.html', [4000]),
    www_open_url(URL).

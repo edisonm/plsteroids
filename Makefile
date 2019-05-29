@@ -78,3 +78,6 @@ tests:
 
 get_plsteroids:
 	echo $(PLSTEROIDS)
+
+doc:
+	swipl -s plsdoc.pl
