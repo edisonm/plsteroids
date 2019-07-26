@@ -454,7 +454,7 @@ header_option(date(Date), Out) :-
     ->  get_time(Time)
     ;   Time = Date
     ),
-    format_time(string(String), '%a, %d %b %Y %T %z', Time),
+    format_time(string(String), '%a, %d %b %Y %T %z', Time, posix),
     format(Out, 'Date: ~w\r\n', [String]).
 header_option(header(Hdr), Out) :-
     Hdr =.. [HdrName, Value],

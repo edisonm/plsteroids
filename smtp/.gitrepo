@@ -6,6 +6,7 @@
 [subrepo]
 	remote = https://github.com/JanWielemaker/smtp.git
 	branch = master
-	commit = 6bbdca1484d86bc95a10543484445a5653a9002a
-	parent = aeaf9f877f5d1ee26b7ca4d6efd9f5cfba124bbd
+	commit = 946cfada0600cddc515f04071eb3f39605314a0d
+	parent = 83cee16860bf0eed135a9f6d33eac49b7445b211
 	cmdver = 0.3.1
+	method = merge
