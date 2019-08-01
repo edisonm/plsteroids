@@ -47,7 +47,7 @@ pack_set_path(Pack, _) :-
 
 pack_load_files(Options, Pack, Loader) :-
     option(exclude(ExFiles), Options, []),
-    directory_source_files(plroot(Pack/prolog), Files, [recursive(true),if(false)]),
+    directory_source_files(plroot(Pack/prolog), Files, [recursive(true),if(true)]),
     forall(( member(File, Files),
              % \+ module_property(_, file(File)),
              \+ ( member(ExFile, ExFiles),
