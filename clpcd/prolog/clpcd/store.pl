@@ -267,6 +267,17 @@ mult_linear_factor(_, Lin, K, Res) :-
 	Rk is R*K,
 	mult_hom(Hom,K,Mult).
 
+div_linear_factor(CLP, Lin, K, Mult) :-
+	compare_d(CLP, =, K, 1),
+	!,
+	Mult = Lin.
+div_linear_factor(_, Lin, K, Res) :-
+	Lin = [I,R|Hom],
+	Res = [Ik,Rk|Mult],
+	Ik is I/K,
+	Rk is R/K,
+	div_hom(Hom,K,Mult).
+
 % mult_hom(Hom,K,Res)
 %
 % Homogene part Res is the result of multiplication of homogene part
@@ -276,6 +287,11 @@ mult_hom([],_,[]).
 mult_hom([l(A*Fa,OrdA)|As],F,[l(A*Fan,OrdA)|Afs]) :-
 	Fan is F*Fa,
 	mult_hom(As,F,Afs).
+
+div_hom([], _, []).
+div_hom([l(A*Fa,OrdA)|As],F,[l(A*Fan,OrdA)|Afs]) :-
+	Fan is Fa/F,
+	div_hom(As,F,Afs).
 
 % nf_substitute(Ord,Def,Lin,Res)
 %
@@ -350,5 +366,4 @@ nf_rhs_x(Lin,OrdX,Rhs,K) :-
 
 isolate(CLP, OrdN, Lin, Lin1) :-
 	delete_factor(OrdN,Lin,Lin0,Coeff),
-	div_d(CLP, -1, Coeff, K),
-	mult_linear_factor(CLP, Lin0, K, Lin1).
+	div_linear_factor(CLP, Lin0, -Coeff, Lin1).
