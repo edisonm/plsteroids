@@ -856,11 +856,15 @@ sd([l(X*K,_)|Xs],Class0,ClassN,Preference0,PreferenceN,NV0,NVt) :-
 % A is best sofar, B is current
 % smallest prefered
 preference(A,B,Pref) :-
-	A = Px-_-_,
-	B = Py-_-_,
+	A = Px-_-Ka,
+	B = Py-_-Kb,
 	(   Px < Py
 	->  Pref = A
-	;   Pref = B
+	;   Px > Py
+        ->  Pref = B
+        ;   abs(Ka) > abs(Kb)
+        ->  Pref = A
+        ;   Pref = B
 	).
 
 % eq_classes(CLP,NV,NVTail,Cs)
