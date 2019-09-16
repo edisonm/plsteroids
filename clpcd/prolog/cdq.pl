@@ -1,4 +1,4 @@
-/*
+/*  $Id$
 
     Part of CLP(Q) (Constraint Logic Programming over Rationals)
 
@@ -51,6 +51,8 @@
 	  ]).
 
 :- license(gpl_swipl, 'CLP(CDQ)').
+:- use_module(library(neck)).
+:- use_module(library(near_utils)).
 :- use_module(library(clpcd/bb)).
 :- use_module(library(clpcd/nf)).
 :- use_module(library(clpcd/bv)).
@@ -74,12 +76,24 @@ compare_q(\=, A, B) :- A =\= B.
 
 clpcd_domain_ops:div_d(cdq, A, B, C) :- C is A rdiv B.
 
+:- public reserved_digits/1.
+
+reserved_digits(R) :-
+    epsilon(E),
+    R is E/epsilon.
+
 clpcd_domain_ops:cast_d(cdq, A, B) :-
+    reserved_digits(R),
+    T is 1/R,
+    neck,
     ( number(A)
+    ->( A >= T
+      ->B is rationalize(A)
+      ; B is rational(A)
+      )
     ; rational(A)
-    ),
-    !,
-    B is rationalize(A).
+    ->B is rational(A)
+    ).
 
 clpcd_domain_ops:floor_d(cdq, A, B) :- B is floor(A).
 
@@ -89,6 +103,8 @@ clpcd_domain_ops:integerp(cdq, A, A) :- integer(A).
 
 clpcd_itf:numbers_only(cdq, Y) :-
 	(   var(Y)
+	;   integer(Y)
+	;   float(Y)
 	;   rational(Y)
 	;   throw(type_error(_X = Y,2,'a rational number',Y))
 	),
