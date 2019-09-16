@@ -41,7 +41,7 @@ cdqr_nl_eval(F, R) :-
 curr_cdqr_nonlin_af(Term, AL, Skel, SL) :-
     num_arithmetic_function(Term),
     \+ member(Term, [_^_, _**_, +_, -_, _-_, _+_, _/_, _*_,
-                     abs(_), copysign(_, _), pow(_, _), float(_), eval(_), max(_, _), min(_, _)]),
+                     pow(_, _), float(_), eval(_)]),
     functor(Term, F, A),
     functor(Skel, F, A),
     A > 0,
@@ -56,6 +56,7 @@ cdqr_nonlin(Term, AL, Skel, SL) :-
     neck.
 
 cdqr_nl_invertible(sin(_)).
+cdqr_nl_invertible(abs(_)).
 cdqr_nl_invertible(cos(_)).
 cdqr_nl_invertible(tan(_)).
 cdqr_nl_invertible(asin(_)).
@@ -89,7 +90,14 @@ cdqr_nl_invert(log(X),_,X,Y,Res) :- Res is exp(Y).
 cdqr_nl_invert(log10(X),_,X,Y,Res) :- Res is 10^Y.
 cdqr_nl_invert(sqrt(X),_,X,Y,Res) :- Res is Y^2.
 cdqr_nl_invert(exp(X),_,X,Y,Res) :- Y >= 0, Res is log(Y).
-
+cdqr_nl_invert(abs(X),_,X,Y,Res) :-
+    ( Y > 0
+    ->( Res is Y
+      ; Res is -Y
+      )
+    ; Y =:= 0
+    ->Res is Y
+    ).
 cdqr_nl_invert(B^C,CLP,X,A,Res) :-
 	(   nf_constant(B,Kb)
 	->  A > 0,
