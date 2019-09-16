@@ -607,7 +607,7 @@ nf(A/B,CLP,Norm) :-
 	!,
 	nf(A,CLP,An),
 	nf(B,CLP,Bn),
-	nf_div(Bn,An,Norm).
+	nf_div(Bn,CLP,An,Norm).
 % non-linear function, one argument: Term = f(Arg) equals f'(Sa1) = Skel
 % non-linear function, two arguments: Term = f(A1,A2) equals f'(Sa1,Sa2) = Skel
 nf(Term,CLP,Norm) :-
@@ -834,21 +834,21 @@ pmerge_case(=,_,As,Res,_,Bs,Ka,Kb,Xa) :-
 	    pmerge(As,Bs,Tail)
 	).
 
-% nf_div(Factor,In,Out)
+% nf_div(Factor,CLP,In,Out)
 %
 % Out is the result of the division of each element in In (which is of the form v(_,_)) by Factor.
 
 % division by zero
-nf_div([],_,_) :-
+nf_div([],_,_,_) :-
 	!,
 	zero_division.
 % division by v(K,P) => multiplication by v(1/K,P^-1)
-nf_div([v(K,P)],Sum,Res) :-
+nf_div([v(K,P)],CLP,Sum,Res) :-
 	!,
         div_d(CLP, 1, K, Ki),
 	mult_exp(P,-1,Pi),
 	nf_mul_factor(v(Ki,Pi), CLP, Sum, Res).
-nf_div(D,A,[v(1,[(A/D)^1])]).
+nf_div(D,_,A,[v(1,[(A/D)^1])]).
 
 % zero_division
 %
@@ -876,7 +876,7 @@ nf_power(CLP, N, Sum, Norm) :-
 	->  Pn is -N,
 	    % nf_power_pos(Pn,Sum,Inorm),
 	    binom(Sum, CLP, Pn, Inorm),
-	    nf_div(Inorm,[v(1,[])],Norm)
+	    nf_div(Inorm,CLP,[v(1,[])],Norm)
 	;   Rel = (>)
 	->  % nf_power_pos(N,Sum,Norm)
 	    binom(Sum, CLP, N, Norm)
@@ -987,7 +987,7 @@ repair_p_one(A1/A2, CLP, TermN) :-
 	repair(CLP, A1, A1n),
 	repair(CLP, A2, A2n),
 	!,
-	nf_div(A2n,A1n,TermN).
+	nf_div(A2n,CLP,A1n,TermN).
 repair_p_one(Term, CLP, TermN) :-
         nonlin(CLP, Term, AL, Skel, SaL),
         maplist(repair(CLP), AL, AnL),
