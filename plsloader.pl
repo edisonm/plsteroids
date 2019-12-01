@@ -15,19 +15,21 @@
 packages(Packages) :- findall(Package, package(Package), Packages).
 
 scanpacks(PackL, Action, Loader) :-
-    scanpacks(PackL, Action, Loader, [], _).
+    deppacks(PackL, [], AllPackL),
+    maplist(load_pack(Action, Loader), AllPackL).
 
-scanpacks(PackL, Action, Loader) -->
-    foldl(scanpack(Action, Loader), PackL).
+load_pack(Action, Loader, Pack) :-
+    call(Action, Pack, Loader).
 
-scanpack(_, _, Pack, Loaded, Loaded) :-
+deppacks(PackL) --> foldl(scanpack, PackL).
+
+scanpack(Pack, Loaded, Loaded) :-
     memberchk(Pack, Loaded), !.
-scanpack(Action, Loader, Pack, Loaded1, Loaded) :-
+scanpack(Pack, Loaded1, Loaded) :-
     absolute_file_name(Pack/pack, F, [file_type(prolog)]),
     read_file(F, PackOptions),
-    call(Action, Pack, Loader),
     findall(ReqPack, member(requires(ReqPack), PackOptions), ReqPacks),
-    scanpacks(ReqPacks, Action, Loader, [Pack|Loaded1], Loaded).
+    deppacks(ReqPacks, [Pack|Loaded1], Loaded).
 
 read_file(F, Terms) :-
     see(F),
