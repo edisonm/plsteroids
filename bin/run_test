@@ -24,7 +24,7 @@ run_test () {
     else
         SWICMD=swi_cmd
     fi
-    ( ( run_cmd $1|${SWICMD} $1 ) || echo -e "ERROR: program exited with code $?" ) >target/$1.stdout 2>target/$1.stderr
+    ( ( run_cmd $1|${SWICMD} $1 ) || echo -e "ERROR: program exited with code $?" ) >target/$1.stdout 2> >(sed -e s:'\\n':'\n':g > target/$1.stderr)
     err_test target/$1.stderr target/$1.stdout
     case $error_found in
         0)
