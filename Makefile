@@ -5,7 +5,7 @@ MAKEFLAGS += --silent --no-print-directory
 
 PLSTEROIDS=target/bin/plsteroids
 
-CONCURRENT=. bin/concurrent ; run_pull
+CONCURRENT=. bin/concurrent ; concurrent_silent=1 ; run_pull
 
 build: $(PLSTEROIDS)
 	true

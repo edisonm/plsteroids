@@ -1,13 +1,122 @@
 #!/bin/bash
 
-workers="localhost:4"
-# workers="localhost:4 lapedison:4"
-# workers="localhost:4 lapedison:4 skyedison:2"
+#     Script for concurrent execution
 
-# workers="hpcedison.local:4 skyedison.local:2"
-# workers="skyedison.local:2"
+#     Author:        Edison Mera Menendez
+#     E-mail:        efmera@gmail.com
+#     WWW:           https://github.com/edisonm/plsteroids
+#     Copyright (C): 2019, Process Design Center, Breda, The Netherlands.
+#     All rights reserved.
+
+#     Redistribution and use in source and binary forms, with or without
+#     modification, are permitted provided that the following conditions
+#     are met:
+
+#     1. Redistributions of source code must retain the above copyright
+#        notice, this list of conditions and the following disclaimer.
+
+#     2. Redistributions in binary form must reproduce the above copyright
+#        notice, this list of conditions and the following disclaimer in
+#        the documentation and/or other materials provided with the
+#        distribution.
+
+#     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+#     "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+#     LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+#     FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+#     COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+#     INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+#     BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+#     LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+#     CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+#     LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+#     ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#     POSSIBILITY OF SUCH DAMAGE.
+
+
+# This script is used to facilitate the concurrent (or parallel) execution of
+# commands among several computers.  To do that, all the computers should share
+# the home directory at the same mount point using nfs.  It is recommended (but
+# not required) to use nis to administer users, specially if you plan to
+# distribute the execution among several computers.
+
+# To use it, first create the ~/.concurrent directory in the home directory, and
+# then modify your scripts placing run_jobs in front of the command you want to
+# make concurrent.
 
 LOCKDIR=$HOME/.concurrent/
+
+scan_line () {
+    if [ x$3 == x${1##*:} ] && [ x`echo $HOME|sed s:"\(${3}\).*":"\1":g` == x${3} ] ; then
+        echo ${1%:*}:`ssh -q ${1%:*} "cd ${PWD} ; . bin/concurrent; show_procs"`
+    fi
+}
+
+show_procs () {
+    cat /proc/cpuinfo|grep 'cpu cores'|sort -u|awk '{print $4}'
+}
+
+show_master () {
+    while read i; do scan_line ${i} ; done < <(mount -t nfs4)
+}
+
+show_hostname_procs () {
+    if [ x$1 == x`show_master` ] ; then
+        echo `hostname`:`show_procs`
+    fi
+}
+
+scan_slave () {
+    echo ssh -q ${6%:*} '"cd ${PWD} ; . bin/concurrent; show_hostname_procs '$1'" ; '
+}
+
+do_get_slaves () {
+    bash -c "`while read j; do scan_slave $1 ${j} ; done < <(netstat -an|grep ':2049 \+[0-9.:]\+ \+ESTABLISHED')`"
+}
+
+show_slaves () {
+    ssh -q ${1%:*} "cd ${PWD} ; . bin/concurrent; do_get_slaves $1"
+}
+
+get_workers () {
+    # first, see if this pc is exporting the home (or part of) via nfs
+    mounts="`(showmount -e --no-headers|awk '{print $1}') 2> /dev/null`"
+    master=""
+    for i in $mounts ; do
+        if [ x`echo $HOME|sed s:"\(${i}\).*":"\1":g` == x${i} ] ; then
+            master=`hostname`:`show_procs`
+        fi
+    done
+    # if this is not the master, check if the home is in the nfs server
+    if [ x$master == x ] ; then
+        master=`show_master`
+    else
+        slaves=`show_slaves $master`
+    fi
+
+    if [ x$master == x ] ; then # no slaves, single pc
+        master=`hostname`:`show_procs`
+        slaves=""
+    else # master was detected, now list the slaves
+        slaves=`show_slaves $master`
+    fi
+    
+    echo $master $slaves
+}
+
+# setup_workers () {
+#     workers="`hostname`:`cat /proc/cpuinfo|grep 'cpu cores'|sort -u|awk '{print $$4}'`"
+# }
+
+setup_workers () {
+    # cache workers for 30 minutes:
+    if [ -f ${LOCKDIR}workers ] && [ $(( `date +%s` - `stat -L --format %Y ~/.concurrent/workers ` < 30*60 )) == 1 ] ; then
+        workers=`cat ${LOCKDIR}workers`
+    else
+        workers=`get_workers`
+        echo $workers > ${LOCKDIR}workers
+    fi
+}
 
 run_job () {
     round=$1
@@ -16,15 +125,22 @@ run_job () {
     shift
     job=$1
     shift
-    # echo "% Round=$round Worker=$worker Job=$job ; $*"
-    if [ $worker == localhost ] ; then
-        ( export CC_ROUND=$round CC_WORKER=$worker CC_JOB=$job ; $* )
-    else
-        ssh -q $worker "cd ${PWD} ; export CC_ROUND=$round CC_WORKER=$worker CC_JOB=$job ; $*"
+    if [ "x$concurrent_silent" == "x" ] ; then
+        echo "% info : concurrent: Round = $round Worker = $worker Job = $job"
     fi
+    # PROSYN environment variables should be passed through ssh
+    vars1=`set|grep '^PROSYN_'`
+    vars2=`echo ${vars1}`
+    if [ $worker == `hostname` ] ; then
+        caller="bash -c"
+    else
+        caller="ssh -q $worker"
+    fi
+    $caller "cd ${PWD} ; export CC_ROUND=$round CC_WORKER=$worker CC_JOB=$job $vars2; $*"
 }
 
 run_pull () {
+    setup_workers
     round=0
     while true
     do
@@ -46,4 +162,9 @@ run_pull () {
         done
         round=$(($round+1))
     done
+}
+
+get_jobs () {
+    setup_workers
+    echo $(( 0 `. bin/concurrent ; for i in ${workers} ; do echo +${i##*:}; done`))
 }
