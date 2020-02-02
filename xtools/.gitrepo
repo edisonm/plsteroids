@@ -6,7 +6,7 @@
 [subrepo]
 	remote = https://github.com/edisonm/xtools.git
 	branch = master
-	commit = e3a0df0b725d5178026f4b6192605aa1d3c98560
-	parent = ca82345d6c1f28dbcf805271381a603c98ea067e
+	commit = 9c38e5e9a481ce43ade035dbe19ab2314042f68b
+	parent = 724141a2d2bbcd2e297a2fe0e69e935e58a8012e
 	cmdver = 0.3.1
 	method = merge
