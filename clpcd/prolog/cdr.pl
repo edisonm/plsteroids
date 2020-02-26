@@ -70,11 +70,11 @@ clpcd_domain_ops:compare_d(cdr, Op, A, B) :-
 clpcd_domain_ops:div_d(cdr, A, B, C) :- C is A/B.
 
 clpcd_domain_ops:cast_d(cdr, A, B) :-
-    ( number(A)
+    ( rational(A),
+      \+ integer(A)
+    ->B is float(A)
+    ; number(A)
     ->B = A
-    ; rational(A),
-      A = X rdiv Y,
-      B is X / Y
     ).
 
 clpcd_domain_ops:floor_d(cdr, A, B) :-
