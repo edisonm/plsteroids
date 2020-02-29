@@ -1,5 +1,4 @@
 :- [plsteroids].
-:- use_module(library(apply_macros)). % Load it proactively
 :- use_module(library(crypto)).
 :- use_module(library(ssl)).
 :- use_module(library(float/floatn)).
