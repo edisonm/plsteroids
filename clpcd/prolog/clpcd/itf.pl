@@ -44,16 +44,16 @@
 :- module(clpcd_itf,
 	[
 	    dump_linear/3,
-	    dump_nonzero/3,
-	    clp_type/2
+	    dump_nonzero/3
 	]).
 
 :- use_module(library(clpcd/class)).
 :- use_module(library(clpcd/domain_ops)).
-:- use_module(library(clpcd/project)).
+:- use_module(library(clpcd/indep)).
 :- use_module(library(clpcd/bv)).
 :- use_module(library(clpcd/nf)).
 :- use_module(library(clpcd/store)).
+:- use_module(library(clpcd/solve)).
 
 % ----------------------------------- dump ------------------------------------
 
@@ -203,13 +203,6 @@ hom2sum([l(Var*K,_)|Cs],CLP,Sofar,Term) :-
 	;   Next = Sofar + K*Var
 	),
 	hom2sum(Cs,CLP,Next,Term).
-
-clp_type(Var,Type) :-
-	(   get_attr(Var,clpcd_itf,Att)
-	->  arg(1,Att,Type)
-	;   get_attr(Var,clpcd_geler,Att)
-	->  arg(1,Att,Type)
-	).
 
 dump_linear(V) -->
 	{
@@ -420,11 +413,3 @@ verify_lin(order(OrdX),CLP,class(Class),lin(LinX),Y) :-
 	    solve(CLP, Lind)
 	).
 verify_lin(_,_,_,_,_).
-
-		 /*******************************
-		 *	       SANDBOX		*
-		 *******************************/
-:- multifile
-	sandbox:safe_primitive/1.
-
-sandbox:safe_primitive(clpcd_itf:clp_type(_,_)).

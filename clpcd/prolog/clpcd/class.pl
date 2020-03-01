@@ -51,13 +51,8 @@
 	    class_put_prio/2
 	]).
 
-:- use_module(ordering,
-	[
-	    combine/3
-	]).
-:- use_module(library(lists),
-	      [ append/3
-	      ]).
+:- use_module(library(clpcd/combine)).
+:- use_module(library(lists)).
 	
 % called when two classes are unified: the allvars lists are appended to eachother, as well as the basis
 % lists.

@@ -38,13 +38,11 @@
     the GNU General Public License.
 */
 
-
 :- module(clpcd_nf,
 	[
 	    add_constraint/2,
 	    nf/3,
 	    entailed/2,
-	    split/3,
 	    repair/3,
 	    nf_constant/2,
 	    wait_linear/4,
@@ -54,8 +52,8 @@
 :- use_module(library(clpcd/geler)).
 :- use_module(library(clpcd/ineq)).
 :- use_module(library(clpcd/domain_ops)).
-:- use_module(library(clpcd/bv)).
 :- use_module(library(clpcd/store)).
+:- use_module(library(clpcd/solve)).
 :- use_module(library(clpcd/highlight), []).
 
 % -------------------------------------------------------------------------
@@ -657,22 +655,6 @@ nf_nonlin(CLP, Skel, AnL, SL, Norm) :-
 
 nf_constant([],Z) :- Z = 0.
 nf_constant([v(K,[])],K).
-
-% split(NF,SNF,C)
-%
-% splits a normalform expression NF into two parts:
-% - a constant term C (which might be 0)
-% - the homogene part of the expression
-%
-% this method depends on the polynf ordering, i.e. [] < [X^1] ...
-
-split([],[],0).
-split([First|T],H,I) :-
-	(   First = v(I,[])
-	->  H = T
-	;   I = 0,
-	    H = [First|T]
-	).
 
 % nf_add(A,B,C): merges two normalized additions into a new normalized addition
 %

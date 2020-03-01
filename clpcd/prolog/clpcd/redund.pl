@@ -44,6 +44,7 @@
 	]).
 
 :- use_module(library(clpcd/bv)).
+:- use_module(library(clpcd/solve)).
 
 %
 % redundancy removal (semantic definition)

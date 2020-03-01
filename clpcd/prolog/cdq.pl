@@ -59,7 +59,7 @@
 :- reexport(library(clpcd/dump),
             [ dump/3 %, projecting_assert/1
             ]).
-:- reexport(library(clpcd/itf), [clp_type/2]).
+:- reexport(library(clpcd/ordering), [clp_type/2]).
 :- use_module(library(clpcd)).
 :- use_module(library(cdqr), []).
 :- reexport(library(clpcd/ordering), [ordering/1]).

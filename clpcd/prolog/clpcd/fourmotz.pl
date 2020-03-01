@@ -46,8 +46,10 @@
 
 :- use_module(library(clpcd/class)).
 :- use_module(library(clpcd/project)).
+:- use_module(library(clpcd/indep)).
 :- use_module(library(clpcd/redund)).
 :- use_module(library(clpcd/store)).
+:- use_module(library(clpcd/solve)).
 :- use_module(library(clpcd/bv)).
 :- use_module(library(clpcd/domain_ops)).
 

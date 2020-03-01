@@ -40,19 +40,23 @@
 
 
 :- module(clpcd_ineq,
-	[
-	    ineq/5,
-	    ineq_one/5,
-	    ineq_one_n_n_0/2,
-	    ineq_one_n_p_0/2,
-	    ineq_one_s_n_0/2,
-	    ineq_one_s_p_0/2
-	]).
+	  [
+              'solve_<'/2,
+              'solve_=<'/2,
+	      ineq/5,
+	      ineq_one/5,
+	      ineq_one_n_n_0/2,
+	      ineq_one_n_p_0/2,
+	      ineq_one_s_n_0/2,
+	      ineq_one_s_p_0/2
+	  ]).
 
 :- use_module(library(clpcd/domain_ops)).
 :- use_module(library(clpcd/ordering)).
-:- use_module(library(clpcd/bv)).
+:- use_module(library(clpcd/detact)).
 :- use_module(library(clpcd/store)).
+:- use_module(library(clpcd/solve)).
+:- use_module(library(clpcd/split)).
 
 % ineq(H,I,Nf,Strictness)
 %
@@ -1268,3 +1272,19 @@ solve_bound(CLP, Lin, Bound) :-
 	normalize_scalar(Nb,Nbs),
 	add_linear_11(CLP, Nbs, Lin, Eq),
 	solve(CLP, Eq).
+
+% 'solve_<'(CLP, Nf)
+%
+% Solves linear inequality Nf < 0 where Nf is in normal form.
+
+'solve_<'(CLP, Nf) :-
+	split(Nf,H,I),
+	ineq(H, CLP, I, Nf, strict).
+
+% 'solve_=<'(CLP, Nf)
+%
+% Solves linear inequality Nf =< 0 where Nf is in normal form.
+
+'solve_=<'(CLP, Nf) :-
+	split(Nf,H,I),
+	ineq(H, CLP, I, Nf, nonstrict).

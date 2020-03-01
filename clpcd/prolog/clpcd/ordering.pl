@@ -37,20 +37,18 @@
     the GNU General Public License.
 */
 
-
 :- module(clpcd_ordering,
-	[
-	    combine/3,
-	    get_or_add_class/2,
-	    ordering/1,
-            var_intern/4,
-	    arrangement/2
-	]).
+	  [
+              clp_type/2,
+	      get_or_add_class/2,
+	      ordering/1,
+              var_intern/4,
+	      arrangement/2
+	  ]).
 
 :- use_module(library(clpcd/class)).
-:- use_module(library(clpcd/itf)).
+:- use_module(library(clpcd/combine)).
 :- use_module(library(ugraphs)).
-:- use_module(library(lists)).
 
 ordering(X) :-
 	var(X),
@@ -136,60 +134,11 @@ join_class([X|Xs],Class) :-
 	),
 	join_class(Xs,Class).
 
-% combine(Ga,Gb,Gc)
-%
-% Combines the vertices of Ga and Gb into Gc.
-
-combine(Ga,Gb,Gc) :-
-	normalize(Ga,Gan),
-	normalize(Gb,Gbn),
-	ugraph_union(Gan,Gbn,Gc).
-
-%
-% both Ga and Gb might have their internal ordering invalidated
-% because of bindings and aliasings
-%
-
-normalize([],[]) :- !.
-normalize(G,Gsgn) :-
-	G = [_|_],
-	keysort(G,Gs),	% sort vertices on key
-	group(Gs,Gsg),	% concatenate vertices with the same key
-	normalize_vertices(Gsg,Gsgn).	% normalize
-
-normalize_vertices([],[]).
-normalize_vertices([X-Xnb|Xs],Res) :-
-	(   normalize_vertex(X,Xnb,Xnorm)
-	->  Res = [Xnorm|Xsn],
-	    normalize_vertices(Xs,Xsn)
-	;   normalize_vertices(Xs,Res)
-	).
-
-% normalize_vertex(X,Nbs,X-Nbss)
-%
-% Normalizes a vertex X-Nbs into X-Nbss by sorting Nbs, removing duplicates (also of X)
-% and removing non-vars.
-
-normalize_vertex(X,Nbs,X-Nbsss) :-
-	var(X),
-	sort(Nbs,Nbss),
-	strip_nonvar(Nbss,X,Nbsss).
-
-% strip_nonvar(Nbs,X,Res)
-%
-% Turns vertext X-Nbs into X-Res by removing occurrences of X from Nbs and removing
-% non-vars. This to normalize after bindings have occurred. See also normalize_vertex/3.
-
-strip_nonvar([],_,[]).
-strip_nonvar([X|Xs],Y,Res) :-
-	(   X==Y % duplicate of Y
-	->  strip_nonvar(Xs,Y,Res)
-	;   var(X) % var: keep
-	->  Res = [X|Stripped],
-	    strip_nonvar(Xs,Y,Stripped)
-	;   % nonvar: remove
-	    nonvar(X),
-	    Res = []	% because Vars<anything
+clp_type(Var,Type) :-
+	(   get_attr(Var,clpcd_itf,Att)
+	->  arg(1,Att,Type)
+	;   get_attr(Var,clpcd_geler,Att)
+	->  arg(1,Att,Type)
 	).
 
 gen_edges([]) --> [].
@@ -202,24 +151,6 @@ gen_edges([Y|Ys],X) -->
 	[X-Y],
 	gen_edges(Ys,X).
 
-% group(Vert,Res)
-%
-% Concatenates vertices with the same key.
-
-group([],[]).
-group([K-Kl|Ks],Res) :-
-	group(Ks,K,Kl,Res).
-
-group([],K,Kl,[K-Kl]).
-group([L-Ll|Ls],K,Kl,Res) :-
-	(   K==L
-	->  append(Kl,Ll,KLl),
-	    group(Ls,K,KLl,Res)
-	;   Res = [K-Kl|Tail],
-	    group(Ls,L,Ll,Tail)
-	).
-
-
 		 /*******************************
 		 *	       SANDBOX		*
 		 *******************************/
@@ -227,3 +158,4 @@ group([L-Ll|Ls],K,Kl,Res) :-
 	sandbox:safe_primitive/1.
 
 sandbox:safe_primitive(clpcd_ordering:ordering(_)).
+sandbox:safe_primitive(clpcd_ordering:clp_type(_,_)).

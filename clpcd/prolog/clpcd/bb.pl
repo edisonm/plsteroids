@@ -40,13 +40,14 @@
 
 :- module(clpcd_bb,
 	[
-	    bb_inf/5,
-	    vertex_value/3
+	    bb_inf/5
 	]).
 
 :- use_module(library(clpcd/domain_ops)).
 :- use_module(library(clpcd/bv)).
 :- use_module(library(clpcd/nf)).
+:- use_module(library(clpcd/solve)).
+:- use_module(library(clpcd/detact)).
 
 % bb_inf(Ints,Term,Inf)
 %
@@ -121,28 +122,6 @@ bb_better_bound(_, _).
 
 bb_branch(CLP, V, U, _) :- add_constraint(V =< U, CLP).
 bb_branch(CLP, V, _, L) :- add_constraint(V >= L, CLP).
-
-% vertex_value(Vars,Values)
-%
-% Returns in <Values> the current values of the variables in <Vars>.
-
-vertex_value([], _, []).
-vertex_value([X|Xs], CLP, [V|Vs]) :-
-	rhs_value(CLP, X, V),
-	vertex_value(Xs, CLP, Vs).
-
-% rhs_value(X,Value)
-%
-% Returns in <Value> the current value of variable <X>.
-
-rhs_value(CLP, Xn, Value) :-
-	(   nonvar(Xn)
-	->  Value = Xn
-	;   var(Xn)
-	->  deref_var(CLP, Xn, Xd),
-	    Xd = [I,R|_],
-	    Value is R+I
-	).
 
 % bb_first_nonint(Ints,Rhss,Viol,Floor,Ceiling)
 %

@@ -63,10 +63,7 @@
 	    dump_linear/3,
 	    dump_nonzero/3
 	]).
-:- use_module(project,
-	[
-	    project_attributes/2
-	]).
+:- use_module(library(clpcd/attributes)).
 :- use_module(ordering,
 	[
 	    ordering/1
