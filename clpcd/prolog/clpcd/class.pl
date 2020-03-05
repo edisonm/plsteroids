@@ -108,7 +108,7 @@ class_basis_add(Class,X,NewBasis) :-
 
 % class_basis_drop(Class,X)
 %
-% removes the first occurence of X from the basis (if exists)
+% removes the first occurrence of X from the basis (if exists)
 
 class_basis_drop(Class,X) :-
 	get_attr(Class,clpcd_class,class(CLP,All,AllT,Basis0,Priority)),
@@ -120,7 +120,7 @@ class_basis_drop(_,_).
 
 % class_basis_pivot(Class,Enter,Leave)
 %
-% removes first occurence of Leave from the basis and adds Enter in front of the basis
+% removes first occurrence of Leave from the basis and adds Enter in front of the basis
 
 class_basis_pivot(Class,Enter,Leave) :-
 	get_attr(Class,clpcd_class,class(CLP,All,AllT,Basis0,Priority)),
@@ -129,7 +129,7 @@ class_basis_pivot(Class,Enter,Leave) :-
 
 % delete_first(Old,Element,New)
 %
-% removes the first occurence of Element from Old and returns the result in New
+% removes the first occurrence of Element from Old and returns the result in New
 %
 % note: test via syntactic equality, not unifiability
 
