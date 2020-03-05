@@ -674,7 +674,7 @@ sd([l(X*K,_)|Xs],Class0,ClassN,Preference0,PreferenceN,NV0,NVt) :-
 
 %
 % A is best sofar, B is current
-% smallest prefered
+% smallest preferred
 preference(A,B,Pref) :-
 	A = Px-_-Ka,
 	B = Py-_-Kb,
