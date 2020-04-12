@@ -199,3 +199,4 @@
 ; predicate documentation:
 ; (setq comment-add 0)
 (add-hook 'prolog-mode-hook (lambda () (setq-local comment-add 0)))
+(xterm-mouse-mode)
