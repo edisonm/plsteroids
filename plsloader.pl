@@ -1,7 +1,7 @@
 :- module(plsloader,
           [packages/1,
-           scanpacks/3,
-           pack_set_path/2,
+           scanpacks/2,
+           pack_set_path/1,
            pack_load_files/3,
            pack_load/3]).
 
@@ -10,16 +10,13 @@
 :- use_module(library(option)).
 :- use_module(library(prolog_source)).
 
-:- meta_predicate scanpacks(+, 2, 1).
+:- meta_predicate scanpacks(+, 1).
 
 packages(Packages) :- findall(Package, package(Package), Packages).
 
-scanpacks(PackL, Action, Loader) :-
+scanpacks(PackL, Action) :-
     deppacks(PackL, [], AllPackL),
-    maplist(load_pack(Action, Loader), AllPackL).
-
-load_pack(Action, Loader, Pack) :-
-    call(Action, Pack, Loader).
+    maplist(Action, AllPackL).
 
 deppacks(PackL) --> foldl(scanpack, PackL).
 
@@ -44,10 +41,10 @@ read_file(F, Terms) :-
             ), Terms),
     seen.
 
-pack_set_path(Pack, _) :-
+pack_set_path(Pack) :-
     assertz(user:file_search_path(pltool, plroot(Pack))).
 
-pack_load_files(Options, Pack, Loader) :-
+pack_load_files(Options, Loader, Pack) :-
     option(exclude(ExFiles), Options, []),
     directory_source_files(plroot(Pack/prolog), Files, [recursive(true),if(true)]),
     forall(( member(File, Files),
@@ -57,6 +54,6 @@ pack_load_files(Options, Pack, Loader) :-
                 )
            ), call(Loader, File)).
 
-pack_load(Options, Pack, Loader) :-
-    pack_set_path(Pack, _),
-    pack_load_files(Options, Pack, Loader).
+pack_load(Options, Loader, Pack) :-
+    pack_set_path(Pack),
+    pack_load_files(Options, Loader, Pack).

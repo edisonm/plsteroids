@@ -19,4 +19,4 @@ loadpacks(Loader) :-
                         library(float/floatn),
                         library(float/floatn_so),
                         library(andorra/andorra_builtins_exports)
-                       ])]), Loader).
+                       ])], Loader)).

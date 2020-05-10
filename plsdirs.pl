@@ -4,4 +4,4 @@
 :- [plsloader].
 
 :- packages(Packs),
-   scanpacks(Packs, pack_set_path, consult).
+   scanpacks(Packs, pack_set_path).
