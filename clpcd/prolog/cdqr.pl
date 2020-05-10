@@ -7,7 +7,6 @@
 :- use_module(library(neck)).
 :- use_module(library(clpcd/domain_ops)).
 :- use_module(library(clpcd/nf)).
-:- use_module(library(typeprops)).
 
 % crafted to get float operators
 

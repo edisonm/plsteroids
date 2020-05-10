@@ -9,3 +9,5 @@ home('https://github.com/edisonm/plsteroids').
 requires(xtools).
 requires(xlibrary).
 requires(assertions).
+requires(lambda).
+requires(clpcd).

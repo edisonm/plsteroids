@@ -5,6 +5,7 @@
 
 :- use_module(library(neck)).
 :- use_module(library(assertions)).
+:- use_module(library(lists)).
 :- use_module(library(substitute)).
 :- use_module(library(extend_args)).
 :- use_module(library(plprops)).
