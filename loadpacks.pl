@@ -20,4 +20,5 @@ loadpacks(Loader) :-
                   playground/prolog/float/floatn,
                   playground/prolog/float/floatn_so
                  ])
-            ], Loader)).
+            ], Loader),
+        pack_set_local_path).

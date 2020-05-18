@@ -1,8 +1,9 @@
 :- module(plsloader,
           [packages/1,
-           scanpacks/1,
            scanpacks/2,
+           scanpacks/3,
            pack_set_path/1,
+           pack_set_local_path/1,
            pack_load_local/3]).
 
 :- use_module(library(apply)).
@@ -12,53 +13,34 @@
 :- use_module(library(prolog_source)).
 :- use_module(library(sort)).
 
-:- meta_predicate scanpacks(+, 1).
+:- meta_predicate
+    scanpacks(1, 1),
+    scanpacks(+, 1, 1).
 
 :- thread_local pack_path_local/1.
+
 user:file_search_path(pltool, plroot(Pack)) :- pack_path_local(Pack).
 
 packages(Packages) :- findall(Package, package(Package), Packages).
 
-scanpack(Action, Pack) :-
-    with_mutex(Pack, scanpacks([Pack], Action)).
-
-scanpacks(PackL, Action) :-
-    deppacks(PackL, DepPackL),
-    maplist(Action, DepPackL).
-
-requires(PackReqU1, Pack1, Pack2) :-
-    once(select(Pack1-ReqL, PackReqU1, PackReqU)),
-    member(Pack3, ReqL),
-    ( Pack3 = Pack2
-    ->true
-    ; requires(PackReqU, Pack3, Pack2)
-    ).
-
-requires(PackReqU, Comp, Pack1, Pack2) :-
-    ( requires(PackReqU, Pack1, Pack2)
-    ->Comp = (>)
-    ; Comp = (<)
-    ).
-
-deppacks(PackL, PackS) :-
-    deppacks(PackL, [], PackReqU),
-    pairs_keys(PackReqU, PackU),
-    predsort(requires(PackReqU), PackU, PackS).
-
-scanpacks(Action) :-
+scanpacks(Action, DepAction) :-
     packages(PackL),
-    deppacks(PackL, DepPackL),
-    concurrent_maplist(scanpack(Action), DepPackL).
+    scanpacks(PackL, Action, DepAction).
 
-deppacks(PackL) --> foldl(scanpack, PackL).
+scanpacks(PackL, Action, DepAction) :-
+    concurrent_maplist(scanpacks(Action, DepAction, []), PackL).
 
-scanpack(Pack, Loaded, Loaded) :-
-    memberchk(Pack-_, Loaded), !.
-scanpack(Pack, Loaded1, Loaded) :-
+scanpacks(_, _, Loaded, Pack) :-
+    memberchk(Pack, Loaded),
+    !,
+    print_message(error, format("Circular dependency not allowed ~w", [[Pack|Loaded]])).
+scanpacks(Action, DepAction, Loaded, Pack) :-
     absolute_file_name(Pack/pack, F, [file_type(prolog)]),
     read_file(F, PackOptions),
-    findall(ReqPack, member(requires(ReqPack), PackOptions), ReqPacks),
-    deppacks(ReqPacks, [Pack-ReqPacks|Loaded1], Loaded).
+    findall(ReqPack, member(requires(ReqPack), PackOptions), PackL),
+    concurrent_maplist(scanpacks(Action, DepAction, [Pack|Loaded]), PackL),
+    maplist(DepAction, PackL),
+    with_mutex(Pack, call(Action, Pack)).
 
 read_file(F, Terms) :-
     setup_call_cleanup(
@@ -82,7 +64,7 @@ pack_set_local_path(Pack) :-
 
 pack_load_files(Options, Loader, Pack) :-
     option(exclude(ExFiles), Options, []),
-    directory_source_files(plroot(Pack/prolog), Files, [recursive(true),if(true)]),
+    directory_source_files(plroot(Pack/prolog), Files, [recursive(true), if(true)]),
     forall(( member(File, Files),
              % \+ module_property(_, file(File)),
              \+ ( member(ExFile, ExFiles),
