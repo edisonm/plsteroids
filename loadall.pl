@@ -1,6 +1,7 @@
 :- [plsconfig].
 :- [loadpacks].
 :- [packages].
+:- use_module(library(statistics)).
 :- use_module(library(crypto)).
 :- use_module(library(ssl)).
 

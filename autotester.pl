@@ -1,6 +1,7 @@
 :- module(autotester, []).
 
 :- user:[plsteroids].
+:- use_module(library(plunit)).
 :- [assertions/tests/'assertions.plt'].
 :- [assertions/tests/foreign/'foreign.plt'].
 :- [refactor/tests/'gcb.plt'].
