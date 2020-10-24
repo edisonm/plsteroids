@@ -23,7 +23,7 @@ Overview
 --------
 
 The goal of this library is to make a CLP library for continuous domains like
-reals or rationals, that is more appropriated to calculations found in
+reals or rationals, that is more appropriated for calculations found in
 engineering applications.
 
 Current CLP(QR) implementation work only when the system of equations are

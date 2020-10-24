@@ -137,4 +137,3 @@ clpcd_nf:nonlin(C, Term, AL, Skel, SL) :-
         cdqr(C),
         neck,
         cdqr_nonlin(Term, AL, Skel, SL).
-
