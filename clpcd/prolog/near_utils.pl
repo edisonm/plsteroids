@@ -3,6 +3,7 @@
            retract_near/1,
            retractall_near/1,
            real_near/2,
+           real_compare/3,
            near_compare/3,
            unify_near/2,
            epsilon/1,
@@ -90,6 +91,8 @@ frozen_near_1(Var) :-
     ).
 
 real_near(A, B) :- near_compare(=, A, B).
+
+real_compare(A, C, B) :- near_compare(C, A, B).
 
 epsilon(E) :- E is 1000*epsilon.
 
