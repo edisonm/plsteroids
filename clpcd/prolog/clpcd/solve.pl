@@ -62,7 +62,6 @@
               rcbl_status/7,
               reconsider/2,
               same_class/2,
-              sd/7,
               select_active_bound/2,
               solve/2,
               solve/6,
@@ -70,7 +69,7 @@
               ub/4,
               ub/5,
               ub_inner/6,
-              unconstrained/4,
+              unconstrained/5,
               var_with_def_intern/5
           ]).
 
@@ -559,11 +558,11 @@ solve(CLP,Lin) :-
 %
 % Solves a linear equation Lin = [I,_|H] = 0 and exports the generated bindings
 
-solve([],_,_,I,Bind0,Bind0) :-
+solve([],CLP,_,I,Bind0,Bind0) :-
 	!,
-	I =:= 0. % redundant or trivially unsat
+	compare_d(CLP, =, 0, I). % redundant or trivially unsat
 solve(H,CLP,Lin,_,Bind0,BindT) :-
-	sd(H,[],ClassesUniq,9-9-0,Category-Selected-_,NV,NVT),
+	sd(H,CLP,[],ClassesUniq,9-9-0,Category-Selected-_,NV,NVT),
 	get_attr(Selected,clpcd_itf,Att),
 	arg(5,Att,order(Ord)),
 	isolate(CLP, Ord, Lin, Lin1),	% Lin = 0 => Selected = Lin1
@@ -629,7 +628,7 @@ solve_ord_x([],_,_,I,_,_,Bind0,Bind0) :-
 solve_ord_x([_|_],CLP,Lin,_,OrdX,ClassX,Bind0,BindT) :-
 	isolate(CLP, OrdX, Lin, Lin1),
 	Lin1 = [_,_|H1],
-	sd(H1,[],ClassesUniq1,9-9-0,_,NV,NVT), % do sd on Lin without X, then
+	sd(H1,CLP,[],ClassesUniq1,9-9-0,_,NV,NVT), % do sd on Lin without X, then
 					       % add class of X
 	ord_add_element(ClassesUniq1,ClassX,ClassesUniq),
 	class_allvars(ClassX,Deps),
@@ -648,41 +647,41 @@ solve_ord_x([_|_],CLP,Lin,_,OrdX,ClassX,Bind0,BindT) :-
 % ClassesIn or that are the classes of the variables in Hom. Variables that do
 % not belong to a class yet, are put in the difference list NV.
 
-sd([],Class0,Class0,Preference0,Preference0,NV0,NV0).
-sd([l(X*K,_)|Xs],Class0,ClassN,Preference0,PreferenceN,NV0,NVt) :-
+sd([],_,Class0,Class0,Preference0,Preference0,NV0,NV0).
+sd([l(X*K,_)|Xs],CLP,Class0,ClassN,Preference0,PreferenceN,NV0,NVt) :-
 	get_attr(X,clpcd_itf,Att),
 	(   arg(6,Att,class(Xc)) % old: has class
 	->  NV0 = NV1,
 	    ord_add_element(Class0,Xc,Class1),
 	    (   arg(2,Att,type(t_none))
-	    ->  preference(Preference0,2-X-K,Preference1)
+	    ->  preference(CLP,Preference0,2-X-K,Preference1)
 		    % has class, no bounds => category 2
-	    ;   preference(Preference0,4-X-K,Preference1)
+	    ;   preference(CLP,Preference0,4-X-K,Preference1)
 		    % has class, is bounded => category 4
 	    )
 	;   % new: has no class
 	    Class1 = Class0,
 	    NV0 = [X|NV1], % X has no class yet, add to list of new variables
 	    (   arg(2,Att,type(t_none))
-	    ->  preference(Preference0,1-X-K,Preference1)
+	    ->  preference(CLP,Preference0,1-X-K,Preference1)
 		    % no class, no bounds => category 1
-	    ;   preference(Preference0,3-X-K,Preference1)
+	    ;   preference(CLP,Preference0,3-X-K,Preference1)
 		    % no class, is bounded => category 3
 	    )
 	),
-	sd(Xs,Class1,ClassN,Preference1,PreferenceN,NV1,NVt).
+	sd(Xs,CLP,Class1,ClassN,Preference1,PreferenceN,NV1,NVt).
 
 %
 % A is best sofar, B is current
 % smallest preferred
-preference(A,B,Pref) :-
+preference(CLP,A,B,Pref) :-
 	A = Px-_-Ka,
 	B = Py-_-Kb,
 	(   Px < Py
 	->  Pref = A
 	;   Px > Py
         ->  Pref = B
-        ;   abs(Ka) > abs(Kb)
+        ;   compare_d(CLP, >, abs(Ka), abs(Kb))
         ->  Pref = A
         ;   Pref = B
 	).
@@ -717,14 +716,14 @@ attach_class([X|Xs],Class) :-
 	setarg(6,Att,class(Class)),
 	attach_class(Xs,Class).
 
-% unconstrained(Lin,Uc,Kuc,Rest)
+% unconstrained(CLP,Lin,Uc,Kuc,Rest)
 %
 % Finds an unconstrained variable Uc (type(t_none)) in Lin with scalar Kuc and
 % removes it from Lin to return Rest.
 
-unconstrained(Lin,Uc,Kuc,Rest) :-
+unconstrained(CLP,Lin,Uc,Kuc,Rest) :-
 	Lin = [_,_|H],
-	sd(H,[],_,9-9-0,Category-Uc-_,_,_),
+	sd(H,CLP,[],_,9-9-0,Category-Uc-_,_,_),
 	Category =< 2,
 	get_attr(Uc,clpcd_itf,Att),
 	arg(5,Att,order(OrdUc)),

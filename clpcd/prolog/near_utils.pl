@@ -94,7 +94,7 @@ real_near(A, B) :- near_compare(=, A, B).
 
 real_compare(A, C, B) :- near_compare(C, A, B).
 
-epsilon(E) :- E is 1000*epsilon.
+epsilon(E) :- E is 1024*epsilon.
 
 epsilon(N, E) :-
     epsilon(R),

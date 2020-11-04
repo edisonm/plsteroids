@@ -15,5 +15,6 @@ package(playground).
 package(smtp).
 package(clpcd).
 package(lambda).
+package(idfpml).
 
 :- assertz(ref_msgtype:rstats_db).

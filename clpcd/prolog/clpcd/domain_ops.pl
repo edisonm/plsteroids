@@ -2,6 +2,7 @@
           [cast_d/3,
            compare_d/4,
            div_d/4,
+           eval_d/3,
            ceiling_d/3,
            floor_d/3,
            integerp/3]).
@@ -12,4 +13,5 @@
         div_d/4,
         ceiling_d/3,
         floor_d/3,
+        eval_d/3,
         integerp/3.

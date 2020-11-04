@@ -49,12 +49,13 @@
 	    nf_rhs_x/4,
 	    isolate/4,
 	    nf_substitute/5,
-	    mult_hom/3,
+	    mult_hom/4,
 	    nf_coeff_of/3,
 	    renormalize/3	
 	]).
 
 :- use_module(library(clpcd/domain_ops)).
+:- use_module(library(clpcd/nf)).
 
 % normalize_scalar(S,[N,Z])
 %
@@ -125,8 +126,8 @@ add_linear_ff(CLP, LinA, Ka, LinB, Kb, LinC) :-
 	LinA = [Ia,Ra|Ha],
 	LinB = [Ib,Rb|Hb],
 	LinC = [Ic,Rc|Hc],
-	Ic is Ia*Ka+Ib*Kb,
-	Rc is Ra*Ka+Rb*Kb,
+	eval_d(CLP, Ia*Ka+Ib*Kb, Ic),
+	eval_d(CLP, Ra*Ka+Rb*Kb, Rc),
  	add_linear_ffh(Ha, CLP, Ka, Hb, Kb, Hc).
 
 % add_linear_ffh(Ha,Ka,Hb,Kb,Hc)
@@ -134,7 +135,7 @@ add_linear_ff(CLP, LinA, Ka, LinB, Kb, LinC) :-
 % Homogene part Hc is the result of the addition of the 2 homogene parts Ha and Hb,
 % each one multiplied by a scalar (Ka for Ha and Kb for Hb)
 
-add_linear_ffh([], _, _, Ys, Kb, Zs) :- mult_hom(Ys,Kb,Zs).
+add_linear_ffh([], CLP, _, Ys, Kb, Zs) :- mult_hom(Ys,CLP,Kb,Zs).
 add_linear_ffh([l(X*Kx,OrdX)|Xs], CLP, Ka, Ys, Kb, Zs) :-
 	add_linear_ffh(Ys, CLP, X, Kx, OrdX, Xs, Zs, Ka, Kb).
 
@@ -143,11 +144,12 @@ add_linear_ffh([l(X*Kx,OrdX)|Xs], CLP, Ka, Ys, Kb, Zs) :-
 % Homogene part Zs is the result of the addition of the 2 homogene parts Ys and
 % [l(X*Kx,OrdX)|Xs], each one multiplied by a scalar (Ka for [l(X*Kx,OrdX)|Xs] and Kb for Ys)
 
-add_linear_ffh([], _, X, Kx, OrdX, Xs, Zs, Ka, _) :- mult_hom([l(X*Kx,OrdX)|Xs],Ka,Zs).
+add_linear_ffh([], CLP, X, Kx, OrdX, Xs, Zs, Ka, _) :-
+            mult_hom([l(X*Kx,OrdX)|Xs], CLP, Ka, Zs).
 add_linear_ffh([l(Y*Ky,OrdY)|Ys], CLP, X, Kx, OrdX, Xs, Zs, Ka, Kb) :-
 	compare(Rel,OrdX,OrdY),
 	(   Rel = (=)
-	->  Kz is Kx*Ka+Ky*Kb,
+	->  eval_d(CLP, Kx*Ka+Ky*Kb, Kz),
 	    (   % Kz =:= 0
                 compare_d(CLP, =, Kx*Ka, -Ky*Kb)
 	    ->  add_linear_ffh(Xs, CLP, Ka, Ys, Kb, Zs)
@@ -156,11 +158,11 @@ add_linear_ffh([l(Y*Ky,OrdY)|Ys], CLP, X, Kx, OrdX, Xs, Zs, Ka, Kb) :-
 	    )
 	;   Rel = (<)
 	->  Zs = [l(X*Kz,OrdX)|Ztail],
-	    Kz is Kx*Ka,
+	    eval_d(CLP, Kx*Ka, Kz),
 	    add_linear_ffh(Xs, CLP, Y, Ky, OrdY, Ys, Ztail, Kb, Ka)
 	;   Rel = (>)
 	->  Zs = [l(Y*Kz,OrdY)|Ztail],
-	    Kz is Ky*Kb,
+	    eval_d(CLP, Ky*Kb, Kz),
 	    add_linear_ffh(Ys, CLP, X, Kx, OrdX, Xs, Ztail, Ka, Kb)
      	).
 
@@ -172,8 +174,8 @@ add_linear_f1(CLP, LinA, Ka, LinB, LinC) :-
 	LinA = [Ia,Ra|Ha],
 	LinB = [Ib,Rb|Hb],
 	LinC = [Ic,Rc|Hc],
-	Ic is Ia*Ka+Ib,
-	Rc is Ra*Ka+Rb,
+	eval_d(CLP, Ia*Ka+Ib, Ic),
+	eval_d(CLP, Ra*Ka+Rb, Rc),
 	add_linear_f1h(Ha, CLP, Ka, Hb, Hc).
 
 % add_linear_f1h(Ha,Ka,Hb,Hc)
@@ -188,11 +190,12 @@ add_linear_f1h([l(X*Kx,OrdX)|Xs], CLP, Ka, Ys, Zs) :-
 %
 % special case of add_linear_ffh/8 with Kb = 1
 
-add_linear_f1h([], _, X, Kx, OrdX, Xs, Zs, Ka) :- mult_hom([l(X*Kx,OrdX)|Xs],Ka,Zs).
+add_linear_f1h([], CLP, X, Kx, OrdX, Xs, Zs, Ka) :-
+            mult_hom([l(X*Kx,OrdX)|Xs], CLP, Ka, Zs).
 add_linear_f1h([l(Y*Ky,OrdY)|Ys], CLP, X, Kx, OrdX, Xs, Zs, Ka) :-
 	compare(Rel,OrdX,OrdY),
 	(   Rel = (=)
-	->  Kz is Kx*Ka+Ky,
+	->  eval_d(CLP, Kx*Ka+Ky, Kz),
 	    (   % Kz =:= 0.0
                 compare_d(CLP, =, Kx*Ka, -Ky)
 	    ->  add_linear_f1h(Xs, CLP, Ka, Ys, Zs)
@@ -201,7 +204,7 @@ add_linear_f1h([l(Y*Ky,OrdY)|Ys], CLP, X, Kx, OrdX, Xs, Zs, Ka) :-
 	    )
 	;   Rel = (<)
 	->  Zs = [l(X*Kz,OrdX)|Ztail],
-	    Kz is Kx*Ka,
+	    eval_d(CLP, Kx*Ka, Kz),
 	    add_linear_f1h(Xs, CLP, Ka, [l(Y*Ky,OrdY)|Ys], Ztail)
  	;   Rel = (>)
 	->  Zs = [l(Y*Ky,OrdY)|Ztail],
@@ -216,8 +219,8 @@ add_linear_11(CLP, LinA, LinB, LinC) :-
 	LinA = [Ia,Ra|Ha],
 	LinB = [Ib,Rb|Hb],
 	LinC = [Ic,Rc|Hc],
-	Ic is Ia+Ib,
-	Rc is Ra+Rb,
+	eval_d(CLP, Ia+Ib, Ic),
+	eval_d(CLP, Ra+Rb, Rc),
 	add_linear_11h(Ha, CLP, Hb, Hc).
 
 % add_linear_11h(Ha,Hb,Hc)
@@ -236,7 +239,7 @@ add_linear_11h([], _, X, Kx, OrdX, Xs, [l(X*Kx,OrdX)|Xs]).
 add_linear_11h([l(Y*Ky,OrdY)|Ys], CLP, X, Kx, OrdX, Xs, Zs) :-
 	compare(Rel,OrdX,OrdY),
 	(   Rel = (=)
-	->  Kz is Kx+Ky,
+	->  eval_d(CLP, Kx+Ky, Kz),
 	    (   % Kz =:= 0
 		compare_d(CLP, =, Kx, -Ky)
 	    ->  add_linear_11h(Xs, CLP, Ys, Zs)
@@ -260,38 +263,38 @@ mult_linear_factor(CLP, Lin, K, Mult) :-
         compare_d(CLP, =, K, 1),
 	!,
 	Mult = Lin.
-mult_linear_factor(_, Lin, K, Res) :-
+mult_linear_factor(CLP, Lin, K, Res) :-
 	Lin = [I,R|Hom],
-	Res = [Ik,Rk|Mult],
-	Ik is I*K,
-	Rk is R*K,
-	mult_hom(Hom,K,Mult).
+	Res = [Ik, Rk|Mult],
+	eval_d(CLP, I*K, Ik),
+	eval_d(CLP, R*K, Rk),
+	mult_hom(Hom, CLP, K, Mult).
 
 div_linear_factor(CLP, Lin, K, Mult) :-
 	compare_d(CLP, =, K, 1),
 	!,
 	Mult = Lin.
-div_linear_factor(_, Lin, K, Res) :-
+div_linear_factor(CLP, Lin, K, Res) :-
 	Lin = [I,R|Hom],
 	Res = [Ik,Rk|Mult],
-	Ik is I/K,
-	Rk is R/K,
-	div_hom(Hom,K,Mult).
+	eval_d(CLP, I/K, Ik),
+	eval_d(CLP, R/K, Rk),
+	div_hom(Hom, CLP, K, Mult).
 
-% mult_hom(Hom,K,Res)
+% mult_hom(Hom,CLP,K,Res)
 %
 % Homogene part Res is the result of multiplication of homogene part
 % Hom by scalar K
 
-mult_hom([],_,[]).
-mult_hom([l(A*Fa,OrdA)|As],F,[l(A*Fan,OrdA)|Afs]) :-
-	Fan is F*Fa,
-	mult_hom(As,F,Afs).
+mult_hom([], _, _, []).
+mult_hom([l(A*Fa,OrdA)|As], CLP, F, [l(A*Fan,OrdA)|Afs]) :-
+	eval_d(CLP, F*Fa, Fan),
+	mult_hom(As, CLP, F, Afs).
 
-div_hom([], _, []).
-div_hom([l(A*Fa,OrdA)|As],F,[l(A*Fan,OrdA)|Afs]) :-
-	Fan is Fa/F,
-	div_hom(As,F,Afs).
+div_hom([], _, _, []).
+div_hom([l(A*Fa,OrdA)|As], CLP, F, [l(A*Fan,OrdA)|Afs]) :-
+	eval_d(CLP, Fa/F, Fan),
+	div_hom(As, CLP, F, Afs).
 
 % nf_substitute(Ord,Def,Lin,Res)
 %

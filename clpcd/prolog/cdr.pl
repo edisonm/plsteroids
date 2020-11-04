@@ -52,17 +52,9 @@
 	  ]).
 
 :- license(gpl_swipl, 'CLP(CDR)').
-:- use_module(library(clpcd/bb)).
-:- use_module(library(clpcd/nf)).
-:- use_module(library(clpcd/bv)).
-:- reexport(library(clpcd/dump),
-            [ dump/3 %, projecting_assert/1
-            ]).
-:- reexport(library(clpcd/ordering), [clp_type/2]).
-:- use_module(library(clpcd)).
-:- use_module(library(cdqr), []).
-:- reexport(library(clpcd/ordering), [ordering/1]).
 :- use_module(library(near_utils)).
+:- use_module(library(cdqr), []).
+:- include(library(cd_cmd)).
 
 clpcd_domain_ops:compare_d(cdr, Op, A, B) :-
     near_compare(Op, A, B).
@@ -97,48 +89,3 @@ clpcd_itf:numbers_only(cdr,Y) :-
 	;   throw(type_error(_X = Y,2,'a real number',Y))
 	),
 	!.
-
-clpcd_highlight:clpcd_module(cdr).
-
-inf(Expression, Inf) :-
-        inf(cdr, Expression, Inf).
-
-inf(Expression, Inf, Vector, Vertex) :-
-        inf(cdr, Expression, Inf, Vector, Vertex).
-
-sup(Expression, Sup) :-
-        sup(cdr, Expression, Sup).
-
-sup(Expression, Sup, Vector, Vertex) :-
-        sup(cdr, Expression, Sup, Vector, Vertex).
-
-maximize(Term) :-
-        maximize(cdr, Term).
-
-minimize(Term) :-
-        minimize(cdr, Term).
-
-{Rel} :-
-        add_constraint(Rel, cdr).
-
-entailed(C) :- entailed(cdr, C).
-
-bb_inf(Is, Term, Inf) :- bb_inf(cdr, Is, Term, Inf, _).
-bb_inf(Is, Term, Inf, Vertex) :- bb_inf(cdr, Is, Term, Inf, Vertex).
-
-		 /*******************************
-		 *	       SANDBOX		*
-		 *******************************/
-:- multifile
-	sandbox:safe_primitive/1.
-
-sandbox:safe_primitive(cdr:{_}).
-sandbox:safe_primitive(cdr:entailed(_)).
-sandbox:safe_primitive(cdr:bb_inf(_, _, _)).
-sandbox:safe_primitive(cdr:bb_inf(_, _, _, _)).
-sandbox:safe_primitive(cdr:maximize(_)).
-sandbox:safe_primitive(cdr:minimize(_)).
-sandbox:safe_primitive(cdr:inf(_,_)).
-sandbox:safe_primitive(cdr:inf(_,_,_,_)).
-sandbox:safe_primitive(cdr:sup(_,_)).
-sandbox:safe_primitive(cdr:sup(_,_,_,_)).

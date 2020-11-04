@@ -86,26 +86,26 @@ ineq_ground(nonstrict, CLP, I) :- compare_d(CLP, =<, I, 0).
 % Solves the inequality K*X + I < 0 or K*X + I =< 0
 
 ineq_one(strict, CLP, X, K, I) :-
-	(   K > 0
-	->  (   I =:= 0
+	(   compare_d(CLP, <, 0, K)
+	->  (   compare_d(CLP, =, 0, I)
 	    ->  ineq_one_s_p_0(CLP, X)	% K*X < 0, K > 0 => X < 0
 	    ;   div_d(CLP, I, K, Inhom),
 		ineq_one_s_p_i(CLP, X, Inhom)	% K*X + I < 0, K > 0 => X + I/K < 0
 	    )
-	;   (   I =:= 0
+	;   (   compare_d(CLP, =, 0, I)
 	    ->  ineq_one_s_n_0(CLP, X)	% K*X < 0, K < 0 => -X < 0
 	    ;   div_d(CLP, -I, K, Inhom),
 		ineq_one_s_n_i(CLP, X, Inhom)	% K*X + I < 0, K < 0 => -X - I/K < 0
 	    )
 	).
 ineq_one(nonstrict, CLP, X, K, I) :-
-	(   K > 0
-	->  (   I =:= 0
+	(   compare_d(CLP, <, 0, K)
+	->  (   compare_d(CLP, =, 0, I)
 	    ->  ineq_one_n_p_0(CLP, X)	% K*X =< 0, K > 0 => X =< 0
 	    ;   div_d(CLP, I, K, Inhom),
 		ineq_one_n_p_i(CLP, X, Inhom)	% K*X + I =< 0, K > 0 => X + I/K =< 0
 	    )
-	;   (   I =:= 0
+	;   (   compare_d(CLP, =, 0, I)
 	    ->  ineq_one_n_n_0(CLP, X)	% K*X =< 0, K < 0 => -X =< 0
 	    ;   div_d(CLP, -I, K, Inhom),
 		ineq_one_n_n_i(CLP, X, Inhom)	% K*X + I =< 0, K < 0 => -X - I/K =< 0
@@ -160,7 +160,7 @@ ineq_one_s_p_i(CLP, X, I) :-
 	;   ineq_one_old_s_p_i(OrdX, CLP, I, X, Ix)
 	).
 ineq_one_s_p_i(CLP, X, I) :-
-	Bound is -I,
+	eval_d(CLP, -I, Bound),
 	var_intern(CLP,t_u(Bound),X,1). % puts a strict inactive upperbound on the variable
 
 % ineq_one_s_n_i(CLP,X,I)
@@ -410,7 +410,7 @@ ineq_more([l(X*K,_)|Tail], CLP, Id, Lind, Strictness) :-
 % Solves the inequality Lin < 0 or Lin =< 0
 
 ineq_more(strict, CLP, Lind) :-
-	(   unconstrained(Lind,U,K,Rest)
+	(   unconstrained(CLP,Lind,U,K,Rest)
 	->  % never fails, no implied value
 	    % Lind < 0 => Rest < -K*U where U has no bounds
 	    var_intern(CLP,t_l(0),S,2),	% create slack variable S
@@ -431,7 +431,7 @@ ineq_more(strict, CLP, Lind) :-
 	    reconsider(CLP, S)			% reconsider basis
 	).
 ineq_more(nonstrict, CLP, Lind) :-
-	(   unconstrained(Lind,U,K,Rest)
+	(   unconstrained(CLP,Lind,U,K,Rest)
 	->  % never fails, no implied value
 	    % Lind =< 0 => Rest =< -K*U where U has no bounds
 	    var_intern(CLP,t_l(0),S,0),	% create slack variable S
@@ -519,7 +519,7 @@ udl(t_none, CLP, X, Lin, Bound, _Sold) :-
 	arg(5,AttX,order(Ord)),
 	setarg(2,AttX,type(t_l(Bound))),
 	setarg(3,AttX,strictness(0)),
-	(   unconstrained(Lin,Uc,Kuc,Rest)
+	(   unconstrained(CLP,Lin,Uc,Kuc,Rest)
 	->  % X = Lin => -1/K*Rest + 1/K*X = U where U has no bounds
 	    div_d(CLP, -1, Kuc, Ki),
 	    add_linear_ff(CLP, Rest, Ki, [0,0,l(X* -1,Ord)], Ki, LinU),
@@ -581,7 +581,7 @@ udls(t_none, CLP, X, Lin, Bound, _Sold) :-
 	arg(5,AttX,order(Ord)),
 	setarg(2,AttX,type(t_l(Bound))),
 	setarg(3,AttX,strictness(2)),
-	(   unconstrained(Lin,Uc,Kuc,Rest)
+	(   unconstrained(CLP,Lin,Uc,Kuc,Rest)
 	->  % X = Lin => U = -1/K*Rest + 1/K*X with U an unconstrained variable
 	    div_d(CLP, -1, Kuc, Ki),
 	    add_linear_ff(CLP, Rest, Ki, [0,0,l(X* -1,Ord)], Ki, LinU),
@@ -644,7 +644,7 @@ udu(t_none, CLP, X, Lin, Bound, _Sold) :-
 	arg(5,AttX,order(Ord)),
 	setarg(2,AttX,type(t_u(Bound))),
 	setarg(3,AttX,strictness(0)),
-	(   unconstrained(Lin,Uc,Kuc,Rest)
+	(   unconstrained(CLP,Lin,Uc,Kuc,Rest)
 	->  % X = Lin => U = -1/K*Rest + 1/K*X with U an unconstrained variable
 	    div_d(CLP, -1, Kuc, Ki),
 	    add_linear_ff(CLP, Rest, Ki, [0,0,l(X* -1,Ord)], Ki, LinU),
@@ -705,7 +705,7 @@ udus(t_none, CLP, X, Lin, Bound, _Sold) :-
 	arg(5,AttX,order(Ord)),
 	setarg(2,AttX,type(t_u(Bound))),
 	setarg(3,AttX,strictness(1)),
-	(   unconstrained(Lin,Uc,Kuc,Rest)
+	(   unconstrained(CLP,Lin,Uc,Kuc,Rest)
 	->   % X = Lin => U = -1/K*Rest + 1/K*X with U an unconstrained variable
 	    div_d(CLP, -1, Kuc, Ki),
 	    add_linear_ff(CLP, Rest, Ki, [0,0,l(X* -1,Ord)], Ki, LinU),

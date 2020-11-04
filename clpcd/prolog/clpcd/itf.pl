@@ -47,6 +47,7 @@
 	    dump_nonzero/3
 	]).
 
+:- use_module(library(neck)).
 :- use_module(library(clpcd/class)).
 :- use_module(library(clpcd/domain_ops)).
 :- use_module(library(clpcd/indep)).
@@ -78,8 +79,8 @@ dump_nz(CLP,_,H,I) -->
 	{
 	    H = [l(_*K,_)|_],
 	    div_d(CLP, 1, K, Kr),
-	    I1 is -Kr*I,
-	    mult_hom(H,Kr,H1),
+	    eval_d(CLP, -Kr*I, I1),
+	    mult_hom(H,CLP,Kr,H1),
 	    nf2sum(H1,CLP,0,Sum)
 	},
 	[Sum =\= I1].
@@ -116,10 +117,10 @@ dump_v(t_l(L),CLP,V,I,H) -->
 	    arg(3,Att,strictness(Strict)),
 	    Sm is Strict /\ 2,
             div_d(CLP, 1, K, Kr),
-	    Li is Kr*(L - I),
-	    mult_hom(H,Kr,H1),
+	    eval_d(CLP, Kr*(L - I), Li),
+	    mult_hom(H,CLP,Kr,H1),
 	    nf2sum(H1,CLP,0,Sum),
-	    (   K > 0 % K > 0
+	    (   compare_d(CLP, <, 0, K)
 	    ->	dump_strict(Sm,Sum >= Li,Sum > Li,Result)
 	    ;   dump_strict(Sm,Sum =< Li,Sum < Li,Result)
 	    )
@@ -136,10 +137,10 @@ dump_v(t_u(U),CLP,V,I,H) -->
 	    arg(3,Att,strictness(Strict)),
 	    Sm is Strict /\ 1,
 	    div_d(CLP, 1, K, Kr),
-	    Ui is Kr*(U-I),
-	    mult_hom(H,Kr,H1),
+	    eval_d(CLP, Kr*(U-I), Ui),
+	    mult_hom(H,CLP,Kr,H1),
 	    nf2sum(H1,CLP,0,Sum),
-	    (   K > 0
+	    (   compare_d(CLP, <, 0, K)
 	    ->	dump_strict(Sm,Sum =< Ui,Sum < Ui,Result)
 	    ;   dump_strict(Sm,Sum >= Ui,Sum > Ui,Result)
 	    )
@@ -168,7 +169,7 @@ dump_v(T,_,V,I,H) --> % should not happen
 
 nf2sum([],_,I,I).
 nf2sum([X|Xs],CLP,I,Sum) :-
-	(   I =:= 0
+	(   compare_d(CLP, =, 0, I)
 	->  X = l(Var*K,_),
  	    (   % K =:= 1.0
                 compare_d(CLP, =, K, 1)
@@ -264,11 +265,11 @@ attr_unify_hook(t(CLP,Ty,St,Li,Or,Cl,_,No,_,_,_),Y) :-
         numbers_only/2.
 
 do_checks(CLP,Y,Ty,St,Li,Or,Cl,No,Later) :-
-	numbers_only(CLP,Y),
-	verify_nonzero(No,CLP,Y),
-	verify_type(Ty,CLP,St,Y,Later,[]),
-	verify_lin(Or,CLP,Cl,Li,Y),
-	maplist(call,Later).
+    numbers_only(CLP,Y),
+    verify_nonzero(No,CLP,Y),
+    verify_type(Ty,CLP,St,Y,Later,[]),
+    verify_lin(Or,CLP,Cl,Li,Y),
+    maplist(call,Later).
 
 % verify_nonzero(Nonzero,CLP,Y)
 %
@@ -276,13 +277,13 @@ do_checks(CLP,Y,Ty,St,Li,Or,Cl,No,Later) :-
 % (if possible, otherwise set Y to be nonzero)
 
 verify_nonzero(nonzero,CLP,Y) :-
-	(   var(Y)
-	->  (   get_attr(Y,clpcd_itf,Att)
-	    ->  setarg(8,Att,nonzero)
-	    ;   put_attr(Y,clpcd_itf,t(CLP,n,n,n,n,n,n,nonzero,n,n,n))
-	    )
-	;   Y =\= 0
-	).
+    (   var(Y)
+    ->  (   get_attr(Y,clpcd_itf,Att)
+	->  setarg(8,Att,nonzero)
+	;   put_attr(Y,clpcd_itf,t(CLP,n,n,n,n,n,n,nonzero,n,n,n))
+	)
+    ;   compare_d(CLP, \=, 0, Y)
+    ).
 verify_nonzero(n,_,_). % X is not nonzero
 
 % verify_type(type(Type),strictness(Strict),Y,[OL|OLT],OLT)
@@ -292,15 +293,15 @@ verify_nonzero(n,_,_). % X is not nonzero
 % the type and strictness
 
 verify_type(type(Type),CLP,strictness(Strict),Y) -->
-	verify_type2(CLP,Y,Type,Strict).
+    verify_type2(CLP,Y,Type,Strict).
 verify_type(n,_,n,_) --> [].
 
 verify_type2(C,Y,TypeX,StrictX) -->
-	{var(Y)},
-	!,
-	verify_type_var(TypeX,C,Y,StrictX).
+    {var(Y)},
+    !,
+    verify_type_var(TypeX,C,Y,StrictX).
 verify_type2(C,Y,TypeX,StrictX) -->
-	{verify_type_nonvar(TypeX,C,Y,StrictX)}.
+    {verify_type_nonvar(TypeX,C,Y,StrictX)}.
 
 % verify_type_nonvar(Type,CLP,Nonvar,Strictness)
 %
@@ -310,16 +311,16 @@ verify_type_nonvar(t_none,_,_,_).
 verify_type_nonvar(t_l(L),C,Value,S) :- ilb(S,C,L,Value).
 verify_type_nonvar(t_u(U),C,Value,S) :- iub(S,C,U,Value).
 verify_type_nonvar(t_lu(L,U),C,Value,S) :-
-	ilb(S,C,L,Value),
-	iub(S,C,U,Value).
+    ilb(S,C,L,Value),
+    iub(S,C,U,Value).
 verify_type_nonvar(t_L(L),C,Value,S) :- ilb(S,C,L,Value).
 verify_type_nonvar(t_U(U),C,Value,S) :- iub(S,C,U,Value).
 verify_type_nonvar(t_Lu(L,U),C,Value,S) :-
-	ilb(S,C,L,Value),
-	iub(S,C,U,Value).
+    ilb(S,C,L,Value),
+    iub(S,C,U,Value).
 verify_type_nonvar(t_lU(L,U),C,Value,S) :-
-	ilb(S,C,L,Value),
-	iub(S,C,U,Value).
+    ilb(S,C,L,Value),
+    iub(S,C,U,Value).
 
 % ilb(Strict,CLP,Lower,Value) & iub(Strict,CLP,Upper,Value)
 %
@@ -332,16 +333,22 @@ verify_type_nonvar(t_lU(L,U),C,Value,S) :-
 % 0 = no strict bounds
 
 ilb(S,C,L,V) :-
-	S /\ 2 =:= 0,
-	!,
-	compare_d(C, =<, L, V). % non-strict
-ilb(_,C,L,V) :- compare_d(C, =<, L, V). % strict
+    between(0, 3, S),
+    ( S /\ 2 =:= 0
+    ->Op = (=<) % non-strict
+    ; Op = (<)  % strict
+    ),
+    neck,
+    compare_d(C, Op, L, V).
 
 iub(S,C,U,V) :-
-	S /\ 1 =:= 0,
-	!,
-	compare_d(C, =<, V, U). % non-strict
-iub(_,C,U,V) :- compare_d(C, <, V, U). % strict
+    between(0, 3, S),
+    ( S /\ 1 =:= 0
+    ->Op = (=<) % non-strict
+    ; Op = (<)  % strict
+    ),
+    neck,
+    compare_d(C, Op, V, U).
 
 %
 % Running some goals after X=Y simplifies the coding. It should be possible
@@ -357,32 +364,34 @@ verify_type_var(t_none,_,_,_) --> [].
 verify_type_var(t_l(L),C,Y,S) --> llb(S,C,L,Y).
 verify_type_var(t_u(U),C,Y,S) --> lub(S,C,U,Y).
 verify_type_var(t_lu(L,U),C,Y,S) -->
-	llb(S,C,L,Y),
-	lub(S,C,U,Y).
+    llb(S,C,L,Y),
+    lub(S,C,U,Y).
 verify_type_var(t_L(L),C,Y,S) --> llb(S,C,L,Y).
 verify_type_var(t_U(U),C,Y,S) --> lub(S,C,U,Y).
 verify_type_var(t_Lu(L,U),C,Y,S) -->
-	llb(S,C,L,Y),
-	lub(S,C,U,Y).
+    llb(S,C,L,Y),
+    lub(S,C,U,Y).
 verify_type_var(t_lU(L,U),C,Y,S) -->
-	llb(S,C,L,Y),
-	lub(S,C,U,Y).
+    llb(S,C,L,Y),
+    lub(S,C,U,Y).
 
 % llb(Strict,Lower,Value,[OL|OLT],OLT) and lub(Strict,Upper,Value,[OL|OLT],OLT)
 %
 % returns the inequalities following from the lower and upper bounds and the
 % strictness see also lb and ub
 llb(S,C,L,V) -->
-	{S /\ 2 =:= 0},
-	!,
-	[C:{L =< V}].
-llb(_,C,L,V) --> [C:{L < V}].
+    {S /\ 2 =:= 0 },
+    !,
+    [C:{L =< V}].
+llb(_,C,L,V) -->
+    [C:{L < V}].
 
 lub(S,C,U,V) -->
-	{S /\ 1 =:= 0},
-	!,
-	[C:{V =< U}].
-lub(_,C,U,V) -->	[C:{V < U}].
+    {S /\ 1 =:= 0 },
+     !,
+     [C:{V =< U}].
+lub(_,C,U,V) -->
+    [C:{V < U}].
 
 %
 % We used to drop X from the class/basis to avoid trouble with subsequent
@@ -393,23 +402,23 @@ lub(_,C,U,V) -->	[C:{V < U}].
 % because the ordering is violated.
 %
 verify_lin(order(OrdX),CLP,class(Class),lin(LinX),Y) :-
-	!,
-	(   indep(CLP,LinX,OrdX)
-	->  detach_bounds_vlv(CLP,OrdX,LinX,Class,Y,NewLinX),
-	    % if there were bounds, they are requeued already
-	    class_drop(Class,Y),
-	    nf(-Y, CLP, NfY),
-	    deref(CLP,NfY,LinY),
-	    add_linear_11(CLP, NewLinX, LinY, Lind),
-	    (   nf_coeff_of(Lind,OrdX,_)
-	    ->	% X is element of Lind
-		solve_ord_x(CLP, Lind, OrdX, Class)
-	    ;	solve(CLP, Lind)	% X is gone, can safely solve Lind
-	    )
-	;   class_drop(Class,Y),
-	    nf(-Y, CLP, NfY),
-	    deref(CLP,NfY,LinY),
-	    add_linear_11(CLP, LinX, LinY, Lind),
-	    solve(CLP, Lind)
-	).
+    !,
+    (   indep(CLP,LinX,OrdX)
+    ->  detach_bounds_vlv(CLP,OrdX,LinX,Class,Y,NewLinX),
+	% if there were bounds, they are requeued already
+	class_drop(Class,Y),
+	nf(-Y, CLP, NfY),
+	deref(CLP,NfY,LinY),
+	add_linear_11(CLP, NewLinX, LinY, Lind),
+	(   nf_coeff_of(Lind,OrdX,_)
+	->  % X is element of Lind
+	    solve_ord_x(CLP, Lind, OrdX, Class)
+	;   solve(CLP, Lind)	% X is gone, can safely solve Lind
+	)
+    ;   class_drop(Class,Y),
+	nf(-Y, CLP, NfY),
+	deref(CLP,NfY,LinY),
+	add_linear_11(CLP, LinX, LinY, Lind),
+	solve(CLP, Lind)
+    ).
 verify_lin(_,_,_,_,_).
