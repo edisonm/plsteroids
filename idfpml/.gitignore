@@ -1,0 +1,12 @@
+target
+*~
+*_impl.h
+*_intf.c
+*_intf.h
+*_so.pl
+*.so
+*.diff
+*.o
+*_auto.pl
+*_auto.h
+libbid.a
