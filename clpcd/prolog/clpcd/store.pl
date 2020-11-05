@@ -55,7 +55,6 @@
 	]).
 
 :- use_module(library(clpcd/domain_ops)).
-:- use_module(library(clpcd/nf)).
 
 % normalize_scalar(S,[N,Z])
 %

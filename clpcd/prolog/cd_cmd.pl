@@ -11,6 +11,7 @@
     bb_inf/4,
     entailed/1)).
 
+:- use_module(library(lists)).
 :- use_module(library(neck)).
 :- use_module(library(clpcd/bb)).
 :- use_module(library(clpcd/nf)).

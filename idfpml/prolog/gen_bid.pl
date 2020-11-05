@@ -36,6 +36,8 @@
           [ gen_bid/0
           ]).
 
+:- use_module(library(filesex)).
+:- use_module(library(lists)).
 :- use_module(library(assertions)).
 :- use_module(library(bid_desc)).
 

@@ -4,6 +4,8 @@
            cd_nonlin/4,
            num_arithmetic_function/1]).
 
+:- use_module(library(arithmetic)).
+:- use_module(library(lists)).
 :- use_module(library(neck)).
 :- use_module(library(mapnargs)).
 :- use_module(library(typeprops)).

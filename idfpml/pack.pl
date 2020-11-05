@@ -8,4 +8,5 @@ maintainer('Edison Mera Menendez', 'http://www.edisonm.com/').
 home('https://github.com/edisonm/idfpml').
 download('https://github.com/edisonm/idfpml.git').
 requires(xlibrary).
+requires(assertions).
 requires(clpcd).

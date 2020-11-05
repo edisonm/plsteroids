@@ -12,7 +12,7 @@
 :- use_module(library(checkers)).
 :- use_module(library(ws_cover)).
 :- use_module(library(i18n/i18n_op)).
-
+/*
 :- use_module(library(prolog_stack)).
 :- multifile
 	user:prolog_exception_hook/4.
@@ -29,3 +29,4 @@ user:prolog_exception_hook(Error, _, _, _) :-
     backtrace(20),
     fail.
 % user:prolog_trace_interception(Port, Frame, PC, continue).
+*/

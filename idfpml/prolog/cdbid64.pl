@@ -40,6 +40,7 @@
 :- module(cdbid64, []).
 
 :- license(gpl_swipl, 'CLP(CDBID128)').
+:- use_module(library(lists)).
 :- use_module(library(bid)).
 :- use_module(library(cdbid)).
 :- include(library(cd_cmd)).

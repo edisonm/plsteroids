@@ -35,6 +35,9 @@ Multiple Precision Floating-Point Reliable Library Prolog Interface.
 We name it floatn in to avoid clashes with names derived from mpfr in the C
 side.
 
+Note: install libmpfr first, for instance, in Debian:
+apt install libmpfr-dev libmpc-dev
+
 */
 
 :- type floatn/1 + native(is_floatn).

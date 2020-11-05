@@ -42,6 +42,8 @@
 :- use_module(library(bid)).
 :- use_module(library(bid_eval)).
 
+:- public cd_type/2.
+
 cd_type(cdbid64,  bid64).
 cd_type(cdbid128, bid128).
 

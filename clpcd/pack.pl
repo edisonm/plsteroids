@@ -8,3 +8,4 @@ maintainer('Edison Mera Menendez', 'http://www.edisonm.com/').
 home('https://github.com/edisonm/clpcd').
 download('https://github.com/edisonm/clpcd.git').
 requires(xlibrary).
+requires(assertions).

@@ -7,7 +7,10 @@ PLSTEROIDS=target/bin/plsteroids
 
 CONCURRENT=. bin/concurrent ; concurrent_silent=1 ; run_pull
 
-build: $(PLSTEROIDS)
+build:
+	cd idfpml/prolog/idfpml/LIBRARY ; \
+	  $(MAKE) CC=gcc CALL_BY_REF=1 GLOBAL_RND=1 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=0
+	$(MAKE) $(PLSTEROIDS)
 	true
 
 compile:

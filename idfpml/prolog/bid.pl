@@ -58,7 +58,7 @@
 :- link_foreign_library(bid).
 :- use_foreign_header('pl-bid').
 :- use_foreign_source('pl-bid').
-:- gen_foreign_library(bid).
+:- gen_foreign_library(plbin(bid)).
 :- use_module(library(gen_bid)).
 :- gen_bid.
 

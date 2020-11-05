@@ -33,12 +33,14 @@
 */
 
 :- module(bid_eval,
-          [ cast/3,
+          [ bid_t/1,
+            cast/3,
             compare/4,
             eval/3,
             int/3
           ]).
 
+:- use_module(library(lists)).
 :- use_module(library(bid)).
 :- use_module(library(bid_desc)).
 :- use_module(library(list_sequence)).
@@ -46,6 +48,11 @@
 
 bid_t(bid64).
 bid_t(bid128).
+
+:- public
+        op_pred/2,
+        pred_expr/2,
+        eval_1/4.
 
 op_pred(=,  quiet_equal).
 op_pred(=<, quiet_less_equal).
@@ -165,8 +172,12 @@ do_eval(Expr, Type, C) :-
 
 Head :-
     bid_desc(Desc, PIL),
-    member(Desc, [pl_, pn_, pi_]),
-    member(F/A, PIL),
+    ( memberchk(Desc, [pl_, pn_]),
+      member(F/A, PIL)
+    ; Desc = pi_,
+      member(F/A, [int/2]),
+      memberchk(F/A, PIL)
+    ),
     functor(Pred, F, A),
     Pred =.. [N, Result|AL],
     Head =.. [N, Type, Result|AL],

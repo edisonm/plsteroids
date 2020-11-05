@@ -9,7 +9,9 @@ loadpacks(Loader) :-
     scanpacks(
         pack_load_local(
             [exclude(
-                 [refactor/prolog/i18n/i18n_trans,
+                 [clpcd/prolog/cd_cmd,
+                  idfpml/prolog/bid_auto,
+                  refactor/prolog/i18n/i18n_trans,
                   xtools/prolog/ws_source,
                   refactor/prolog/ref_expand,
                   refactor/prolog/ref_replace,

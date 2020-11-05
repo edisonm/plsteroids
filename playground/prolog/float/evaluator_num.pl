@@ -2,7 +2,7 @@
 
 :- use_module(library(arithmetic)).
 :- use_module(library(float/evaluator)).
-:- use_module(library(cdqr)).
+:- use_module(library(clpcd)).
 
 evaluator:castexpr(num(Expr), num, Expr).
 evaluator:evalfunc(num, Expr, Value) :- arithmetic_expression_value(Expr, Value).
