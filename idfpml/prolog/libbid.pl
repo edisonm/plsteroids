@@ -32,7 +32,7 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(bid,
+:- module(libbid,
           [bid64/2,
            bid128/2,
            bid64_t/1,
@@ -58,7 +58,7 @@
 :- link_foreign_library(bid).
 :- use_foreign_header('pl-bid').
 :- use_foreign_source('pl-bid').
-:- gen_foreign_library(plbin(bid)).
+:- gen_foreign_library(plbin(libbid)).
 :- use_module(library(gen_bid)).
 :- gen_bid.
 

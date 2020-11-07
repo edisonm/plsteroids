@@ -41,7 +41,7 @@
           ]).
 
 :- use_module(library(lists)).
-:- use_module(library(bid)).
+:- use_module(library(libbid)).
 :- use_module(library(bid_desc)).
 :- use_module(library(list_sequence)).
 :- use_module(library(neck)).
