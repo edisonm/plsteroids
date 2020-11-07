@@ -59,7 +59,3 @@ unsigned rnd_mode=0;
    return DR;
 
 }
-
-
-
- 

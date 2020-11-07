@@ -2072,4 +2072,3 @@ DECLSPEC_OPT      type0                                     \
     BID_RETURN_VAL((type0)res);                                   \
                    }
 #endif
-
