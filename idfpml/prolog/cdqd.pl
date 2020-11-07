@@ -37,20 +37,20 @@
     the GNU General Public License.
 */
 
-:- module(cdbid64, []).
+:- module(cdqd, []).
 
-:- license(gpl_swipl, 'CLP(CDBID128)').
-:- use_module(library(lists)).
+:- license(gpl_swipl, 'CLP(CDQD)').
 :- use_module(library(libbid)).
 :- use_module(library(cdbid)).
 :- include(library(cd_cmd)).
 
-clpcd_itf:numbers_only(cdbid64, Y) :-
+clpcd_itf:numbers_only(cdqd, Y) :-
     (   var(Y)
     ;   integer(Y)
     ;   float(Y)
     ;   rational(Y)
     ;   bid64_t(Y)
-    ;   throw(type_error(_X = Y,2,'a decimal number',Y))
+    ;   bid128_t(Y)
+    ;   throw(type_error(_X = Y,2,'a quadruple decimal number',Y))
     ),
     !.

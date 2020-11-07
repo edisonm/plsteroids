@@ -44,8 +44,8 @@
 
 :- public cd_type/2.
 
-cd_type(cdbid64,  bid64).
-cd_type(cdbid128, bid128).
+cd_type(cddd,  bid64).
+cd_type(cdqd, bid128).
 
 clpcd_domain_ops:compare_d(Domain, Op, A, B) :-
     cd_type(Domain, Type),
