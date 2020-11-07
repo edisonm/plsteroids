@@ -22,7 +22,9 @@ compile:
 	swipl -q -s qcompile.pl -t halt
 
 clean:
-	$(RM) -rf target assertions/tests/foreign/*{.o,.so,_so.pl,_impl.h,_intf.c,_intf.h}
+	cd idfpml/prolog/idfpml/LIBRARY ; $(MAKE) clean
+	$(RM) -rf target assertions/tests/foreign/*{.o,.so,_so.pl,_impl.h,_intf.c,_intf.h} \
+		idfpml/prolog/*{.o,.so,_so.pl,_impl.h,_intf.c,_intf.h,_auto.*}
 	mkdir -p target/bin
 
 $(PLSTEROIDS):

@@ -72,8 +72,7 @@ freeze_near(Arg1, Arg) :-
     %   forall(( member(A, Arg1),
     %            nonvar(A)
     %          ), rnum(A))
-    % ->% (line_counter:line_count(N),N>=210->gtrace;true),
-    %   maplist(put_near, Arg1, Arg)
+    % ->maplist(put_near, Arg1, Arg)
     ; var(Arg1)
     ->Arg = Arg1
     ; mapargs(freeze_near, Arg1, Arg)
