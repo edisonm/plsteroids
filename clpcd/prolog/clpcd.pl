@@ -119,7 +119,7 @@ curr_cd_nonlin_af(Term, AL, Skel, SL) :-
                      pow(_, _), float(_), eval(_)]),
     functor(Term, F, A),
     functor(Skel, F, A),
-    A > 0,
+    A >= 0,
     Term =.. [_|AL],
     Skel =.. [_|SL].
 
