@@ -39,10 +39,11 @@
 
 :- module(clpcd_redund,
 	[
-	    redundancy_vars/1,
+	    redundancy_vars/2,
 	    systems/3
 	]).
 
+:- use_module(library(clpcd/domain_ops)).
 :- use_module(library(clpcd/bv)).
 :- use_module(library(clpcd/solve)).
 
@@ -78,60 +79,60 @@ not_memq([Y|Ys],X) :-
 	X \== Y,
 	not_memq(Ys,X).
 
-% redundancy_vars(Vs)
+% redundancy_vars(Vs, CLP)
 %
-% Does the same thing as redundancy_vs/1 but has some extra timing facilities that
+% Does the same thing as redundancy_vs/2 but has some extra timing facilities that
 % may be used.
 
-redundancy_vars(Vs) :-
+redundancy_vars(Vs, CLP) :-
 	!,
-	redundancy_vs(Vs).
-redundancy_vars(Vs) :-
+	redundancy_vs(Vs, CLP).
+redundancy_vars(Vs, CLP) :-
 	statistics(runtime,[Start|_]),
-	redundancy_vs(Vs),
+	redundancy_vs(Vs, CLP),
 	statistics(runtime,[End|_]),
 	Duration is End-Start,
 	format(user_error,"% Redundancy elimination took ~d msec~n",Duration).
 
 
-% redundancy_vs(Vs)
+% redundancy_vs(Vs, CLP)
 %
 % Removes redundant bounds from the variables in Vs via redundant/3
 
-redundancy_vs(Vs) :-
+redundancy_vs(Vs, _) :-
 	var(Vs),
 	!.
-redundancy_vs([]).
-redundancy_vs([V|Vs]) :-
+redundancy_vs([], _).
+redundancy_vs([V|Vs], CLP) :-
 	(   get_attr(V,clpcd_itf,Att),
 	    arg(2,Att,type(Type)),
 	    arg(3,Att,strictness(Strict)),
-	    redundant(Type,V,Strict)
-	->  redundancy_vs(Vs)
-	;   redundancy_vs(Vs)
+	    redundant(Type,CLP,V,Strict)
+	->  redundancy_vs(Vs, CLP)
+	;   redundancy_vs(Vs, CLP)
 	).
 
-% redundant(Type,Var,Strict)
+% redundant(Type,CLP,Var,Strict)
 %
 % Removes redundant bounds from variable Var with type Type and strictness Strict.
 % A redundant bound is one that is satisfied anyway (so adding the inverse of the bound
 % makes the system infeasible. This predicate can either fail or succeed but a success
 % doesn't necessarily mean a redundant bound.
 
-redundant(t_l(L),X,Strict) :-
+redundant(t_l(L),CLP,X,Strict) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(1,Att,CLP),
 	detach_bounds(CLP,X),	% drop temporarily
 	% if not redundant, backtracking will restore bound
 	negate_l(Strict,CLP,L,X),
 	red_t_l.	% negate_l didn't fail, redundant bound
-redundant(t_u(U),X,Strict) :-
+redundant(t_u(U),CLP,X,Strict) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(1,Att,CLP),
 	detach_bounds(CLP,X),
 	negate_u(Strict,CLP,U,X),
 	red_t_u.
-redundant(t_lu(L,U),X,Strict) :-
+redundant(t_lu(L,U),CLP,X,Strict) :-
 	strictness_parts(Strict,Sl,Su),
 	(   get_attr(X,clpcd_itf,Att),
 	    arg(1,Att,CLP),
@@ -151,28 +152,28 @@ redundant(t_lu(L,U),X,Strict) :-
 	->  red_t_u
 	;   true
 	).
-redundant(t_L(L),X,Strict) :-
+redundant(t_L(L),CLP,X,Strict) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(1,Att,CLP),
-	Bound is -L,
-	intro_at(X,Bound,t_none),	% drop temporarily
+	eval_d(CLP, -L, Bound),
+	intro_at(CLP, X, Bound, t_none),	% drop temporarily
 	detach_bounds(CLP,X),
 	negate_l(Strict,CLP,L,X),
 	red_t_L.
-redundant(t_U(U),X,Strict) :-
+redundant(t_U(U),CLP,X,Strict) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(1,Att,CLP),
-	Bound is -U,
-	intro_at(X,Bound,t_none),	% drop temporarily
+	eval_d(CLP, -U, Bound),
+	intro_at(CLP, X, Bound, t_none),	% drop temporarily
 	detach_bounds(CLP,X),
 	negate_u(Strict,CLP,U,X),
 	red_t_U.
-redundant(t_Lu(L,U),X,Strict) :-
+redundant(t_Lu(L,U),CLP,X,Strict) :-
 	strictness_parts(Strict,Sl,Su),
-	(   Bound is -L,
+	(   eval_d(CLP, -L, Bound),
 	    get_attr(X,clpcd_itf,Att),
 	    arg(1,Att,CLP),
-	    intro_at(X,Bound,t_u(U)),
+	    intro_at(CLP, X, Bound, t_u(U)),
 	    get_attr(X,clpcd_itf,Att2), % changed?
 	    setarg(3,Att2,strictness(Su)),
 	    negate_l(Strict,CLP,L,X)
@@ -203,8 +204,8 @@ redundant(t_lU(L,U),X,Strict) :-
 	    )
 	;   get_attr(X,clpcd_itf,Att),
 	    arg(1,Att,CLP),
-	    Bound is -U,
-	    intro_at(X,Bound,t_l(L)),
+	    eval_d(CLP, -U, Bound),
+	    intro_at(CLP, X, Bound, t_l(L)),
 	    get_attr(X,clpcd_itf,Att2), % changed?
 	    setarg(3,Att2,strictness(Sl)),
 	    negate_u(Strict,CLP,U,X)

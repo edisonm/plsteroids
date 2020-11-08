@@ -186,7 +186,7 @@ submit_eq_b(v(_,[]), _) :-
 % case b2/b3: A is n*X^P => X = 0
 submit_eq_b(v(_,[X^P]), CLP) :-
     var(X),
-    compare_d(CLP, 0, <, P),
+    compare_d(CLP, <, 0, P),
     !,
     eval_d(CLP, 0, X).
 % case b2: non-linear is invertible: NL(X) = 0 => X - inv(NL)(0) = 0
@@ -318,8 +318,8 @@ submit_eq_c1([], _, v(_K,[X^_P]), _I) :-
     !,
     fail.
 % case c11e: fail for { -25 = _X^2.5 } and { -25 = _X^(-2.5) } and may be others!
-% 			 if you uncomment this case { -25 = _X^2.5 } throw an error(evaluation_error(undefined))
-% 			 and { -25 = _X^(-2.5) } succeed with an unbound X
+%			 if you uncomment this case { -25 = _X^2.5 } throw an error(evaluation_error(undefined))
+%			 and { -25 = _X^(-2.5) } succeed with an unbound X
 submit_eq_c1([], CLP, v(K,[X^P]), I) :-
     nonvar(X),
     X = _^_,   % TLS added 03/12
@@ -583,9 +583,9 @@ nf(X,CLP,Norm) :-
 	nf_number(CLP,X,Norm),
         !.
 % nf(#(Const),Norm) :-
-% 	monash_constant(Const,Value),
-% 	!,
-% 	Norm = [v(Value,[])].
+%	monash_constant(Const,Value),
+%	!,
+%	Norm = [v(Value,[])].
 nf(-A,CLP,Norm) :-
 	!,
 	nf(A,CLP,An),

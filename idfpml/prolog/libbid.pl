@@ -74,7 +74,7 @@
 
 user:portray('$bid64'(V)) :-
     bid64_string('$bid64'(V), S),
-    format("~s", [S]).
+    format('"~s"', [S]).
 user:portray('$bid128'(V1,V2)) :-
     bid128_string('$bid128'(V1,V2), S),
-    format("~s", [S]).
+    format('"~s"', [S]).

@@ -202,7 +202,7 @@ ineq_one_old_s_p_0([l(Y*Ky,_)|Tail], CLP, X, Ix) :-
 ineq_one_old_s_n_0([], CLP, _, Ix) :- compare_d(CLP, >, Ix, 0). % X = I: Ix > 0
 ineq_one_old_s_n_0([l(Y*Ky,_)|Tail], CLP, X, Ix) :-
 	(   Tail = []	% X = K*Y + I
-	->  Coeff is -Ky,
+	->  eval_d(CLP, -Ky, Coeff),
 	    div_d(CLP, Ix, Coeff, Bound),
 	    update_indep(strict, CLP, Y, Coeff, Bound)
 	;   Tail = [_|_]
@@ -223,7 +223,7 @@ ineq_one_old_s_p_i([l(Y*Ky,_)|Tail], CLP, I, X, Ix) :-
 	->  div_d(CLP, -(Ix + I), Ky, Bound),
 	    update_indep(strict, CLP, Y, Ky, Bound)
 	;   Tail = [_|_]
-	->  Bound is -I,
+	->  eval_d(CLP, -I, Bound),
 	    get_attr(X,clpcd_itf,Att),
 	    arg(2,Att,type(Type)),
 	    arg(3,Att,strictness(Old)),
@@ -238,7 +238,7 @@ ineq_one_old_s_p_i([l(Y*Ky,_)|Tail], CLP, I, X, Ix) :-
 ineq_one_old_s_n_i([], CLP, I, _, Ix) :- compare_d(CLP, <, I, Ix). % X = I
 ineq_one_old_s_n_i([l(Y*Ky,_)|Tail], CLP, I, X, Ix) :-
 	(   Tail = []	% X = K*Y + I
-	->  Coeff is -Ky,
+	->  eval_d(CLP, -Ky, Coeff),
 	    div_d(CLP, Ix - I, Coeff, Bound),
 	    update_indep(strict, CLP, Y, Coeff, Bound)
 	;   Tail = [_|_]
@@ -297,7 +297,7 @@ ineq_one_n_p_i(CLP, X, I) :-
 	;   ineq_one_old_n_p_i(OrdX, CLP, I, X, Ix)
 	).
 ineq_one_n_p_i(CLP, X, I) :-
-	Bound is -I,
+	eval_d(CLP, -I, Bound),
 	var_intern(CLP,t_u(Bound),X,0).	% nonstrict upperbound
 
 % ineq_one_n_n_i(CLP,X,I)
@@ -340,7 +340,7 @@ ineq_one_old_n_p_0([l(Y*Ky,_)|Tail], CLP, X, Ix) :-
 ineq_one_old_n_n_0([], CLP, _, Ix) :- compare_d(CLP, >=, Ix, 0). % X = I
 ineq_one_old_n_n_0([l(Y*Ky,_)|Tail], CLP, X, Ix) :-
 	(   Tail = []	% X = K*Y + I
-	->  Coeff is -Ky,
+	->  eval_d(CLP, -Ky, Coeff),
 	    div_d(CLP, Ix, Coeff, Bound),
 	    update_indep(nonstrict, CLP, Y, Coeff, Bound)
 	;   Tail = [_|_]
@@ -361,7 +361,7 @@ ineq_one_old_n_p_i([l(Y*Ky,_)|Tail], CLP, I, X, Ix) :-
 	->  div_d(CLP, -(Ix + I), Ky, Bound),
 	    update_indep(nonstrict, CLP, Y, Ky, Bound)
 	;   Tail = [_|_]
-	->  Bound is -I,
+	->  eval_d(CLP, -I, Bound),
 	    get_attr(X,clpcd_itf,Att),
 	    arg(2,Att,type(Type)),
 	    arg(3,Att,strictness(Old)),
@@ -376,7 +376,7 @@ ineq_one_old_n_p_i([l(Y*Ky,_)|Tail], CLP, I, X, Ix) :-
 ineq_one_old_n_n_i([], CLP, I, _, Ix) :- compare_d(CLP, =<, I, Ix). % X = I
 ineq_one_old_n_n_i([l(Y*Ky,_)|Tail], CLP, I, X, Ix) :-
 	(   Tail = []
-	->  Coeff is -Ky,
+	->  eval_d(CLP, -Ky, Coeff),
 	    div_d(CLP, Ix - I, Coeff, Bound),
 	    update_indep(nonstrict, CLP, Y, Coeff, Bound)
 	;   Tail = [_|_]
@@ -427,7 +427,7 @@ ineq_more(strict, CLP, Lind) :-
 	    backsubst(CLP, ClassU, OrdU, LinU)	% substitute U by new lin. eq. everywhere in the class
 	;   var_with_def_intern(t_u(0), CLP, S, Lind, 1),	% Lind < 0 => Lind = S with S < 0
 	    basis_add(S,_),			% adds S to the basis
-	    determine_active_dec(Lind),		% activate bounds
+	    determine_active_dec(CLP, Lind),	% activate bounds
 	    reconsider(CLP, S)			% reconsider basis
 	).
 ineq_more(nonstrict, CLP, Lind) :-
@@ -449,7 +449,7 @@ ineq_more(nonstrict, CLP, Lind) :-
 	;   % all variables are constrained
 	    var_with_def_intern(t_u(0), CLP, S, Lind, 0),	% Lind =< 0 => Lind = S with S =< 0
 	    basis_add(S,_),				% adds S to the basis
-	    determine_active_dec(Lind),
+	    determine_active_dec(CLP, Lind),
 	    reconsider(CLP, S)
 	).
 
@@ -464,7 +464,7 @@ update_indep(strict, CLP, X, K, Bound) :-
 	arg(2,Att,type(Type)),
 	arg(3,Att,strictness(Old)),
 	arg(4,Att,lin(Lin)),
-	(   K < 0
+	(   compare_d(CLP, >, 0, K)
 	->  uils(Type, CLP, X, Lin, Bound, Old)	% update independent lowerbound strict
 	;   uius(Type, CLP, X, Lin, Bound, Old)	% update independent upperbound strict
 	).
@@ -473,7 +473,7 @@ update_indep(nonstrict, CLP, X, K, Bound) :-
 	arg(2,Att,type(Type)),
 	arg(3,Att,strictness(Old)),
 	arg(4,Att,lin(Lin)),
-	(   K < 0
+	(   compare_d(CLP, >, 0, K)
 	->  uil(Type, CLP, X, Lin, Bound, Old)	% update independent lowerbound nonstrict
 	;   uiu(Type, CLP, X, Lin, Bound, Old)	% update independent upperbound nonstrict
 	).
@@ -529,7 +529,7 @@ udl(t_none, CLP, X, Lin, Bound, _Sold) :-
 	    backsubst(CLP, Class, OrdU, LinU)
 	;   % no unconstrained variables in Lin: make X part of basis and reconsider
 	    basis_add(X,_),
-	    determine_active_inc(Lin),
+	    determine_active_inc(CLP, Lin),
 	    reconsider(CLP, X)
 	).
 udl(t_l(L), CLP, X, Lin, Bound, Sold) :-
@@ -591,7 +591,7 @@ udls(t_none, CLP, X, Lin, Bound, _Sold) :-
 	    backsubst(CLP, Class, OrdU, LinU)
 	;   % no unconstrained variables: add X to basis and reconsider basis
 	    basis_add(X,_),
-	    determine_active_inc(Lin),
+	    determine_active_inc(CLP, Lin),
 	    reconsider(CLP, X)
 	).
 udls(t_l(L), CLP, X, Lin, Bound, Sold) :-
@@ -654,7 +654,7 @@ udu(t_none, CLP, X, Lin, Bound, _Sold) :-
 	    backsubst(CLP, Class, OrdU, LinU)
 	;   % no unconstrained variables: add X to basis and reconsider basis
 	    basis_add(X,_),
-	    determine_active_dec(Lin),	% try to lower R
+	    determine_active_dec(CLP, Lin),	% try to lower R
 	    reconsider(CLP, X)
 	).
 udu(t_u(U), CLP, X, Lin, Bound, Sold) :-
@@ -668,13 +668,14 @@ udu(t_u(U), CLP, X, Lin, Bound, Sold) :-
 	;   true	% equal to upperbound and nonstrict: keep
 	).
 udu(t_l(L), CLP, X, Lin, Bound, _Sold) :-
-	(   compare_d(CLP, >, Bound, L)
+	(   compare_d(CLP, <, Bound, L)
+        ->  fail
+        ;   compare_d(CLP, >, Bound, L)
 	->  % larger than lowerbound: use new and reconsider basis
 	    get_attr(X,clpcd_itf,Att),
 	    setarg(2,Att,type(t_lu(L,Bound))),
 	    reconsider_upper(CLP, X, Lin, Bound)
-	;   compare_d(CLP, =, Bound, L),
-            solve_bound(CLP, Lin, Bound)	% equal to lowerbound: solve
+	;   solve_bound(CLP, Lin, Bound)	% equal to lowerbound: solve
 	).
 udu(t_lu(L,U), CLP, X, Lin, Bound, Sold) :-
 	(   compare_d(CLP, <, Bound, U)
@@ -715,7 +716,7 @@ udus(t_none, CLP, X, Lin, Bound, _Sold) :-
 	    backsubst(CLP, Class, OrdU, LinU)
 	;   % no unconstrained variables: add X to basis and reconsider basis
 	    basis_add(X,_),
-	    determine_active_dec(Lin),
+	    determine_active_dec(CLP, Lin),
 	    reconsider(CLP, X)
 	).
 udus(t_u(U), CLP, X, Lin, Bound, Sold) :-
@@ -840,7 +841,7 @@ uiu(t_U(U), CLP, X, _Lin, Bound, Sold) :-
 		arg(6,Att,class(ClassX)),
 		setarg(2,Att,type(t_U(Bound))),
 		setarg(3,Att,strictness(Strict)),
-		Delta is Bound - U,
+		eval_d(CLP, Bound - U, Delta),
 		backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 	    )
 	;   true	% equal to upperbound and non-strict: keep
@@ -854,7 +855,7 @@ uiu(t_lU(L,U), CLP, X, Lin, Bound, Sold) :-
 		    arg(5,Att,order(OrdX)),
 		    arg(6,Att,class(ClassX)),
 		    lb(ClassX, CLP, OrdX, Vlb-Vb-Lb),
-		    Bound - (Lb + U) < 1.0e-10
+		    compare_d(CLP, <, Bound, Lb + U)
 		->  get_attr(X,clpcd_itf,Att2), % changed?
 		    setarg(2,Att2,type(t_lU(L,Bound))),
 		    setarg(3,Att2,strictness(Strict)),
@@ -865,7 +866,7 @@ uiu(t_lU(L,U), CLP, X, Lin, Bound, Sold) :-
 		    arg(6,Att,class(ClassX)),
 		    setarg(2,Att,type(t_lU(L,Bound))),
 		    setarg(3,Att,strictness(Strict)),
-		    Delta is Bound - U,
+		    eval_d(CLP, Bound - U, Delta),
 		    backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 		)
 	    ;	% equal to lowerbound: check strictness and solve
@@ -946,7 +947,7 @@ uius(t_U(U), CLP, X, _Lin, Bound, Sold) :-
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
 		lb(ClassX, CLP, OrdX, Vlb-Vb-Lb),
-		Bound - (Lb + U) < 1.0e-10
+		compare_d(CLP, <, Bound, Lb + U)
 	    ->  get_attr(X,clpcd_itf,Att2), % changed?
 		setarg(2,Att2,type(t_U(Bound))),
 		setarg(3,Att2,strictness(Strict)),
@@ -957,7 +958,7 @@ uius(t_U(U), CLP, X, _Lin, Bound, Sold) :-
 		arg(6,Att,class(ClassX)),
 		setarg(2,Att,type(t_U(Bound))),
 		setarg(3,Att,strictness(Strict)),
-		Delta is Bound - U,
+		eval_d(CLP, Bound - U, Delta),
 		backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 	    )
 	;   Strict is Sold \/ 1,
@@ -974,7 +975,7 @@ uius(t_lU(L,U), CLP, X, _Lin, Bound, Sold) :-
 		arg(5,Att,order(OrdX)),
 		arg(6,Att,class(ClassX)),
 		lb(ClassX, CLP, OrdX, Vlb-Vb-Lb),
-		Bound - (Lb + U) < 1.0e-10
+		compare_d(CLP, <, Bound, Lb + U)
 	    ->  get_attr(X,clpcd_itf,Att2), % changed?
 		setarg(2,Att2,type(t_lU(L,Bound))),
 		setarg(3,Att2,strictness(Strict)),
@@ -985,7 +986,7 @@ uius(t_lU(L,U), CLP, X, _Lin, Bound, Sold) :-
 		arg(6,Att,class(ClassX)),
 		setarg(2,Att,type(t_lU(L,Bound))),
 		setarg(3,Att,strictness(Strict)),
-		Delta is Bound - U,
+		eval_d(CLP, Bound - U, Delta),
 		backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 	    )
 	;   Strict is Sold \/ 1,
@@ -1070,7 +1071,7 @@ uil(t_L(L), CLP, X, _Lin, Bound, Sold) :-
 		arg(6,Att,class(ClassX)),
 		setarg(2,Att,type(t_L(Bound))),
 		setarg(3,Att,strictness(Strict)),
-		Delta is Bound - L,
+		eval_d(CLP, Bound - L, Delta),
 		backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 	    )
 	;   true
@@ -1094,7 +1095,7 @@ uil(t_Lu(L,U), CLP, X, Lin, Bound, Sold) :-
 		    arg(6,Att,class(ClassX)),
 		    setarg(2,Att,type(t_Lu(Bound,U))),
 		    setarg(3,Att,strictness(Strict)),
-		    Delta is Bound - L,
+		    eval_d(CLP, Bound - L, Delta),
 		    backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 		)
 	    ;	compare_d(CLP, =, Bound, U),
@@ -1184,7 +1185,7 @@ uils(t_L(L), CLP, X, _Lin, Bound, Sold) :-
 		arg(6,Att,class(ClassX)),
 		setarg(2,Att,type(t_L(Bound))),
 		setarg(3,Att,strictness(Strict)),
-		Delta is Bound - L,
+		eval_d(CLP, Bound - L, Delta),
 		backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 	    )
 	;   Strict is Sold \/ 2,
@@ -1212,7 +1213,7 @@ uils(t_Lu(L,U), CLP, X, _Lin, Bound, Sold) :-
 		arg(6,Att,class(ClassX)),
 		setarg(2,Att,type(t_Lu(Bound,U))),
 		setarg(3,Att,strictness(Strict)),
-		Delta is Bound - L,
+		eval_d(CLP, Bound - L, Delta),
 		backsubst_delta(CLP, ClassX, OrdX, X, Delta)
 	    )
 	;   Strict is Sold \/ 2,
@@ -1268,7 +1269,7 @@ solve_bound(CLP, Lin, Bound) :-
 	!,
 	solve(CLP, Lin).
 solve_bound(CLP, Lin, Bound) :-
-	Nb is -Bound,
+	eval_d(CLP, -Bound, Nb),
 	normalize_scalar(Nb,Nbs),
 	add_linear_11(CLP, Nbs, Lin, Eq),
 	solve(CLP, Eq).

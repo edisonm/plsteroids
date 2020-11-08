@@ -70,7 +70,7 @@ bb_inf_internal(CLP, Is, Lin, _, _) :-
 	repair(CLP, Lin, LinR),	% bb_narrow ...
 	deref(CLP,LinR,Lind),
 	var_with_def_assign(CLP, Dep, Lind),
-	determine_active_dec(Lind),
+	determine_active_dec(CLP, Lind),
 	bb_loop(CLP, Dep, IsNf),
 	fail.
 bb_inf_internal(CLP, _, _, Inf, Vertex) :-
@@ -90,7 +90,7 @@ bb_loop(CLP, Opt, Is) :-
 	(   bb_first_nonint(CLP, Is, Ivs, Viol, Floor, Ceiling)
 	->  bb_branch(CLP, Viol, Floor, Ceiling),
 	    bb_loop(CLP, Opt, Is)
-	;   round_values(Ivs,RoundVertex),
+	;   round_values(Ivs,CLP,RoundVertex),
 	    nb_setval(prov_opt,Inf-RoundVertex) % new provisional optimum
 	).
 
@@ -102,9 +102,9 @@ bb_loop(CLP, Opt, Is) :-
 
 bb_reoptimize(CLP, Obj, Inf) :-
 	var(Obj),
+        !,
 	iterate_dec(CLP, Obj, Inf).
 bb_reoptimize(_, Obj, Inf) :-
-	nonvar(Obj),
 	Inf = Obj.
 
 % bb_better_bound(Inf)
@@ -131,21 +131,23 @@ bb_branch(CLP, V, _, L) :- add_constraint(V >= L, CLP).
 % Viol. The floor and ceiling of its actual bound is returned in Floor and Ceiling.
 
 bb_first_nonint(CLP, [I|Is], [Rhs|Rhss], Viol, F, C) :-
-	(   compare_d(CLP, =, Rhs, integer(Rhs))
-	->  bb_first_nonint(CLP, Is, Rhss, Viol, F, C)
-        ;   Viol = I,
-	    F is floor(Rhs),
-	    C is ceiling(Rhs)
+	(   floor_d(CLP, Rhs, Floor),
+            ceiling_d(CLP, Rhs, Ceiling),
+            compare_d(CLP, <, epsilon, min(Rhs-Floor, Ceiling-Rhs))
+	->  Viol = I,
+            F = Floor,
+            C = Ceiling
+        ;   bb_first_nonint(CLP, Is, Rhss, Viol, F, C)
 	).
 
-% round_values([X|Xs],[Xr|Xrs])
+% round_values([X|Xs],CLP,[Xr|Xrs])
 %
 % Rounds of the values of the first list into the second list.
 
-round_values([],[]).
-round_values([X|Xs],[Y|Ys]) :-
-	Y is round(X),
-	round_values(Xs,Ys).
+round_values([],_,[]).
+round_values([X|Xs],CLP,[Y|Ys]) :-
+        eval_d(CLP, round(X), Y),
+	round_values(Xs,CLP,Ys).
 
 % bb_intern([X|Xs],[Xi|Xis])
 %
@@ -191,9 +193,9 @@ bb_intern(_, CLP, _, Term) :-
 
 bb_narrow_lower(CLP, X) :-
 	(   inf(CLP, X, Inf)
-	->  floor_d(CLP, Inf, Bound),
+	->  ceiling_d(CLP, Inf, Bound),
 	    (   entailed(CLP, X > Bound)
-	    ->  add_constraint(X >= Bound+1, CLP)
+            ->  add_constraint(X >= Bound+1, CLP)
 	    ;   add_constraint(X >= Bound,   CLP)
 	    )
 	;   true
@@ -207,7 +209,7 @@ bb_narrow_upper(CLP, X) :-
 	(   sup(CLP, X, Sup)
 	->  floor_d(CLP, Sup, Bound),
 	    (   entailed(CLP, X < Bound)
-	    ->  add_constraint(X =< Bound-1, CLP)
+            ->  add_constraint(X =< Bound-1, CLP)
 	    ;   add_constraint(X =< Bound,   CLP)
 	    )
 	;   true

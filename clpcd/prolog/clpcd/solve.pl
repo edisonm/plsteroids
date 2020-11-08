@@ -50,10 +50,9 @@
               deref_var/3,
               export_binding/1,
               inc_step/3,
-              intro_at/3,
+              intro_at/4,
               lb/4,
               lb/5,
-              lb_inner/6,
               log_deref/5,
               pivot/6,
               pivot_a/5,
@@ -68,7 +67,6 @@
               solve_ord_x/4,
               ub/4,
               ub/5,
-              ub_inner/6,
               unconstrained/5,
               var_with_def_intern/5
           ]).
@@ -222,7 +220,7 @@ inc_step_cont([l(V*K,OrdV)|Vs], CLP, Status, ContIn, ContOut) :-
 	).
 
 dec_step_2_cont(t_U(U),CLP,l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
-	K > 0,
+	compare_d(CLP, <, 0, K),
 	(   lb(Class,CLP,OrdV,Vub-Vb-_)
 	->  % found a lower bound
 	    Status = applied,
@@ -232,14 +230,14 @@ dec_step_2_cont(t_U(U),CLP,l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
 	    ContIn = ContOut
 	).
 dec_step_2_cont(t_lU(L,U),CLP,l(V*K,OrdV),Class,applied,ContIn,ContOut) :-
-	K > 0,
-	Init is L - U,
+	compare_d(CLP, <, 0, K),
+	eval_d(CLP, L - U, Init),
 	class_basis(Class,Deps),
 	lb(Deps,CLP,OrdV,V-t_Lu(L,U)-Init,Vub-Vb-_),
 	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)),
 	replace_in_cont(ContIn,Vub,V,ContOut).
 dec_step_2_cont(t_L(L),CLP,l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
-	K < 0,
+	compare_d(CLP, >, 0, K),
 	(   ub(Class,CLP,OrdV,Vub-Vb-_)
 	->  Status = applied,
 	    pivot_a(CLP,Vub,V,Vb,t_l(L)),
@@ -248,8 +246,8 @@ dec_step_2_cont(t_L(L),CLP,l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
 	    ContIn = ContOut
 	).
 dec_step_2_cont(t_Lu(L,U),CLP,l(V*K,OrdV),Class,applied,ContIn,ContOut) :-
-	K < 0,
-	Init is U - L,
+	compare_d(CLP, >, 0, K),
+	eval_d(CLP, U - L, Init),
 	class_basis(Class,Deps),
 	ub(Deps,CLP,OrdV,V-t_lU(L,U)-Init,Vub-Vb-_),
 	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)),
@@ -259,7 +257,7 @@ dec_step_2_cont(t_none,_,l(V*_,_),_,unlimited(V,t_none),Cont,Cont).
 
 
 inc_step_2_cont(t_U(U),CLP,l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
-	K < 0,
+	compare_d(CLP, >, 0, K),
 	(   lb(Class,CLP,OrdV,Vub-Vb-_)
 	->  Status = applied,
 	    pivot_a(CLP,Vub,V,Vb,t_u(U)),
@@ -268,14 +266,14 @@ inc_step_2_cont(t_U(U),CLP,l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
 	    ContIn = ContOut
 	).
 inc_step_2_cont(t_lU(L,U),CLP,l(V*K,OrdV),Class,applied,ContIn,ContOut) :-
-	K < 0,
-	Init is L - U,
+	compare_d(CLP, >, 0, K),
+	eval_d(CLP, L - U, Init),
 	class_basis(Class,Deps),
 	lb(Deps,CLP,OrdV,V-t_Lu(L,U)-Init,Vub-Vb-_),
 	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)),
 	replace_in_cont(ContIn,Vub,V,ContOut).
 inc_step_2_cont(t_L(L),CLP,l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
-	K > 0,
+	compare_d(CLP, <, 0, K),
 	(   ub(Class,CLP,OrdV,Vub-Vb-_)
 	->  Status = applied,
 	    pivot_a(CLP,Vub,V,Vb,t_l(L)),
@@ -284,8 +282,8 @@ inc_step_2_cont(t_L(L),CLP,l(V*K,OrdV),Class,Status,ContIn,ContOut) :-
 	    ContIn = ContOut
 	).
 inc_step_2_cont(t_Lu(L,U),CLP,l(V*K,OrdV),Class,applied,ContIn,ContOut) :-
-	K > 0,
-	Init is U - L,
+	compare_d(CLP, <, 0, K),
+	eval_d(CLP, U - L, Init),
 	class_basis(Class,Deps),
 	ub(Deps,CLP,OrdV,V-t_lU(L,U)-Init,Vub-Vb-_),
 	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)),
@@ -312,7 +310,7 @@ dec_step([l(V*K,OrdV)|Vs], CLP, Status) :-
 	).
 
 dec_step_2(t_U(U),CLP,l(V*K,OrdV),Class,Status) :-
-	K > 0,
+	compare_d(CLP, <, 0, K),
 	(   lb(Class,CLP,OrdV,Vub-Vb-_)
 	->  % found a lower bound
 	    Status = applied,
@@ -320,21 +318,21 @@ dec_step_2(t_U(U),CLP,l(V*K,OrdV),Class,Status) :-
 	;   Status = unlimited(V,t_u(U))
 	).
 dec_step_2(t_lU(L,U),CLP,l(V*K,OrdV),Class,applied) :-
-	K > 0,
-	Init is L - U,
+	compare_d(CLP, <, 0, K),
+	eval_d(CLP, L - U, Init),
 	class_basis(Class,Deps),
 	lb(Deps,CLP,OrdV,V-t_Lu(L,U)-Init,Vub-Vb-_),
 	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)).
 dec_step_2(t_L(L),CLP,l(V*K,OrdV),Class,Status) :-
-	K < 0,
+	compare_d(CLP, >, 0, K),
 	(   ub(Class,CLP,OrdV,Vub-Vb-_)
 	->  Status = applied,
 	    pivot_a(CLP,Vub,V,Vb,t_l(L))
 	;   Status = unlimited(V,t_l(L))
 	).
 dec_step_2(t_Lu(L,U),CLP,l(V*K,OrdV),Class,applied) :-
-	K < 0,
-	Init is U - L,
+	compare_d(CLP, >, 0, K),
+	eval_d(CLP, U - L, Init),
 	class_basis(Class,Deps),
 	ub(Deps,CLP,OrdV,V-t_lU(L,U)-Init,Vub-Vb-_),
 	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)).
@@ -351,28 +349,28 @@ inc_step([l(V*K,OrdV)|Vs], CLP, Status) :-
 	).
 
 inc_step_2(t_U(U),CLP,l(V*K,OrdV),Class,Status) :-
-	K < 0,
+	compare_d(CLP, >, 0, K),
 	(   lb(Class,CLP,OrdV,Vub-Vb-_)
 	->  Status = applied,
 	    pivot_a(CLP,Vub,V,Vb,t_u(U))
 	;   Status = unlimited(V,t_u(U))
 	).
 inc_step_2(t_lU(L,U),CLP,l(V*K,OrdV),Class,applied) :-
-	K < 0,
-	Init is L - U,
+	compare_d(CLP, >, 0, K),
+	eval_d(CLP, L - U, Init),
 	class_basis(Class,Deps),
 	lb(Deps,CLP,OrdV,V-t_Lu(L,U)-Init,Vub-Vb-_),
 	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)).
 inc_step_2(t_L(L),CLP,l(V*K,OrdV),Class,Status) :-
-	K > 0,
+	compare_d(CLP, <, 0, K),
 	(   ub(Class,CLP,OrdV,Vub-Vb-_)
 	->  Status = applied,
 	    pivot_a(CLP,Vub,V,Vb,t_l(L))
 	;   Status = unlimited(V,t_l(L))
 	).
 inc_step_2(t_Lu(L,U),CLP,l(V*K,OrdV),Class,applied) :-
-	K > 0,
-	Init is U - L,
+	compare_d(CLP, <, 0, K),
+	eval_d(CLP, U - L, Init),
 	class_basis(Class,Deps),
 	ub(Deps,CLP,OrdV,V-t_lU(L,U)-Init,Vub-Vb-_),
 	pivot_b(CLP,Vub,V,Vb,t_lu(L,U)).
@@ -410,8 +408,7 @@ ub_first([Dep|Deps],CLP,OrdX,Tightest) :-
 	(   get_attr(Dep,clpcd_itf,Att),
 	    arg(2,Att,type(Type)),
 	    arg(4,Att,lin(Lin)),
-	    ub_inner(Type,CLP,OrdX,Lin,W,Ub),
-	    Ub >= 0
+	    ub_inner(Type,CLP,OrdX,Lin,W,Ub)
 	->  ub(Deps,CLP,OrdX,Dep-W-Ub,Tightest)
 	;   ub_first(Deps,CLP,OrdX,Tightest)
 	).
@@ -426,9 +423,8 @@ ub([Dep|Deps],CLP,OrdX,T0,T1) :-
 	    arg(2,Att,type(Type)),
 	    arg(4,Att,lin(Lin)),
 	    ub_inner(Type,CLP,OrdX,Lin,W,Ub),
-	    T0 = _-Ubb,
-            compare_d(CLP, <, Ub, Ubb),
-	    Ub >= 0
+            T0 = _-Ubb,
+            compare_d(CLP, <, Ub, Ubb)
 	->  ub(Deps,CLP,OrdX,Dep-W-Ub,T1)	% tighter bound, use new bound
 	;   ub(Deps,CLP,OrdX,T0,T1)	% no tighter bound, keep current one
 	).
@@ -438,21 +434,25 @@ ub([Dep|Deps],CLP,OrdX,T0,T1) :-
 % See lb_inner/6: this is similar
 
 ub_inner(t_l(L),CLP,OrdX,Lin,t_L(L),Ub) :-
-	nf_rhs_x(Lin,OrdX,Rhs,K),
+	nf_rhs_x(CLP,Lin,OrdX,Rhs,K),
 	% Rhs is right hand side of lin. eq. Lin containing term X*K
-	K < 0,
+	compare_d(CLP, >, 0, K),
+        compare_d(CLP, =<, L, Rhs),
         div_d(CLP, L - Rhs, K, Ub).
 ub_inner(t_u(U),CLP,OrdX,Lin,t_U(U),Ub) :-
-	nf_rhs_x(Lin,OrdX,Rhs,K),
-	K > 0,
+	nf_rhs_x(CLP,Lin,OrdX,Rhs,K),
+	compare_d(CLP, <, 0, K),
+        compare_d(CLP, =<, Rhs, U),
         div_d(CLP, U - Rhs, K, Ub).
 ub_inner(t_lu(L,U),CLP,OrdX,Lin,W,Ub) :-
-	nf_rhs_x(Lin,OrdX,Rhs,K),
-	(   K < 0 % use lowerbound
+	nf_rhs_x(CLP,Lin,OrdX,Rhs,K),
+	(   compare_d(CLP, >, 0, K) % use lowerbound
 	->  W = t_Lu(L,U),
+            compare_d(CLP, =<, L, Rhs),
 	    div_d(CLP, L - Rhs, K, Ub)
-	;   K > 0 % use upperbound
+	;   compare_d(CLP, <, 0, K) % use upperbound
 	->  W = t_lU(L,U),
+            compare_d(CLP, =<, Rhs, U),
 	    div_d(CLP, U - Rhs, K, Ub)
 	).
 
@@ -483,8 +483,7 @@ lb_first([Dep|Deps],CLP,OrdX,Tightest) :-
 	(   get_attr(Dep,clpcd_itf,Att),
 	    arg(2,Att,type(Type)),
 	    arg(4,Att,lin(Lin)),
-	    lb_inner(Type, CLP, OrdX, Lin, W, Lb),
-	    Lb =< 0 % Lb > 0 means a violated bound
+	    lb_inner(Type, CLP, OrdX, Lin, W, Lb)
 	->  lb(Deps,CLP,OrdX,Dep-W-Lb,Tightest)
 	;   lb_first(Deps, CLP, OrdX, Tightest)
 	).
@@ -501,11 +500,10 @@ lb([Dep|Deps],CLP,OrdX,T0,T1) :-
 	    arg(4,Att,lin(Lin)),
 	    lb_inner(Type, CLP, OrdX, Lin, W, Lb),
 	    T0 = _-Lbb,
-	    compare_d(CLP, >, Lb, Lbb), % Lb > Lbb: choose the least lowering, others
+	    compare_d(CLP, >, Lb, Lbb)  % Lb > Lbb: choose the least lowering, others
 					% might violate bounds
-	    Lb =< 0     		% violation of a bound (without lowering)
-	->  lb(Deps,OrdX,Dep-W-Lb,T1)
-	;   lb(Deps,OrdX,T0,T1)
+	->  lb(Deps,CLP,OrdX,Dep-W-Lb,T1)
+	;   lb(Deps,CLP,OrdX,T0,T1)
 	).
 
 % lb_inner(Type,CLP,X,Lin,W,Lb)
@@ -522,23 +520,27 @@ lb([Dep|Deps],CLP,OrdX,T0,T1) :-
 % X has ordering attribute OrdX.
 
 lb_inner(t_l(L),CLP,OrdX,Lin,t_L(L),Lb) :-
-	nf_rhs_x(Lin,OrdX,Rhs,K), % if linear equation Lin contains the term
+	nf_rhs_x(CLP,Lin,OrdX,Rhs,K), % if linear equation Lin contains the term
 				  % X*K, Rhs is the right hand side of that
 				  % equation
-	K > 0,
+        compare_d(CLP, <, 0, K),
+        compare_d(CLP, =<, L, Rhs),
 	div_d(CLP, L - Rhs, K, Lb).
 lb_inner(t_u(U),CLP,OrdX,Lin,t_U(U),Lb) :-
-	nf_rhs_x(Lin,OrdX,Rhs,K),
-	K < 0, % K < 0
+	nf_rhs_x(CLP,Lin,OrdX,Rhs,K),
+        compare_d(CLP, >, 0, K),
+        compare_d(CLP, =<, Rhs, U),
 	div_d(CLP, U - Rhs, K, Lb).
 lb_inner(t_lu(L,U),CLP,OrdX,Lin,W,Lb) :-
-	nf_rhs_x(Lin,OrdX,Rhs,K),
-	(   K < 0
-	->  W = t_lU(L,U),
+	nf_rhs_x(CLP,Lin,OrdX,Rhs,K),
+	(   compare_d(CLP, >, 0, K)
+	->  compare_d(CLP, =<, Rhs, U),
+            W = t_lU(L,U),
             div_d(CLP, U - Rhs, K, Lb)
-	;   K > 0
-	->  W = t_Lu(L,U),
-	    div_d(CLP, L - Rhs, K, Lb)
+	;   compare_d(CLP, <, 0, K)
+	->  compare_d(CLP, =<, L, Rhs),
+	    W = t_Lu(L,U),
+            div_d(CLP, L - Rhs, K, Lb)
 	).
 
 % ---------------------------------- equations --------------------------------
@@ -587,7 +589,7 @@ solve(H,CLP,Lin,_,Bind0,BindT) :-
 	    deactivate_bound(Type,Selected),
 	    eq_classes(CLP, NV, NVT, ClassesUniq),
 	    basis_add(Selected,Basis),
-	    undet_active(Lin1),	% we can't tell which bound will likely be a
+	    undet_active(CLP,Lin1),	% we can't tell which bound will likely be a
 				% problem at this point
 	    Lin1 = [Inhom,_|Hom],
 	    bs_collect_binding(Hom,Selected,Inhom,Bind0,Bind1),	% only if
@@ -608,7 +610,7 @@ solve(H,CLP,Lin,_,Bind0,BindT) :-
 	    % eq_classes( NV, NVT, ClassesUniq),
 	    %  4 -> var(NV)
 	    equate(ClassesUniq,_),
-	    undet_active(Lin1),
+	    undet_active(CLP,Lin1),
 	    rcbl(Basis,CLP,Bind1,BindT)
 	).
 
@@ -760,56 +762,56 @@ deactivate_bound(t_lU(L,U),X) :-
 	get_attr(X,clpcd_itf,Att),
 	setarg(2,Att,type(t_lu(L,U))).
 
-% intro_at(X,Value,Type)
+% intro_at(CLP,X,Value,Type)
 %
 % Variable X gets new type Type which reflects the activation of a bound with
 % value Value. In the linear equations of all the variables belonging to the
 % same class as X, X is substituted by [0,Value,X] to reflect the new active
 % bound.
 
-intro_at(X,Value,Type) :-
+intro_at(CLP,X,Value,Type) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(5,Att,order(Ord)),
 	arg(6,Att,class(Class)),
 	setarg(2,Att,type(Type)),
-	(   Value =:= 0
+	(   compare_d(CLP, =, 0, Value)
 	->  true
-	;   backsubst_delta(_, Class, Ord, X, Value)
+	;   backsubst_delta(CLP, Class, Ord, X, Value)
 	).
 
-% undet_active(Lin)
+% undet_active(CLP, Lin)
 %
 % For each variable in the homogene part of Lin, a bound is activated
 % if an inactive bound exists. (t_l(L) becomes t_L(L) and so on)
 
-undet_active([_,_|H]) :-
-	undet_active_h(H).
+undet_active(CLP, [_,_|H]) :-
+	undet_active_h(H, CLP).
 
 % undet_active_h(Hom)
 %
 % For each variable in homogene part Hom, a bound is activated if an
 % inactive bound exists (t_l(L) becomes t_L(L) and so on)
 
-undet_active_h([]).
-undet_active_h([l(X*_,_)|Xs]) :-
+undet_active_h([],_).
+undet_active_h([l(X*_,_)|Xs],CLP) :-
 	get_attr(X,clpcd_itf,Att),
 	arg(2,Att,type(Type)),
-	undet_active(Type,X),
-	undet_active_h(Xs).
+	undet_active(Type,CLP,X),
+	undet_active_h(Xs,CLP).
 
-% undet_active(Type,Var)
+% undet_active(Type,CLP,Var)
 %
 % An inactive bound of Var is activated if such exists
 % t_lu(L,U) is arbitrarily chosen to become t_Lu(L,U)
 
-undet_active(t_none,_).	% type_activity
-undet_active(t_L(_),_).
-undet_active(t_Lu(_,_),_).
-undet_active(t_U(_),_).
-undet_active(t_lU(_,_),_).
-undet_active(t_l(L),X) :- intro_at(X,L,t_L(L)).
-undet_active(t_u(U),X) :- intro_at(X,U,t_U(U)).
-undet_active(t_lu(L,U),X) :- intro_at(X,L,t_Lu(L,U)).
+undet_active(t_none,_,_).	% type_activity
+undet_active(t_L(_),_,_).
+undet_active(t_Lu(_,_),_,_).
+undet_active(t_U(_),_,_).
+undet_active(t_lU(_,_),_,_).
+undet_active(t_l(L),CLP,X) :- intro_at(CLP,X,L,t_L(L)).
+undet_active(t_u(U),CLP,X) :- intro_at(CLP,X,U,t_U(U)).
+undet_active(t_lu(L,U),CLP,X) :- intro_at(CLP,X,L,t_Lu(L,U)).
 
 % ----------------------------- manipulate the basis --------------------------
 
@@ -859,13 +861,13 @@ pivot_b(CLP,Vub,V,Vb,Wd) :-
 	    arg(5,Att,order(Ord)),
 	    arg(6,Att,class(Class)),
 	    setarg(2,Att,type(Vb)),
-	    pivot_b_delta(Vb,Delta), % nonzero(Delta)
+	    pivot_b_delta(Vb, CLP, Delta), % nonzero(Delta)
 	    backsubst_delta(CLP, Class, Ord, V, Delta)
 	;   pivot_a(CLP,Vub,V,Vb,Wd)
 	).
 
-pivot_b_delta(t_Lu(L,U),Delta) :- Delta is L-U.
-pivot_b_delta(t_lU(L,U),Delta) :- Delta is U-L.
+pivot_b_delta(t_Lu(L,U), CLP, Delta) :- eval_d(CLP, L-U, Delta).
+pivot_b_delta(t_lU(L,U), CLP, Delta) :- eval_d(CLP, U-L, Delta).
 
 % select_active_bound(Type,Bound)
 %
@@ -900,8 +902,8 @@ pivot(CLP,Dep,Class,IndepOrd,DepAct,IndAct) :-
 	select_active_bound(DepAct,AbvD), % New current value for Dep
 	select_active_bound(IndAct,AbvI), % Old current value of Indep
 	delete_factor(IndepOrd,H,H0,Coeff), % Dep = ... + Coeff*Indep + ...
-	AbvDm is -AbvD,
-	AbvIm is -AbvI,
+	eval_d(CLP, -AbvD, AbvDm),
+	eval_d(CLP, -AbvI, AbvIm),
 	add_linear_f1(CLP, [0,AbvIm], Coeff, H0, H1),
 	div_d(CLP, -1, Coeff, K),
 	add_linear_ff(CLP, H1, K, [0,AbvDm,l(Dep* -1,DepOrd)], K, H2),
@@ -909,7 +911,7 @@ pivot(CLP,Dep,Class,IndepOrd,DepAct,IndAct) :-
 	add_linear_11(CLP, H2, [0,AbvIm], Lin),
 	backsubst(CLP, Class, IndepOrd, Lin).
 
-% backsubst_delta(Class,OrdX,X,Delta)
+% backsubst_delta(CLP,Class,OrdX,X,Delta)
 %
 % X with ordering attribute OrdX, is substituted in all linear equations of
 % variables in the class Class, by linear equation [0,Delta,l(X*1,OrdX)]. This
@@ -1014,7 +1016,7 @@ rcb_cont(CLP,X,Status,Violated,ContIn,ContOut) :-
 	    Violated = u(U),
 	    dec_step_cont(H,CLP,Status,ContIn,ContOut)
 	;   Type = t_lu(L,U) % case 3: check both
-	->  At is R + I,
+	->  eval_d(CLP, R + I, At),
 	    (   compare_d(CLP, =<, At, L)
 	    ->	Violated = l(L),
 		inc_step_cont(H, CLP, Status, ContIn, ContOut)
@@ -1066,7 +1068,7 @@ rcb(CLP,X,Status,Violated) :-
 	    Violated = u(U),
 	    dec_step(H, CLP, Status)
 	;   Type = t_lu(L,U) % case 3: check both
-	->  At is R + I,
+	->  eval_d(CLP, R + I, At),
 	    (   compare_d(CLP, =<, At, L)
 	    ->	Violated = l(L),
 		inc_step(H, CLP, Status)
@@ -1098,13 +1100,13 @@ rcbl_opt(l(L),CLP,X,Continuation,B0,B1) :-
 	arg(3,Att,strictness(Strict)),
 	arg(4,Att,lin(Lin)),
 	Lin = [I,R|_],
-	Opt is R + I,
+	eval_d(CLP, R + I, Opt),
 	(   compare_d(CLP, <, L, Opt)
 	->  narrow_u(Type,X,Opt), % { X =< Opt }
 	    rcbl(Continuation,CLP,B0,B1)
 	;   compare_d(CLP, =, L, Opt),
 	    Strict /\ 2 =:= 0, % meets lower
-	    Mop is -Opt,
+	    eval_d(CLP, -Opt, Mop),
 	    normalize_scalar(Mop,MopN),
 	    add_linear_11(CLP, MopN, Lin, Lin1),
 	    Lin1 = [Inhom,_|Hom],
@@ -1119,13 +1121,13 @@ rcbl_opt(u(U),CLP,X,Continuation,B0,B1) :-
 	arg(3,Att,strictness(Strict)),
 	arg(4,Att,lin(Lin)),
 	Lin = [I,R|_],
-	Opt is R + I,
+	eval_d(CLP, R + I, Opt),
 	(   compare_d(CLP, >, U, Opt)
 	->  narrow_l(Type,X,Opt), % { X >= Opt }
 	    rcbl(Continuation,CLP,B0,B1)
 	;   compare_d(CLP, =, U, Opt),
 	    Strict /\ 1 =:= 0, % meets upper
-	    Mop is -Opt,
+	    eval_d(CLP, -Opt, Mop),
 	    normalize_scalar(Mop,MopN),
 	    add_linear_11(CLP, MopN, Lin, Lin1),
 	    Lin1 = [Inhom,_|Hom],

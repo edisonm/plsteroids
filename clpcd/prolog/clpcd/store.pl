@@ -46,7 +46,7 @@
 	    normalize_scalar/2,
 	    delete_factor/4,
 	    mult_linear_factor/4,
-	    nf_rhs_x/4,
+	    nf_rhs_x/5,
 	    isolate/4,
 	    nf_substitute/5,
 	    mult_hom/4,
@@ -352,14 +352,14 @@ nf_coeff_hom([l(_*K,OVar)|Vs],OVid,Coeff) :-
 	->  nf_coeff_hom(Vs,OVid,Coeff)
 	).
 
-% nf_rhs_x(Lin,OrdX,Rhs,K)
+% nf_rhs_x(CLP, Lin,OrdX,Rhs,K)
 %
 % Rhs = R + I where Lin = [I,R|Hom] and l(X*K,OrdX) is a term of Hom
 
-nf_rhs_x(Lin,OrdX,Rhs,K) :-
+nf_rhs_x(CLP, Lin,OrdX,Rhs,K) :-
 	Lin = [I,R|Tail],
 	nf_coeff_hom(Tail,OrdX,K),
-	Rhs is R+I.	% late because X may not occur in H
+	eval_d(CLP, R+I, Rhs).	% late because X may not occur in H
 
 % isolate(OrdN,Lin,Lin1)
 %

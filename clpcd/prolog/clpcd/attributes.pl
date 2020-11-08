@@ -67,8 +67,8 @@ project_attributes(TargetVars,Cvas) :-
 	    project_nonlin(Tvs,Avs,NlReachable),
 	    (   Tvs == []
 	    ->  drop_lin_atts(Avs)
-	    ;   redundancy_vars(Avs),		% removes redundant bounds (redund.pl)
-		make_target_indep(Tvs,Pivots),	% pivot partners are marked to be kept during elim.	
+	    ;   redundancy_vars(Avs,CLP),	% removes redundant bounds (redund.pl)
+		make_target_indep(Tvs, Pivots),	% pivot partners are marked to be kept during elim.	
 		mark_target(NlReachable),	% after make_indep to express priority
 		drop_dep(Avs),
 		fm_elim(CLP,Avs,Tvs,Pivots),

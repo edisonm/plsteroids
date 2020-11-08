@@ -50,7 +50,7 @@ cd_type(cdqd, bid128).
 clpcd_domain_ops:compare_d(Domain, Op, A, B) :-
     cd_type(Domain, Type),
     neck,
-    compare(Type, Op, A, B).
+    near_compare(Type, Op, A, B).
 
 clpcd_domain_ops:eval_d(C, F, R) :-
     cd_type(C, T),
@@ -70,12 +70,14 @@ clpcd_domain_ops:cast_d(Domain, A, B) :-
 clpcd_domain_ops:floor_d(Domain, A, B) :-
     cd_type(Domain, Type),
     neck,
-    eval(Type, floor(A), B).
+    epsilon(Type, abs(A), E),
+    eval(Type, floor(A+E), B).
 
 clpcd_domain_ops:ceiling_d(Domain, A, B) :-
     cd_type(Domain, Type),
     neck,
-    eval(Type, ceiling(A), B).
+    epsilon(Type, abs(A), E),
+    eval(Type, ceiling(A-E), B).
 
 clpcd_domain_ops:integerp(Domain, A, C) :-
     cd_type(Domain, Type),

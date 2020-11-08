@@ -153,7 +153,7 @@ elim_min(CLP, V, Occ, Target, Pivots, NewPivots) :-
 	reverse_pivot(Pivots, CLP),
 	fm_detach(Occ, CLP),
 	allvars(V,All),
-	redundancy_vars(All),			% only for New \== []
+	redundancy_vars(All, CLP),		% only for New \== []
 	make_target_indep(Target,NewPivots),
 	drop_dep(All).
 

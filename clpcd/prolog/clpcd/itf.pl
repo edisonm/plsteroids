@@ -199,7 +199,7 @@ hom2sum([l(Var*K,_)|Cs],CLP,Sofar,Term) :-
 	->  Next = Sofar - Var
 	;   % K < 0.0
 	    compare_d(CLP, <, K, 0)
-	->  Ka is -K,
+	->  eval_d(CLP, -K, Ka),
 	    Next = Sofar - Ka*Var
 	;   Next = Sofar + K*Var
 	),

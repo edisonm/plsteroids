@@ -139,7 +139,7 @@ minimize(CLP,Term) :-
 minimize_lin(CLP,Lin) :-
 	deref(CLP,Lin,Lind),
 	var_with_def_intern(t_none,CLP,Dep,Lind,0),
-	determine_active_dec(Lind),
+	determine_active_dec(CLP, Lind),
 	iterate_dec(CLP, Dep, Inf),
 	add_constraint(Dep =:= Inf, CLP).
 
@@ -160,7 +160,7 @@ inf(CLP,Expression,Inf,Vector,Vertex) :-
 inf_lin(CLP, Lin,_,Vector,_) :-
 	deref(CLP,Lin,Lind),
 	var_with_def_intern(t_none,CLP,Dep,Lind,0),	% make new variable Dep = Lind
-	determine_active_dec(Lind),	% minimizes Lind
+	determine_active_dec(CLP, Lind),	% minimizes Lind
 	iterate_dec(CLP, Dep, Inf),
 	vertex_value(Vector, CLP, Values),
 	nb_setval(inf,[Inf|Values]),
@@ -189,7 +189,7 @@ rhs_value(CLP, Xn, Value) :-
 	;   var(Xn)
 	->  deref_var(CLP, Xn, Xd),
 	    Xd = [I,R|_],
-	    Value is R+I
+	    eval_d(CLP, R+I, Value)
 	).
 
 % assign(L1,CLP,L2)
@@ -237,7 +237,7 @@ iterate_dec(CLP, OptVar, Opt) :-
 	(   Status = applied
 	->  iterate_dec(CLP, OptVar, Opt)
 	;   Status = optimum,
-	    Opt is R + I
+	    eval_d(CLP, R + I, Opt)
 	).
 
 % allvars(X,Allvars)
@@ -305,8 +305,8 @@ pivot_vlv(CLP,Dep,Class,IndepOrd,DepAct,AbvI,Lin) :-
 	setarg(2,Att,type(DepAct)),
 	select_active_bound(DepAct,AbvD), % New current value for Dep
 	delete_factor(IndepOrd,H,H0,Coeff), % Dep = ... + Coeff*Indep + ...
-	AbvDm is -AbvD,
-	AbvIm is -AbvI,
+	eval_d(CLP, -AbvD, AbvDm),
+	eval_d(CLP, -AbvI, AbvIm),
 	add_linear_f1(CLP, [0,AbvIm], Coeff, H0, H1),
 	div_d(CLP, -1, Coeff, K),
 	add_linear_ff(CLP, H1, K, [0,AbvDm,l(Dep* -1,DepOrd)], K, Lin),

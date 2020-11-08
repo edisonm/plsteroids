@@ -36,8 +36,11 @@
           [ bid_t/1,
             cast/3,
             compare/4,
+            epsilon/2,
+            epsilon/3,
             eval/3,
-            int/3
+            int/3,
+            near_compare/4
           ]).
 
 :- use_module(library(lists)).
@@ -65,6 +68,36 @@ compare(Type, Op, A, B) :-
     eval(Type, A, X),
     eval(Type, B, Y),
     compare_b(Op, Type, X, Y).
+
+compare_eq(=).
+compare_eq(=<).
+compare_eq(>=).
+
+near_compare(Type, Op, A, B) :-
+    eval(Type, A, X),
+    eval(Type, B, Y),
+    near_compare_b(Type, Op, X, Y).
+
+near_compare_b(Type, Op, X, Y) :-
+    ( compare_b(=, Type, X, Y)
+    ->compare_eq(Op)
+    ; epsilon(Type, max(abs(X), abs(Y)), E),
+      compare(Op, Type, X, Y, E)
+    ).
+
+epsilon(T, E) :-
+    eval(T, 1000*epsilon, E).
+
+epsilon(T, N, E) :-
+    epsilon(T, R),
+    eval(T, R*N, E).
+
+compare(=,  T, A, B, E) :- compare(T, =<, abs(A - B), E).
+compare(=<, T, A, B, E) :- compare(T, =<, A - B, E).
+compare(>=, T, A, B, E) :- compare(T, =<, B - A, E).
+compare(<,  T, A, B, E) :- compare(T, >, B - A, E).
+compare(>,  T, A, B, E) :- compare(T, >, A - B, E).
+compare(\=, T, A, B, E) :- compare(T, >, abs(A - B), E).
 
 compare_b(Op, Type, X, Y) :-
     op_pred(Op, Pred),
@@ -119,10 +152,11 @@ pred_expr(add(A, B), A+B).
 % pred_expr(random_float, random_float).
 % pred_expr(sign(A), sign(A)).
 pred_expr(mul(A, B), A*B).
-pred_expr(integral_negative(A), floor(A)).
-pred_expr(integral_positive(A), ceil(A)).
-pred_expr(integral_positive(A), ceiling(A)).
+pred_expr(round_integral_negative(A), floor(A)).
+pred_expr(round_integral_positive(A), ceil(A)).
+pred_expr(round_integral_positive(A), ceiling(A)).
 pred_expr(round_integral_exact(A), integer(A)).
+pred_expr(round_integral_exact(A), round(A)).
 pred_expr(fmod(A, B), mod(A, B)).
 
 do_eval(cputime, Type, C) :-
