@@ -126,11 +126,23 @@ eval(Type, Expr, C) :-
 eval(Type, Value, C) :-
     cast(Type, Value, C).
 
-cast(Type, Value, C) :-
+inner_cast(Type, Value, C) :-
     bid_t(Type),
     Body =.. [Type, Value, C],
     neck,
     Body.
+
+cast(Type, Value, C) :-
+    ( inner_cast(Type, Value, C)
+    ->true
+    ; integer(Value)
+    ->term_to_atom(Value, Atom),
+      cast(Type, Atom, C)
+    ; rational(Value)
+    ->X is numerator(Value),
+      Y is denominator(Value),
+      do_eval(X/Y, Type, C)
+    ).
 
 pred_expr(atan2(A, B), atan(A, B)).
 % pred_expr(copysign(A, B), copysign(A, B)).

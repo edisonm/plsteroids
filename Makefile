@@ -7,11 +7,12 @@ PLSTEROIDS=target/bin/plsteroids
 
 CONCURRENT=. bin/concurrent ; concurrent_silent=1 ; run_pull
 
-build:
+bid:
 	cd idfpml/prolog/idfpml/LIBRARY ; \
 	  $(MAKE) CC=gcc CALL_BY_REF=1 GLOBAL_RND=1 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=0
+
+build: bid
 	$(MAKE) $(PLSTEROIDS)
-	true
 
 compile:
 	for i in `find . -name pack.pl`; do \
@@ -21,11 +22,15 @@ compile:
 	done
 	swipl -q -s qcompile.pl -t halt
 
-clean:
+bidclean:
 	cd idfpml/prolog/idfpml/LIBRARY ; $(MAKE) clean
+
+plclean:
 	$(RM) -rf target assertions/tests/foreign/*{.o,.so,_so.pl,_impl.h,_intf.c,_intf.h} \
 		idfpml/prolog/*{.o,.so,_so.pl,_impl.h,_intf.c,_intf.h,_auto.*}
 	mkdir -p target/bin
+
+clean: bidclean plclean
 
 $(PLSTEROIDS):
 	mkdir -p `dirname $@`

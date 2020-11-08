@@ -37,7 +37,8 @@
         case PL_INTEGER:                                                \
         {                                                               \
             long long i;                                                \
-            __rtcheck(PL_get_int64(v, (int64_t *)&i));                  \
+            int result = PL_get_int64(v, (int64_t *)&i);                \
+            if (!result) return FALSE;                                  \
             BIDECIMAL_CALL1(bid##__type##_from_int64, ref, i);          \
             break;                                                      \
         }                                                               \
