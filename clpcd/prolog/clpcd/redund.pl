@@ -140,7 +140,7 @@ redundant(t_lu(L,U),CLP,X,Strict) :-
 	    setarg(3,Att,strictness(Su)),
 	    negate_l(Strict,CLP,L,X)
 	->  red_t_l,
-	    (   redundant(t_u(U),X,Strict)
+	    (   redundant(t_u(U),CLP,X,Strict)
 	    ->  true
 	    ;   true
 	    )
@@ -178,7 +178,7 @@ redundant(t_Lu(L,U),CLP,X,Strict) :-
 	    setarg(3,Att2,strictness(Su)),
 	    negate_l(Strict,CLP,L,X)
 	->  red_t_l,
-	    (   redundant(t_u(U),X,Strict)
+	    (   redundant(t_u(U),CLP,X,Strict)
 	    ->  true
 	    ;   true
 	    )
@@ -190,7 +190,7 @@ redundant(t_Lu(L,U),CLP,X,Strict) :-
 	->  red_t_u
 	;   true
 	).
-redundant(t_lU(L,U),X,Strict) :-
+redundant(t_lU(L,U),CLP,X,Strict) :-
 	strictness_parts(Strict,Sl,Su),
 	(   get_attr(X,clpcd_itf,Att),
 	    arg(1,Att,CLP),
@@ -198,7 +198,7 @@ redundant(t_lU(L,U),X,Strict) :-
 	    setarg(3,Att,strictness(Su)),
 	    negate_l(Strict,CLP,L,X)
 	->  red_t_l,
-	    (   redundant(t_U(U),X,Strict)
+	    (   redundant(t_U(U),CLP,X,Strict)
 	    ->  true
 	    ;   true
 	    )

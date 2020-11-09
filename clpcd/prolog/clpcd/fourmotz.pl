@@ -277,7 +277,7 @@ cross_lower(CLP, Ta, Tb, K, Lin, Strict) -->
 	    lower(Ta,La),
 	    lower(Tb,Lb),
 	    !,
-	    L is K*La+Lb,
+	    eval_d(CLP, K*La+Lb, L),
 	    normalize_scalar(L,Ln),
 	    add_linear_f1(CLP, Lin, -1, Ln, Lhs),
 	    Sl is Strict >> 1			% normalize to upper bound
@@ -296,7 +296,7 @@ cross_upper(CLP, Ta, Tb, K, Lin, Strict) -->
 	    upper(Ta,Ua),
 	    upper(Tb,Ub),
 	    !,
-	    U is -(K*Ua+Ub),
+	    eval_d(CLP, -(K*Ua+Ub), U),
 	    normalize_scalar(U,Un),
 	    add_linear_11(CLP, Un, Lin, Lhs),
 	    Su is Strict /\ 1			% normalize to upper bound
