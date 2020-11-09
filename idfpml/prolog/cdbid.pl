@@ -35,11 +35,9 @@
 :- module(cdbid, []).
 
 :- use_module(library(neck)).
-:- use_module(library(typeprops)).
 :- use_module(library(clpcd/domain_ops)).
 :- use_module(library(clpcd/nf)).
 :- use_module(library(clpcd)).
-:- use_module(library(libbid)).
 :- use_module(library(bid_eval)).
 
 :- public cd_type/2.

@@ -44,10 +44,12 @@
           ]).
 
 :- use_module(library(lists)).
-:- use_module(library(libbid)).
-:- use_module(library(bid_desc)).
-:- use_module(library(list_sequence)).
 :- use_module(library(neck)).
+:- use_module(library(libbid)).
+:- use_module(library(compare_eq)).
+:- use_module(library(compilation_module)).
+:- compilation_module(library(list_sequence)).
+:- compilation_module(library(bid_desc)).
 
 bid_t(bid64).
 bid_t(bid128).
@@ -68,10 +70,6 @@ compare(Type, Op, A, B) :-
     eval(Type, A, X),
     eval(Type, B, Y),
     compare_b(Op, Type, X, Y).
-
-compare_eq(=).
-compare_eq(=<).
-compare_eq(>=).
 
 near_compare(Type, Op, A, B) :-
     eval(Type, A, X),
