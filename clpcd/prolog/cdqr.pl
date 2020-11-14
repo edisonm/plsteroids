@@ -6,8 +6,10 @@
 :- use_module(library(clpcd/domain_ops)).
 :- use_module(library(clpcd/nf)).
 :- use_module(library(clpcd)).
+:- use_module(library(arithex)).
 
-cdqr_eval_d(F, R) :- R is F.
+cdqr_eval_d(F, R) :-
+    arithmetic_expression_value(F, R).
 
 /*
 cdqr_eval_d(F, R) :-

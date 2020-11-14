@@ -31,51 +31,38 @@ prolog:message(query(YesNo,Bindings)) --> !,
 	dump_format(Constraints),
         '$messages':prolog_message(query(YesNo,Bindings)).
 
-cd_invertible(sin(_)).
-cd_invertible(abs(_)).
-cd_invertible(cos(_)).
-cd_invertible(tan(_)).
-cd_invertible(asin(_)).
-cd_invertible(acos(_)).
-cd_invertible(atan(_)).
-cd_invertible(sinh(_)).
-cd_invertible(cosh(_)).
-cd_invertible(tanh(_)).
-cd_invertible(asinh(_)).
-cd_invertible(acosh(_)).
-cd_invertible(atanh(_)).
-cd_invertible(exp(_)).
-cd_invertible(log(_)).
-cd_invertible(log10(_)).
-cd_invertible(sqrt(_)).
-cd_invertible(_^_).
-
-cd_invert(sin(X),T,X,Y,R) :- compare_d(T, =<, abs(Y), 1), int(I), eval_d(T, asin(Y) + 2*pi * I, R).
-cd_invert(cos(X),T,X,Y,R) :- compare_d(T, =<, abs(Y), 1), int(I), eval_d(T, acos(Y)+2*pi*I, R).
-cd_invert(tan(X),T,X,Y,R) :- int(I), eval_d(T,atan(Y)+pi*I,R).
-cd_invert(asin(X),T,X,Y,R) :- eval_d(T, sin(Y), R).
-cd_invert(acos(X),T,X,Y,R) :- eval_d(T, cos(Y), R).
-cd_invert(atan(X),T,X,Y,R) :- eval_d(T, tan(Y), R).
-cd_invert(sinh(X),T,X,Y,R) :- eval_d(T, asinh(Y), R).
-cd_invert(cosh(X),T,X,Y,R) :- compare_d(T, >=, Y, 1), eval_d(T, acosh(Y), R).
-cd_invert(tanh(X),T,X,Y,R) :- eval_d(T, atanh(Y), R).
-cd_invert(asinh(X),T,X,Y,R) :- eval_d(T, sinh(Y), R).
-cd_invert(acosh(X),T,X,Y,R) :- eval_d(T, cosh(Y), R).
-cd_invert(atanh(X),T,X,Y,R) :- eval_d(T, tanh(Y), R).
-cd_invert(log(X),T,X,Y,R) :- eval_d(T, exp(Y), R).
-cd_invert(log10(X),T,X,Y,R) :- eval_d(T, 10^Y, R).
-cd_invert(sqrt(X),T,X,Y,R) :- eval_d(T, Y^2, R).
-cd_invert(exp(X),T,X,Y,R) :- compare_d(T, >=, Y, 0), eval_d(T, log(Y), R).
-cd_invert(abs(X),T,X,Y,R) :-
-    ( compare_d(T, >, Y, 0 )
-    ->( eval_d(T, Y, R)
+cd_invert(sin(  X),T,X,Y,R) :- compare_d(T, =<, abs(Y), 1), int(I), eval_d(T, asin(Y)+2*pi*I, R).
+cd_invert(cos(  X),T,X,Y,R) :- compare_d(T, =<, abs(Y), 1), int(I), eval_d(T, acos(Y)+2*pi*I, R).
+cd_invert(tan(  X),T,X,Y,R) :- int(I), eval_d(T,atan(Y)+pi*I,R).
+cd_invert(asin( X),T,X,Y,R) :- eval_d(T, sin(  Y), R).
+cd_invert(acos( X),T,X,Y,R) :- eval_d(T, cos(  Y), R).
+cd_invert(atan( X),T,X,Y,R) :- eval_d(T, tan(  Y), R).
+cd_invert(sinh( X),T,X,Y,R) :- eval_d(T, asinh(Y), R).
+cd_invert(cosh( X),T,X,Y,R) :- compare_d(T, >=, Y, 1), eval_d(T, acosh(Y), R).
+cd_invert(tanh( X),T,X,Y,R) :- eval_d(T, atanh(Y), R).
+cd_invert(asinh(X),T,X,Y,R) :- eval_d(T, sinh( Y), R).
+cd_invert(acosh(X),T,X,Y,R) :- eval_d(T, cosh( Y), R).
+cd_invert(atanh(X),T,X,Y,R) :- eval_d(T, tanh( Y), R).
+cd_invert(log(  X),T,X,Y,R) :- eval_d(T, exp(  Y), R).
+cd_invert(log10(X),T,X,Y,R) :- eval_d(T, exp10(Y), R).
+cd_invert(log1p(X),T,X,Y,R) :- eval_d(T, expm1(Y), R).
+cd_invert(log2( X),T,X,Y,R) :- eval_d(T, exp2( Y), R).
+cd_invert(sqrt( X),T,X,Y,R) :- eval_d(T, Y^2, R).
+cd_invert(cbrt( X),T,X,Y,R) :- eval_d(T, Y^3, R).
+cd_invert(exp10(X),T,X,Y,R) :- compare_d(T, >=, Y,  0), eval_d(T, log10(Y), R).
+cd_invert(exp2( X),T,X,Y,R) :- compare_d(T, >=, Y,  0), eval_d(T, log2( Y), R).
+cd_invert(exp(  X),T,X,Y,R) :- compare_d(T, >=, Y,  0), eval_d(T, log(  Y), R).
+cd_invert(expm1(X),T,X,Y,R) :- compare_d(T, >=, Y, -1), eval_d(T, log1p(Y), R).
+cd_invert(abs(  X),T,X,Y,R) :-
+    ( compare_d(T, <, 0, Y)
+    ->( R = Y
       ; eval_d(T, -Y, R)
       )
-    ; compare_d(T, =, Y, 0 )
-    ->eval_d(T, Y, R)
+    ; compare_d(T, =, 0, Y)
+    ->R = Y
     ).
 cd_invert(B^C,T,X,A,R) :-
-    ( nf_constant(B,Kb)
+    ( nf_constant(B, Kb)
     ->compare_d(T, <, 0, A),
       compare_d(T, <, 0, Kb),
       % Kb =\= 1.0
@@ -88,6 +75,21 @@ cd_invert(B^C,T,X,A,R) :-
       X = B, % note delayed unification
       eval_d(T, A**(1/Kc), R)
     ).
+cd_invert(hypot(B,C),T,X,A,R) :-
+    ( nf_constant(B, Kb)
+    ->cd_invert_hypot(Kb,C,T,X,A,R)
+    ; nf_constant(C, Kc)
+    ->cd_invert_hypot(Kc,B,T,X,A,R)
+    ).
+
+cd_invert_hypot(Kb,C,T,X,A,R) :-
+    compare_d(T, >=, abs(A), abs(Kb)),
+    X = C,
+    eval_d(T, sqrt((A+Kb)*(A-Kb)), R).
+
+cd_invertible(Term) :-
+    clause(cd_invert(Term, _, _, _, _), _),
+    neck.
 
 % crafted to get float operators
 
@@ -105,7 +107,12 @@ curr_num_arithmetic_function(Expr) :-
                   _,
                   fail),
             float(Value)
-           ).
+          ).
+% Extra arithmetic functions not implemented in is/2 but in most of float libraries
+curr_num_arithmetic_function(Expr) :-
+    member(Expr, [cbrt(_), exp10(_), exp2(_), expm1(_), log1p(_),
+                  log2(_), tgamma(_), hypot(_, _)]),
+    neck.
 
 num_arithmetic_function(Expr) :-
     curr_num_arithmetic_function(Expr),
