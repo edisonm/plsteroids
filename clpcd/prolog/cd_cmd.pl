@@ -20,7 +20,6 @@
             [ dump/3 %, projecting_assert/1
             ]).
 :- reexport(library(clpcd/ordering), [clp_type/2]).
-:- use_module(library(clpcd)).
 :- reexport(library(clpcd/ordering), [ordering/1]).
 
 clpcd_highlight:clpcd_module(D) :-
