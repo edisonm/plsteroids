@@ -134,8 +134,8 @@ cast(Type, Value, C) :-
     ( inner_cast(Type, Value, C)
     ->true
     ; integer(Value)
-    ->term_to_atom(Value, Atom),
-      cast(Type, Atom, C)
+    ->term_string(Value, String),
+      cast(Type, String, C)
     ; rational(Value)
     ->X is numerator(Value),
       Y is denominator(Value),
