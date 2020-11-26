@@ -3,7 +3,7 @@
 . bin/run_test
 
 swi_cmd () {
-    swipl -q -s loadall.pl
+    swipl -q -s loadall
 }
 
 run_cmd () {
