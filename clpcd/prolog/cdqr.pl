@@ -7,6 +7,8 @@
 :- use_module(library(clpcd)).
 :- use_module(library(arithex)).
 
+:- meta_predicate cdqr_eval_d(+,?).
+
 cdqr_eval_d(F, R) :-
     arithmetic_expression_value(F, R).
 
