@@ -32,47 +32,48 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(bid_desc, [bid_desc/2]).
+:- module(bid_desc, [bid_desc/3]).
 
-bid_desc(pl_, [acos/2,   acosh/2, asin/2,   asinh/2, atan/2,
-               atanh/2,  cbrt/2,  cos/2,    cosh/2,  erf/2,
-               erfc/2,   exp10/2,  exp2/2,  exp/2,   expm1/2,
-               lgamma/2, log10/2,  log1p/2, log2/2,  log/2,
-               round_integral_exact/2,
-               round_integral_nearest_away/2,
-               round_integral_nearest_even/2,
-               round_integral_negative/2,
-               round_integral_positive/2,
-               round_integral_zero/2,
-               sin/2,    sinh/2,  sqrt/2,   tan/2,      tanh/2,
-               tgamma/2, add/3,   atan2/3,  div/3,      fdim/3,
-               hypot/3,  mul/3,   pow/3,    quantize/3, sub/3]).
-bid_desc(pt_, [atom/2, string/2]).
-bid_desc(pi_, [rnint/2,  xrnint/2, xrninta/2, int/2,  xint/2,
-               floor/2,  xfloor/2, rninta/2,  ceil/2, xceil/2]).
-bid_desc(is_, [quiet_equal/2,
-               quiet_greater/2,
-               quiet_greater_equal/2,
-               quiet_greater_unordered/2,
-               quiet_less/2,
-               quiet_less_equal/2,
-               quiet_less_unordered/2,
-               quiet_not_equal/2,
-               quiet_not_greater/2,
-               quiet_not_less/2,
-               quiet_ordered/2,
-               quiet_unordered/2,
-               signaling_greater/2,
-               signaling_greater_equal/2,
-               signaling_greater_unordered/2,
-               signaling_less/2,
-               signaling_less_equal/2,
-               signaling_less_unordered/2,
-               signaling_not_greater/2,
-               signaling_not_less/2]).
-bid_desc(pn_, [rem/3,
-               fmod/3,
-               minnum/3,
-               maxnum/3,
-               minnum_mag/3,
-               maxnum_mag/3]).
+bid_desc(pl_, [acos,   acosh, asin,   asinh, atan,
+               atanh,  cbrt,  cos,    cosh,  erf,
+               erfc,   exp10,  exp2,  exp,   expm1,
+               lgamma, log10,  log1p, log2,  log,
+               round_integral_exact,
+               round_integral_nearest_away,
+               round_integral_nearest_even,
+               round_integral_negative,
+               round_integral_positive,
+               round_integral_zero,
+               sin,    sinh,  sqrt,   tan,      tanh,
+               tgamma], 2).
+bid_desc(pl_, [add,   atan2,  div,      fdim,
+               hypot,  mul,   pow,    quantize, sub], 3).
+bid_desc(pn_, [rem,
+               fmod,
+               minnum,
+               maxnum,
+               minnum_mag,
+               maxnum_mag], 3).
+bid_desc(pt_, [atom, string], 2).
+bid_desc(pi_, [rnint,  xrnint, xrninta, int,  xint,
+               floor,  xfloor, rninta,  ceil, xceil], 2).
+bid_desc(is_, [quiet_equal,
+               quiet_greater,
+               quiet_greater_equal,
+               quiet_greater_unordered,
+               quiet_less,
+               quiet_less_equal,
+               quiet_less_unordered,
+               quiet_not_equal,
+               quiet_not_greater,
+               quiet_not_less,
+               quiet_ordered,
+               quiet_unordered,
+               signaling_greater,
+               signaling_greater_equal,
+               signaling_greater_unordered,
+               signaling_less,
+               signaling_less_equal,
+               signaling_less_unordered,
+               signaling_not_greater,
+               signaling_not_less], 2).

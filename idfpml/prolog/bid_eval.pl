@@ -146,7 +146,6 @@ pred_expr(atan2(A, B), atan(A, B)).
 % pred_expr(copysign(A, B), copysign(A, B)).
 pred_expr(div(A,B), A/B).
 pred_expr(pow(A,B), A**B).
-% pred_expr(eval(A), eval(A)).
 % pred_expr(float(A), float(A)).
 % pred_expr(float_fractional_part(A), float_fractional_part(A)).
 % pred_expr(float_integer_part(A), float_integer_part(A)).
@@ -157,10 +156,8 @@ pred_expr(minnum(A, B), min(A, B)).
 pred_expr(sub(A, B), A-B).
 % pred_expr(nan, nan).
 % pred_expr(nexttoward(A, B), nexttoward(A, B)).
-% pred_expr(pi, pi).
 pred_expr(add(A, B), A+B).
 % pred_expr(random_float, random_float).
-% pred_expr(sign(A), sign(A)).
 pred_expr(mul(A, B), A*B).
 pred_expr(round_integral_negative(A), floor(A)).
 pred_expr(round_integral_positive(A), ceil(A)).
@@ -173,8 +170,8 @@ do_eval(cputime, Type, C) :-
     X is cputime,
     cast(Type, X, C).
 do_eval(epsilon, Type, C) :- do_eval_epsilon(Type, C).
-do_eval(0, Type, C) :- do_eval_0(Type, C).
-do_eval(1, Type, C) :- do_eval_1(Type, C).
+do_eval(0,  Type, C) :- do_eval_0(Type, C).
+do_eval(1,  Type, C) :- do_eval_1(Type, C).
 do_eval(-1, Type, C) :- do_eval_m1(Type, C).
 do_eval(e,  Type, C) :- do_eval_e(Type, C).
 do_eval(pi, Type, C) :- do_eval_pi(Type, C).
@@ -187,6 +184,7 @@ do_eval(sign(X), Type, C) :-
     ->do_eval_m1(Type, C)
     ; C = Z
     ).
+do_eval(eval(Expr), Type, C) :- eval(Type, Expr, C).
 do_eval(+(Expr), Type, C) :- eval(Type, Expr, C).
 do_eval(-(Expr), Type, C) :- do_eval(0-Expr, Type, C).
 do_eval(abs(Expr), Type, C) :-
@@ -197,9 +195,9 @@ do_eval(abs(Expr), Type, C) :-
     ; C = V
     ).
 do_eval(Expr, Type, C) :-
-    bid_desc(Desc, PIL),
     member(Desc, [pl_, pn_]),
-    member(F/A1, PIL),
+    bid_desc(Desc, FL, A1),
+    member(F, FL),
     succ(A, A1),
     functor(Pred, F, A),
     Pred =.. [Name|Args],
@@ -215,12 +213,12 @@ do_eval(Expr, Type, C) :-
     AC.
 
 Head :-
-    bid_desc(Desc, PIL),
+    bid_desc(Desc, FL, A),
     ( memberchk(Desc, [pl_, pn_]),
-      member(F/A, PIL)
+      member(F, FL)
     ; Desc = pi_,
       member(F/A, [int/2]),
-      memberchk(F/A, PIL)
+      memberchk(F, FL)
     ),
     functor(Pred, F, A),
     Pred =.. [N, Result|AL],

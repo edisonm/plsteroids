@@ -60,22 +60,35 @@ gen_bid_h(Dir) :-
     told.
 
 dump_bid_h :-
-    ( bid_desc(Prefix, FL),
-      member(F/A, FL),
+    ( bid_desc(Prefix, FL, A),
+      member(F, FL),
       format("GEN_BID_ALL(~w~w,~w)~n", [Prefix, A, F]),
       fail
     ; true
     ).
 
+compats(1, T, -T) :- !.
+compats(N, T, (Cs * +T)) :-
+    N > 1,
+    succ(N1, N),
+    compats(N1, T, Cs).
+
+compats(pl_, A, T, Cs) :- compats(A, T, Cs).
+compats(pn_, A, T, Cs) :- compats(A, T, Cs).
+compats(pt_, 2, T, +T * -).
+compats(pi_, 2, T, -int* +T).
+compats(is_, 2, T, +T* +T).
+
 dump_bid_pl :-
-    ( bid_desc(Prefix, FL),
+    ( member(Pre-T, [bid64-bid64_t, bid128-bid128_t]),
+      bid_desc(Prefix, FL, A),
+      compats(Prefix, A, T, Cs),
       findall(Func/A,
-              ( member(F/A, FL),
-                member(Pre, [64, 128]),
-                atomic_list_concat([bid, Pre, '_', F], Func)
+              ( member(F, FL),
+                atomic_list_concat([Pre, '_', F], Func)
               ), PIL),
       forall(member(PI, PIL), portray_clause((:- export(PI)))),
-      portray_clause((:- pred PIL + native(prefix(Prefix)))),
+      portray_clause((:- pred PIL :: Cs + native(prefix(Prefix)))),
       fail
     ; true
     ).
