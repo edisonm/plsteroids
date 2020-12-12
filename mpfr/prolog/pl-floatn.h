@@ -6,17 +6,17 @@
 #include <SWI-Stream.h>
 #include <SWI-Prolog.h>
 
-typedef mpfr_t floatn;
+typedef mpfr_t floatn_t;
 
 PL_blob_t *record_mpfr;
 
-#define FI_unify_floatn(t, v) PL_unify_floatn((t), (v))
-#define FI_get_floatn(_, t, v) PL_get_floatn((t), (v))
+#define FI_unify_floatn_t(t, v) PL_unify_floatn_t((t), (v))
+#define FI_get_floatn_t(_, t, v) PL_get_floatn_t((t), (v))
 #define FI_unify_mpfr_prec_t(t, v) FI_unify_integer((t), (v))
 #define FI_get_mpfr_prec_t(r, t, v) FI_get_long((r), (t), (v))
 
-int PL_unify_floatn(term_t t, floatn *fr);
-int PL_get_floatn(term_t t, floatn **fr);
+int PL_unify_floatn_t(term_t t, floatn_t *fr);
+int PL_get_floatn_t(term_t t, floatn_t **fr);
 
 void floatn_init();
 
