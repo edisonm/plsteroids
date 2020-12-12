@@ -11,6 +11,7 @@ loadpacks(Loader) :-
             [exclude(
                  [clpcd/prolog/cd_cmd,
                   idfpml/prolog/bid_auto,
+                  mpfr/prolog/floatn_auto,
                   refactor/prolog/i18n/i18n_trans,
                   xtools/prolog/ws_source,
                   refactor/prolog/ref_expand,

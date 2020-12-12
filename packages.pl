@@ -11,10 +11,11 @@ package(assertions).
 package(xtools).
 package(rtchecks).
 package(refactor).
-package(playground).
+% package(playground).
 package(smtp).
 package(clpcd).
 package(lambda).
 package(idfpml).
+package(mpfr).
 
 :- assertz(ref_msgtype:rstats_db).
