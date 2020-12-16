@@ -53,7 +53,7 @@ floatn_desc(pi_, [jn, yn], 4).
 floatn_desc(ip_, [rootn_ui], 4).
 floatn_desc(is_, [greater, greaterequal, less, lessequal,
                   lessgreater, equal, unordered], 2).
-floatn_desk(is_, [nan, inf, number, integer, zero, regular], 1).
+floatn_desc(is_, [nan, inf, number, integer, zero, regular], 1).
 
 /*
 floatn_desc(pn_, [rem,

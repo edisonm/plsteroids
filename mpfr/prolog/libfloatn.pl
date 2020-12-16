@@ -7,10 +7,7 @@
 :- use_module(library(lists)).
 :- use_module(library(neck)).
 :- use_module(library(assertions)).
-:- use_module(library(substitute)).
-:- use_module(library(extend_args)).
 :- use_module(library(plprops)).
-:- use_module(library(float_props)).
 :- use_module(library(foreign/foreign_generator)).
 :- use_module(library(foreign/foreign_interface)).
 :- use_module(library(foreign/foreign_props)).
@@ -52,6 +49,10 @@ apt install libmpfr-dev libmpc-dev
 :- include(floatn_auto).
 
 /*
+:- use_module(library(substitute)).
+:- use_module(library(extend_args)).
+:- use_module(library(float_props)).
+
 :- export floatn_domain_args/1,
           floatn_evalfunc/3.
 

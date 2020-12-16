@@ -50,6 +50,8 @@
           ] :: (+floatn_t * +floatn_t * int * -floatn_t)
         ].
 
+:- compilation_predicate expr_pred/2.
+
 expr_pred(A/B, div(A, B)).
 expr_pred(A**B, pow(A, B)).
 expr_pred(A^B, pow(A, B)).
@@ -66,7 +68,10 @@ expr_pred(Pred, Pred) :-
     A is A2 - 2,
     functor(Pred, F, A),
     \+ expr_pred(_, Pred),
+    \+ expr_pred(Pred, _),
     neck.
+
+:- public eval_1/4.
 
 eval_1(P, Arg, eval(P, Arg, EA), EA).
 
@@ -121,6 +126,6 @@ do_eval_epsilon(P, V) :-
     ; N=P
     ),
     N1 is 1-N,
-    floatn(N1, P, FN),
     floatn(2,  P, F2),
-    pow(F2, FN, P, V).
+    floatn(N1, P, FN),
+    floatn_pow(P, V, F2, FN).
