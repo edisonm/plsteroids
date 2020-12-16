@@ -142,42 +142,53 @@ cast(Type, Value, C) :-
       do_eval(X/Y, Type, C)
     ).
 
-pred_expr(atan2(A, B), atan(A, B)).
-% pred_expr(copysign(A, B), copysign(A, B)).
-pred_expr(div(A,B), A/B).
-pred_expr(pow(A,B), A**B).
-% pred_expr(float(A), float(A)).
-% pred_expr(float_fractional_part(A), float_fractional_part(A)).
-% pred_expr(float_integer_part(A), float_integer_part(A)).
-pred_expr(pow(A, B), A^B).
-% pred_expr(inf, inf).
-pred_expr(maxnum(A, B), max(A, B)).
-pred_expr(minnum(A, B), min(A, B)).
-pred_expr(sub(A, B), A-B).
-% pred_expr(nan, nan).
-% pred_expr(nexttoward(A, B), nexttoward(A, B)).
-pred_expr(add(A, B), A+B).
-% pred_expr(random_float, random_float).
-pred_expr(mul(A, B), A*B).
-pred_expr(round_integral_negative(A), floor(A)).
-pred_expr(round_integral_positive(A), ceil(A)).
-pred_expr(round_integral_positive(A), ceiling(A)).
-pred_expr(round_integral_exact(A), integer(A)).
-pred_expr(round_integral_exact(A), round(A)).
-pred_expr(fmod(A, B), mod(A, B)).
+:- compilation_predicate expr_pred/2.
+
+expr_pred(atan(A, B), atan2(A, B)).
+% expr_pred(copysign(A, B), copysign(A, B)).
+expr_pred(A/B, div(A,B)).
+expr_pred(A**B, pow(A,B)).
+% expr_pred(float(A), float(A)).
+% expr_pred(float_fractional_part(A), float_fractional_part(A)).
+% expr_pred(float_integer_part(A), float_integer_part(A)).
+expr_pred(A^B, pow(A, B)).
+% expr_pred(inf, inf).
+expr_pred(max(A, B), maxnum(A, B)).
+expr_pred(min(A, B), minnum(A, B)).
+expr_pred(A-B, sub(A, B)).
+% expr_pred(nan, nan).
+% expr_pred(nexttoward(A, B), nexttoward(A, B)).
+expr_pred(A+B, add(A, B)).
+% expr_pred(random_float, random_float).
+expr_pred(A*B, mul(A, B)).
+expr_pred(floor(A), round_integral_negative(A)).
+expr_pred(ceil(A), round_integral_positive(A)).
+expr_pred(ceiling(A), round_integral_positive(A)).
+expr_pred(integer(A), round_integral_exact(A)).
+expr_pred(round(A), round_integral_exact(A)).
+expr_pred(mod(A, B), fmod(A, B)).
+expr_pred(Pred, Pred) :-
+    member(Desc, [pl_, pn_]),
+    bid_desc(Desc, FL, A1),
+    member(F, FL),
+    succ(A, A1),
+    functor(Pred, F, A),
+    \+ expr_pred(_, Pred),
+    \+ expr_pred(Pred, _),
+    neck.
 
 do_eval(cputime, Type, C) :-
     X is cputime,
     cast(Type, X, C).
 do_eval(epsilon, Type, C) :- do_eval_epsilon(Type, C).
-do_eval(0,  Type, C) :- do_eval_0(Type, C).
+do_eval(0,  Type, C) :- do_eval_z(Type, C).
 do_eval(1,  Type, C) :- do_eval_1(Type, C).
 do_eval(-1, Type, C) :- do_eval_m1(Type, C).
 do_eval(e,  Type, C) :- do_eval_e(Type, C).
 do_eval(pi, Type, C) :- do_eval_pi(Type, C).
 do_eval(sign(X), Type, C) :-
     eval(Type, X, V),
-    do_eval_0(Type, Z),
+    do_eval_z(Type, Z),
     ( compare_b(<, Type, Z, V)
     ->do_eval_1(Type, C)
     ; compare(Type, >, Z, X)
@@ -189,22 +200,14 @@ do_eval(+(Expr), Type, C) :- eval(Type, Expr, C).
 do_eval(-(Expr), Type, C) :- do_eval(0-Expr, Type, C).
 do_eval(abs(Expr), Type, C) :-
     eval(Type, Expr, V),
-    do_eval_0(Type, Z),
+    do_eval_z(Type, Z),
     ( compare_b(>, Type, Z, V)
     ->do_eval(-V, Type, C)
     ; C = V
     ).
 do_eval(Expr, Type, C) :-
-    member(Desc, [pl_, pn_]),
-    bid_desc(Desc, FL, A1),
-    member(F, FL),
-    succ(A, A1),
-    functor(Pred, F, A),
+    expr_pred(Expr, Pred),
     Pred =.. [Name|Args],
-    (   pred_expr(Pred, Expr)
-    *-> true
-    ;   Expr = Pred
-    ),
     maplist(eval_1(Type), Args, EvalL, EAs),
     AC =.. [Name, Type, C|EAs],
     list_sequence(EvalL, EvalS),
@@ -229,7 +232,7 @@ Head :-
     necki,
     Body.
 
-do_eval_0(Type, C) :-
+do_eval_z(Type, C) :-
     bid_t(Type),
     cast(Type, 0, C),
     neck.

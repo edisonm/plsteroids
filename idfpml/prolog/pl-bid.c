@@ -79,7 +79,7 @@
         default:                                                        \
             return FALSE;                                               \
         }                                                               \
-        return FI_unify_bid##__type##_t(t, ref);                        \
+        return FI_unify_bid##__type##_t(t, &ref);                       \
     }
 
 #define GEN_BID_pl_2(__type, __func)                                    \
@@ -88,7 +88,7 @@
         bid##__type##_t b;                                              \
         if (PL_get_bid##__type##_t(x, &a)) {                            \
             BIDECIMAL_CALL1(bid##__type##_##__func, b, a);              \
-            return FI_unify_bid##__type##_t(res, b);                    \
+            return FI_unify_bid##__type##_t(res, &b);                   \
         }                                                               \
         return FALSE;                                                   \
     }
@@ -99,7 +99,7 @@
         if (FI_get_bid##__type##_t(NULL, x, &a)                         \
             && FI_get_bid##__type##_t(NULL, y, &b)) {                   \
             BIDECIMAL_CALL2(bid##__type##_##__func, c, a, b);           \
-            return FI_unify_bid##__type##_t(res, c);                    \
+            return FI_unify_bid##__type##_t(res, &c);                   \
         }                                                               \
         return FALSE;                                                   \
     }
@@ -110,7 +110,7 @@
         if (FI_get_bid##__type##_t(NULL, x, &a)                         \
             && FI_get_bid##__type##_t(NULL, y, &b)) {                   \
             BIDECIMAL_CALL2_NORND(bid##__type##_##__func, c, a, b);     \
-            return FI_unify_bid##__type##_t(res, c);                    \
+            return FI_unify_bid##__type##_t(res, &c);                   \
         }                                                               \
         return FALSE;                                                   \
     }
@@ -148,24 +148,24 @@
         return TRUE;                                                    \
     }
 
-int FI_unify_bid64_t(term_t t, bid64_t v)
+int FI_unify_bid64_t(term_t t, bid64_t * const v)
 {
     bid64_t src;
     switch (PL_term_type(t)) {
     case PL_VARIABLE:
-        return PL_unify_term(t,                 
-                             PL_FUNCTOR_CHARS,  
-                             "$bid64", 1,       
-                             PL_INT64,          
-                             v);                
+        return PL_unify_term(t,
+                             PL_FUNCTOR_CHARS,
+                             "$bid64", 1,
+                             PL_INT64,
+                             *v);
     case PL_TERM:
-        return PL_get_bid64_t(t, &src)          
-            && (src == v);                      
-    }                                           
-    return FALSE;                               
+        return PL_get_bid64_t(t, &src)
+            && (src == *v);
+    }
+    return FALSE;
 }
 
-int FI_unify_bid128_t(term_t t, bid128_t v)
+int FI_unify_bid128_t(term_t t, bid128_t * const v)
 {
     bid128_t src;
     switch (PL_term_type(t)) {
@@ -174,13 +174,13 @@ int FI_unify_bid128_t(term_t t, bid128_t v)
                              PL_FUNCTOR_CHARS,
                              "$bid128", 2,
                              PL_INT64,
-                             v.w[0],
+                             v->w[0],
                              PL_INT64,
-                             v.w[1]);
+                             v->w[1]);
     case PL_TERM:
         return PL_get_bid128_t(t, &src)
-            && (src.w[0] == v.w[0])
-            && (src.w[1] == v.w[1]);
+            && (src.w[0] == v->w[0])
+            && (src.w[1] == v->w[1]);
     }
     return FALSE;
 }
