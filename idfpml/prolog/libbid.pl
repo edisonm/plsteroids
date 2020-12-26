@@ -64,7 +64,14 @@
 
 :- type [ bid64_t/1,
           bid128_t/1
-        ] + native(prefix(is_)).
+        ].
+
+bid64_t('$bid64'(V)) :-
+    int64(V).
+
+bid128_t('$bid128'(V1, V2)) :-
+    int64(V1),
+    int64(V2).
 
 :- pred [ bid64/2,
           bid128/2

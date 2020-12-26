@@ -205,26 +205,6 @@ int PL_get_bid128_t(term_t t, bid128_t *v) {
         && PL_get_arg(2, t, b) && PL_get_int64(b, (int64_t *)&(v->w[1]));
 }
 
-int is_bid64_t(term_t t) {
-    atom_t name;
-    size_t arity;
-    term_t a = PL_new_term_ref();
-    return PL_get_name_arity(t, &name, &arity)
-        && (arity == 1) && (PL_new_atom("$bid64")==name)
-        && PL_get_arg(1, t, a) && PL_is_integer(a);
-}
-
-int is_bid128_t(term_t t) {
-    atom_t name;
-    size_t arity;
-    term_t a = PL_new_term_ref();
-    term_t b = PL_new_term_ref();
-    return PL_get_name_arity(t, &name, &arity)
-        && (arity == 2) && (PL_new_atom("$bid128")==name)
-        && PL_get_arg(1, t, a) && PL_is_integer(a)
-        && PL_get_arg(2, t, b) && PL_is_integer(b);
-}
-
 #define GEN_BID_ALL(__pre, __func) \
     GEN_BID_##__pre( 64, __func) \
     GEN_BID_##__pre(128, __func)
