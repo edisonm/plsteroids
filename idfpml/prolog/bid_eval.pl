@@ -48,6 +48,7 @@
 :- use_module(library(libbid)).
 :- use_module(library(compare_eq)).
 :- use_module(library(compilation_module)).
+:- include(library(eval)).
 :- compilation_module(library(list_sequence)).
 :- compilation_module(library(bid_desc)).
 
@@ -56,8 +57,7 @@ bid_t(bid128).
 
 :- public
         op_pred/2,
-        pred_expr/2,
-        eval_1/4.
+        pred_expr/2.
 
 op_pred(=,  quiet_equal).
 op_pred(=<, quiet_less_equal).
@@ -112,35 +112,11 @@ Head :-
     necki,
     Body.
 
-eval_1(Type, Arg, eval(Type, Arg, EA), EA).
-
-eval(_, Expr, _) :-
-    var(Expr),
-    !,
-    fail.
-eval(Type, Expr, C) :-
-    do_eval(Expr, Type, C),
-    !.
-eval(Type, Value, C) :-
-    cast(Type, Value, C).
-
 inner_cast(Type, Value, C) :-
     bid_t(Type),
     Body =.. [Type, Value, C],
     neck,
     Body.
-
-cast(Type, Value, C) :-
-    ( inner_cast(Type, Value, C)
-    ->true
-    ; integer(Value)
-    ->term_string(Value, String),
-      cast(Type, String, C)
-    ; rational(Value)
-    ->X is numerator(Value),
-      Y is denominator(Value),
-      do_eval(X/Y, Type, C)
-    ).
 
 :- compilation_predicate expr_pred/2.
 

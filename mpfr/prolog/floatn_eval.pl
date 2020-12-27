@@ -40,6 +40,7 @@
 :- use_module(library(neck)).
 :- use_module(library(libfloatn)).
 :- use_module(library(compilation_module)).
+:- include(library(eval)).
 :- compilation_module(library(list_sequence)).
 :- compilation_module(library(floatn_desc)).
 
@@ -71,31 +72,8 @@ expr_pred(Pred, Pred) :-
     \+ expr_pred(Pred, _),
     neck.
 
-:- public eval_1/4.
-
-eval_1(P, Arg, eval(P, Arg, EA), EA).
-
-eval(_, Expr, _) :-
-    var(Expr),
-    !,
-    fail.
-eval(Type, Expr, C) :-
-    do_eval(Expr, Type, C),
-    !.
-eval(Type, Value, C) :-
-    cast(Type, Value, C).
-
-cast(Type, Value, C) :-
-    ( floatn(Value, Type, C)
-    ->true
-    ; integer(Value)
-    ->term_string(Value, String),
-      cast(Type, String, C)
-    ; rational(Value)
-    ->X is numerator(Value),
-      Y is denominator(Value),
-      do_eval(X/Y, Type, C)
-    ).
+inner_cast(Type, Value, C) :-
+    floatn(Value, Type, C).
 
 do_eval(cputime, P, C) :- do_eval_cputime(P, C).
 do_eval(epsilon, P, C) :- do_eval_epsilon(P, C).

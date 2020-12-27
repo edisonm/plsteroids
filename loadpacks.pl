@@ -10,6 +10,7 @@ loadpacks(Loader) :-
         pack_load_local(
             [exclude(
                  [clpcd/prolog/cd_cmd,
+                  clpcd/prolog/eval,
                   idfpml/prolog/bid_auto,
                   mpfr/prolog/floatn_auto,
                   refactor/prolog/i18n/i18n_trans,
