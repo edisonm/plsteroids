@@ -43,8 +43,7 @@
 :- use_module(library(floatn_desc)).
 
 gen_floatn :-
-    absolute_file_name(library(gen_floatn), This, [file_type(prolog), access(exist)]),
-    directory_file_path(Dir, _, This),
+    absolute_file_name(plbin('.'), Dir, [file_type(directory), access(exist)]),
     gen_floatn_pl(Dir),
     gen_floatn_h(Dir).
 

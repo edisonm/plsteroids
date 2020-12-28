@@ -77,7 +77,7 @@ bid128_t('$bid128'(V1, V2)) :-
           bid128/2
         ] + native(prefix(pl_)).
 
-:- include(bid_auto).
+:- include(plbin(bid_auto)).
 
 user:portray('$bid64'(V)) :-
     bid64_string('$bid64'(V), S),

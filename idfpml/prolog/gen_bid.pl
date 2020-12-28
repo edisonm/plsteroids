@@ -42,8 +42,7 @@
 :- use_module(library(bid_desc)).
 
 gen_bid :-
-    absolute_file_name(library(gen_bid), This, [file_type(prolog), access(exist)]),
-    directory_file_path(Dir, _, This),
+    absolute_file_name(plbin('.'), Dir, [file_type(directory), access(exist)]),
     gen_bid_pl(Dir),
     gen_bid_h(Dir).
 

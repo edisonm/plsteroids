@@ -46,7 +46,7 @@ apt install libmpfr-dev libmpc-dev
           % ] + evaluable
         ].
 
-:- include(floatn_auto).
+:- include(plbin(floatn_auto)).
 
 /*
 :- use_module(library(substitute)).
