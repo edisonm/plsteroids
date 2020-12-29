@@ -42,6 +42,9 @@
 :- license(gpl_swipl, 'CLP(CDQD)').
 :- use_module(library(libbid)).
 :- use_module(library(cdbid)).
+
+clpcd(cdqd).
+
 :- include(library(cd_cmd)).
 
 clpcd_itf:numbers_only(cdqd, Y) :-

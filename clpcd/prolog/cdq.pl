@@ -53,6 +53,9 @@
 :- license(gpl_swipl, 'CLP(CDQ)').
 :- use_module(library(near_utils)).
 :- use_module(library(cdqr), []).
+
+clpcd(cdq).
+
 :- include(library(cd_cmd)).
 
 clpcd_domain_ops:compare_d(cdq, Op, A, B) :-

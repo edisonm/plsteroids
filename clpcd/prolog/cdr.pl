@@ -54,6 +54,9 @@
 :- license(gpl_swipl, 'CLP(CDR)').
 :- use_module(library(near_utils)).
 :- use_module(library(cdqr), []).
+
+clpcd(cdr).
+
 :- include(library(cd_cmd)).
 
 clpcd_domain_ops:compare_d(cdr, Op, A, B) :-

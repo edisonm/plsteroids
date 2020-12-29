@@ -43,6 +43,9 @@
 :- use_module(library(lists)).
 :- use_module(library(libbid)).
 :- use_module(library(cdbid)).
+
+clpcd(cddd).
+
 :- include(library(cd_cmd)).
 
 clpcd_itf:numbers_only(cddd, Y) :-

@@ -22,57 +22,59 @@
 :- reexport(library(clpcd/ordering), [clp_type/2]).
 :- reexport(library(clpcd/ordering), [ordering/1]).
 
+:- public clpcd/1.
+
 clpcd_highlight:clpcd_module(D) :-
-    '$current_source_module'(D),
+    clpcd(D),
     neck.
 
 inf(Expression, Inf) :-
-    '$current_source_module'(D),
+    clpcd(D),
     neck,
     inf(D, Expression, Inf).
 
 inf(Expression, Inf, Vector, Vertex) :-
-    '$current_source_module'(D),
+    clpcd(D),
     neck,
     inf(D, Expression, Inf, Vector, Vertex).
 
 sup(Expression, Sup) :-
-    '$current_source_module'(D),
+    clpcd(D),
     neck,
     sup(D, Expression, Sup).
 
 sup(Expression, Sup, Vector, Vertex) :-
-    '$current_source_module'(D),
+    clpcd(D),
     neck,
     sup(D, Expression, Sup, Vector, Vertex).
 
 maximize(Term) :-
-    '$current_source_module'(D),
+    clpcd(D),
     neck,
     maximize(D, Term).
 
 minimize(Term) :-
-    '$current_source_module'(D),
+    clpcd(D),
     neck,
     minimize(D, Term).
 
 {Rel} :-
-    '$current_source_module'(D),
+    clpcd(D),
     neck,
     add_constraint(Rel, D).
 
 entailed(C) :-
-    '$current_source_module'(D),
+    clpcd(D),
     neck,
     entailed(D, C).
 
 bb_inf(Is, Term, Inf) :-
-    '$current_source_module'(D),
+    clpcd(D),
     neck,
     bb_inf(D, Is, Term, Inf, _).
 
 bb_inf(Is, Term, Inf, Vertex) :-
-    '$current_source_module'(D),
+    clpcd(D),
     neck,
     bb_inf(D, Is, Term, Inf, Vertex).
 
@@ -83,7 +85,7 @@ bb_inf(Is, Term, Inf, Vertex) :-
 	sandbox:safe_primitive/1.
 
 sandbox:safe_primitive(D:H) :-
-    '$current_source_module'(D),
+    clpcd(D),
     member(H, [{_},
                entailed(_),
                bb_inf(_, _, _),

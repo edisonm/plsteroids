@@ -37,6 +37,9 @@
 :- license(gpl_swipl, 'CLP(FLOATN)').
 :- use_module(library(libfloatn)).
 :- use_module(library(cdmpfr)).
+
+clpcd(cdfloatn).
+
 :- include(library(cd_cmd)).
 
 clpcd_itf:numbers_only(cdfloatn, Y) :-
