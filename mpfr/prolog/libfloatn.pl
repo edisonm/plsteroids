@@ -1,7 +1,8 @@
 :- module(libfloatn,
           [ mpfr_get_default_prec/1,
             floatn_t/1,
-            floatn/3
+            floatn/3,
+            floatn_get_si/2
           ]).
 
 :- use_module(library(lists)).

@@ -33,14 +33,7 @@
 */
 
 :- module(bid_eval,
-          [ bid_t/1,
-            cast/3,
-            compare/4,
-            epsilon/2,
-            epsilon/3,
-            eval/3,
-            int/3,
-            near_compare/4
+          [ int/3
           ]).
 
 :- use_module(library(lists)).
@@ -48,16 +41,15 @@
 :- use_module(library(libbid)).
 :- use_module(library(compare_eq)).
 :- use_module(library(compilation_module)).
-:- include(library(eval)).
 :- compilation_module(library(list_sequence)).
 :- compilation_module(library(bid_desc)).
 
-bid_t(bid64).
-bid_t(bid128).
+:- compilation_predicate cd_type/1.
 
-:- public
-        op_pred/2,
-        pred_expr/2.
+cd_type(bid64).
+cd_type(bid128).
+
+cd_preffix(Type, Type) :- cd_type(Type).
 
 op_pred(=,  quiet_equal).
 op_pred(=<, quiet_less_equal).
@@ -66,59 +58,15 @@ op_pred(<,  quiet_less).
 op_pred(>,  quiet_greater).
 op_pred(\=, quiet_not_equal).
 
-compare(Type, Op, A, B) :-
-    eval(Type, A, X),
-    eval(Type, B, Y),
-    compare_b(Op, Type, X, Y).
-
-near_compare(Type, Op, A, B) :-
-    eval(Type, A, X),
-    eval(Type, B, Y),
-    near_compare_b(Type, Op, X, Y).
-
-near_compare_b(Type, Op, X, Y) :-
-    ( compare_b(=, Type, X, Y)
-    ->compare_eq(Op)
-    ; epsilon(Type, max(abs(X), abs(Y)), E),
-      compare(Op, Type, X, Y, E)
-    ).
-
-epsilon(T, E) :-
-    eval(T, 1000*epsilon, E).
-
-epsilon(T, N, E) :-
-    epsilon(T, R),
-    eval(T, R*N, E).
-
-compare(=,  T, A, B, E) :- compare(T, =<, abs(A - B), E).
-compare(=<, T, A, B, E) :- compare(T, =<, A - B, E).
-compare(>=, T, A, B, E) :- compare(T, =<, B - A, E).
-compare(<,  T, A, B, E) :- compare(T, >, B - A, E).
-compare(>,  T, A, B, E) :- compare(T, >, A - B, E).
-compare(\=, T, A, B, E) :- compare(T, >, abs(A - B), E).
-
-compare_b(Op, Type, X, Y) :-
-    op_pred(Op, Pred),
-    Body =.. [Pred, Type, X, Y],
-    necki,
-    Body.
-
-Head :-
-    op_pred(_, Pred),
-    Head =.. [Pred, Type, X, Y],
-    bid_t(Type),
-    atomic_list_concat([Type, '_', Pred], F),
-    Body =.. [F, X, Y],
-    necki,
-    Body.
+reserve_eps(1000 ).
 
 inner_cast(Type, Value, C) :-
-    bid_t(Type),
+    cd_type(Type),
     Body =.. [Type, Value, C],
     neck,
     Body.
 
-:- compilation_predicate expr_pred/2.
+:- include(library(eval)).
 
 expr_pred(atan(A, B), atan2(A, B)).
 % expr_pred(copysign(A, B), copysign(A, B)).
@@ -202,39 +150,39 @@ Head :-
     functor(Pred, F, A),
     Pred =.. [N, Result|AL],
     Head =.. [N, Type, Result|AL],
-    bid_t(Type),
+    cd_type(Type),
     atomic_list_concat([Type, '_', N], BN),
     Body =.. [BN, Result|AL],
     necki,
     Body.
 
 do_eval_z(Type, C) :-
-    bid_t(Type),
+    cd_type(Type),
     cast(Type, 0, C),
     neck.
 
 do_eval_1(Type, C) :-
-    bid_t(Type),
+    cd_type(Type),
     cast(Type, 1, C),
     neck.
 
 do_eval_m1(Type, C) :-
-    bid_t(Type),
+    cd_type(Type),
     cast(Type, -1, C),
     neck.
 
 do_eval_e(Type, C) :-
-    bid_t(Type),
+    cd_type(Type),
     do_eval(exp(1), Type, C),
     neck.
 
 do_eval_pi(Type, C) :-
-    bid_t(Type),
+    cd_type(Type),
     do_eval(4*atan(1), Type, C),
     neck.
 
 do_eval_epsilon(Type, E) :-
-    bid_t(Type),
+    cd_type(Type),
     eval(Type, '0.1', P),
     do_eval_1(Type, O),
     once(( between(1,200,X),

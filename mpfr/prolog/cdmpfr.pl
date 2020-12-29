@@ -32,67 +32,74 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(gen_floatn,
-          [ gen_floatn/0
-          ]).
+:- module(cdmpfr, []).
 
-:- use_module(library(filesex)).
-:- use_module(library(lists)).
 :- use_module(library(neck)).
-:- use_module(library(assertions)).
-:- use_module(library(floatn_desc)).
+:- use_module(library(clpcd/domain_ops)).
+:- use_module(library(clpcd/nf)).
+:- use_module(library(clpcd)).
+:- use_module(library(floatn_eval)).
+:- use_module(library(libfloatn)).
 
-gen_floatn :-
-    absolute_file_name(plbin('.'), Dir, [file_type(directory), access(exist)]),
-    gen_floatn_pl(Dir),
-    gen_floatn_h(Dir).
+:- public cd_type/2.
 
-gen_floatn_pl(Dir) :-
-    directory_file_path(Dir, 'floatn_auto.pl', File),
-    tell(File),
-    dump_floatn_pl,
-    told.
+cd_type(cdfloatn, 53). % :- mpfr_get_default_prec(N).
 
-gen_floatn_h(Dir) :-
-    directory_file_path(Dir, 'pl-floatn_auto.h', File),
-    tell(File),
-    dump_floatn_h,
-    told.
+int(_, A, B) :- floatn_get_si(A, B).
 
-dump_floatn_h :-
-    ( floatn_desc(Prefix, FL, A),
-      member(F, FL),
-      format("GEN_FLOATN_ALL(~w~w,~w)~n", [Prefix, A, F]),
-      fail
-    ; true
-    ).
-
-compats(1, T, int * -T) :- !.
-compats(N, T, (Cs * +T)) :-
-    N > 1,
-    succ(N1, N),
-    compats(N1, T, Cs).
-
-compats(Prefix, A1, T, Cs) :-
-    member(Prefix, [pl_, pc_]),
+clpcd_domain_ops:compare_d(Domain, Op, A, B) :-
+    cd_type(Domain, Type),
     neck,
-    succ(A, A1), compats(A, T, Cs).
-compats(pi_, 4, T, int * -T * +int * +T).
-compats(pi_, 2, T, -int * +T).
-compats(ip_, 4, T, int * -T * +T * +int).
-compats(is_, 1, T, +T).
-compats(is_, 2, T, +T * +T).
+    near_compare(Type, Op, A, B).
 
-dump_floatn_pl :-
-    ( member(Pre-T, [floatn-floatn_t]),
-      floatn_desc(Prefix, FL, A),
-      compats(Prefix, A, T, Cs),
-      findall(Func/A,
-              ( member(F, FL),
-                atomic_list_concat([Pre, '_', F], Func)
-              ), PIL),
-      forall(member(PI, PIL), portray_clause((:- export(PI)))),
-      portray_clause((:- pred PIL :: Cs + native(prefix(Prefix)))),
-      fail
-    ; true
-    ).
+clpcd_domain_ops:eval_d(C, F, R) :-
+    cd_type(C, T),
+    neck,
+    eval(T, F, R).
+
+clpcd_domain_ops:div_d(Domain, A, B, C) :-
+    cd_type(Domain, Type),
+    neck,
+    eval(Type, A/B, C).
+
+clpcd_domain_ops:cast_d(Domain, A, B) :-
+    cd_type(Domain, Type),
+    neck,
+    cast(Type, A, B).
+
+clpcd_domain_ops:floor_d(Domain, A, B) :-
+    cd_type(Domain, Type),
+    neck,
+    epsilon(Type, abs(A), E),
+    eval(Type, floor(A+E), B).
+
+clpcd_domain_ops:ceiling_d(Domain, A, B) :-
+    cd_type(Domain, Type),
+    neck,
+    epsilon(Type, abs(A), E),
+    eval(Type, ceiling(A-E), B).
+
+clpcd_domain_ops:integerp(Domain, A, C) :-
+    cd_type(Domain, Type),
+    neck,
+    eval(Type, integer(A), B),
+    compare(=, A, B), % near_compare(=, A, B)
+    int(Type, C, B).
+
+clpcd_nf:nl_invertible(C,F) :-
+    cd_type(C, _),
+    neck,
+    cd_invertible(F).
+
+clpcd_nf:nl_invert(C,F,X,Y,Res) :-
+    cd_type(C, _),
+    neck,
+    cd_invert(F,C,X,Y,N),
+    cast_d(C,N,Res).
+
+:- use_module(library(cdqr), []).
+
+clpcd_nf:nonlin(C, Term, AL, Skel, SL) :-
+    cd_type(C, _),
+    neck,
+    cd_nonlin(Term, AL, Skel, SL).

@@ -32,67 +32,19 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(gen_floatn,
-          [ gen_floatn/0
-          ]).
+:- module(cdfloatn, []).
 
-:- use_module(library(filesex)).
-:- use_module(library(lists)).
-:- use_module(library(neck)).
-:- use_module(library(assertions)).
-:- use_module(library(floatn_desc)).
+:- license(gpl_swipl, 'CLP(FLOATN)').
+:- use_module(library(libfloatn)).
+:- use_module(library(cdmpfr)).
+:- include(library(cd_cmd)).
 
-gen_floatn :-
-    absolute_file_name(plbin('.'), Dir, [file_type(directory), access(exist)]),
-    gen_floatn_pl(Dir),
-    gen_floatn_h(Dir).
-
-gen_floatn_pl(Dir) :-
-    directory_file_path(Dir, 'floatn_auto.pl', File),
-    tell(File),
-    dump_floatn_pl,
-    told.
-
-gen_floatn_h(Dir) :-
-    directory_file_path(Dir, 'pl-floatn_auto.h', File),
-    tell(File),
-    dump_floatn_h,
-    told.
-
-dump_floatn_h :-
-    ( floatn_desc(Prefix, FL, A),
-      member(F, FL),
-      format("GEN_FLOATN_ALL(~w~w,~w)~n", [Prefix, A, F]),
-      fail
-    ; true
-    ).
-
-compats(1, T, int * -T) :- !.
-compats(N, T, (Cs * +T)) :-
-    N > 1,
-    succ(N1, N),
-    compats(N1, T, Cs).
-
-compats(Prefix, A1, T, Cs) :-
-    member(Prefix, [pl_, pc_]),
-    neck,
-    succ(A, A1), compats(A, T, Cs).
-compats(pi_, 4, T, int * -T * +int * +T).
-compats(pi_, 2, T, -int * +T).
-compats(ip_, 4, T, int * -T * +T * +int).
-compats(is_, 1, T, +T).
-compats(is_, 2, T, +T * +T).
-
-dump_floatn_pl :-
-    ( member(Pre-T, [floatn-floatn_t]),
-      floatn_desc(Prefix, FL, A),
-      compats(Prefix, A, T, Cs),
-      findall(Func/A,
-              ( member(F, FL),
-                atomic_list_concat([Pre, '_', F], Func)
-              ), PIL),
-      forall(member(PI, PIL), portray_clause((:- export(PI)))),
-      portray_clause((:- pred PIL :: Cs + native(prefix(Prefix)))),
-      fail
-    ; true
-    ).
+clpcd_itf:numbers_only(cdfloatn, Y) :-
+    (   var(Y)
+    ;   integer(Y)
+    ;   float(Y)
+    ;   rational(Y)
+    ;   floatn_t(Y)
+    ;   throw(type_error(_X = Y,2,'a multiple precison floating point number',Y))
+    ),
+    !.

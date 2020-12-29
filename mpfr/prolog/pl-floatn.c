@@ -195,9 +195,19 @@ void floatn_init() {
         return PL_unify_floatn_t(r, fr);                                \
     }
 
+#define GEN_FLOATN_pi_2(name)                                           \
+    foreign_t pi_floatn_##name(term_t r, term_t a)                      \
+    {                                                                   \
+        long i;                                                         \
+        floatn_t *ra;                                                   \
+        __rtcheck(PL_get_floatn_t(a, &ra));                             \
+        i = mpfr_##name(*ra, MPFR_RNDN);                                \
+        return PL_unify_integer(r, i);                                  \
+    }
+
 #define GEN_FLOATN_pl_5(name)                                           \
     foreign_t pl_floatn_##name(term_t p, term_t r,                      \
-                            term_t a, term_t b, term_t c)               \
+                               term_t a, term_t b, term_t c)            \
     {                                                                   \
         floatn_t *fr;                                                   \
         PL_blob_t *type;                                                \

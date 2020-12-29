@@ -35,22 +35,27 @@
 :- module(floatn_desc, [floatn_desc/3]).
 
 floatn_desc(pc_, [log2, pi,      euler, catalan], 2).
-floatn_desc(pl_, [acos, acosh,   ai,    asin,  asinh, 
-                  atan, atanh,   cbrt,  cos,   cosh,
-                  cot,  coth,    csc,   csch,  digamma,
-                  eint, erf,     erfc,  exp,   exp10,
-                  exp2, expm1,   gamma, j0,    j1,
-                  li2,  lngamma, log,   log10, log1p,
-                  log2, neg,     sec,   sech,  sin,
-                  sinh, sqrt,    tan,   tanh,  y0,
-                  y1,   zeta
+floatn_desc(pl_, [abs,     acos, acosh,   ai,    asin,
+                  asinh,   atan, atanh,   cbrt,  cos,
+                  cosh,    cot,  coth,    csc,   csch,
+                  digamma, eint, erf,     erfc,  exp,
+                  exp10,   exp2, expm1,   gamma, j0,
+                  j1,      li2,  lngamma, log,   log10,
+                  log1p,   log2, neg,  rec_sqrt, rint,
+                  rint_roundeven, rint_round, rint_trunc, rint_ceil, rint_floor,
+                  frac,    sec,  sech,    set,   sin,
+                  sinh,    sqr,  sqrt,    tan,   tanh,
+                  y0,     y1,    zeta
                  ], 3).
-floatn_desc(pl_, [add,       agm, atan2, beta, div,
-                  gamma_inc, hypot, mul, pow,  sub], 4).
+floatn_desc(pl_, [add, agm,       atan2, beta, dim,
+                  div, gamma_inc, fmod,  min,  max,
+                  remainder, hypot, mul, pow,  sub], 4).
 floatn_desc(pl_, [fma,  fms ], 5).
 floatn_desc(pl_, [fmma, fmms], 6).
-floatn_desc(pi_, [jn, yn], 4).
-floatn_desc(ip_, [rootn_ui], 4).
+floatn_desc(pi_, [si_sub, si_div, jn, yn], 4).
+floatn_desc(pi_, [get_si], 2).
+floatn_desc(ip_, [pow_ui,   add_ui,   sub_ui,  mul_ui,  div_ui,
+                  mul_2exp, div_2exp, mul_2ui, div_2ui, rootn_ui], 4).
 floatn_desc(is_, [greater, greaterequal, less, lessequal,
                   lessgreater, equal, unordered], 2).
 floatn_desc(is_, [nan, inf, number, integer, zero, regular], 1).

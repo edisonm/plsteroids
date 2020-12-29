@@ -32,6 +32,16 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
+:- export(epsilon/2).
+:- export(epsilon/3).
+:- export(eval/3).
+:- export(cast/3).
+:- export(compare/4).
+:- export(near_compare/4).
+
+:- compilation_predicate op_pred/2.
+:- compilation_predicate cd_preffix/2.
+:- compilation_predicate expr_pred/2.
 :- public eval_1/4.
 
 eval_1(Type, Arg, eval(Type, Arg, EA), EA).
@@ -57,3 +67,50 @@ cast(Type, Value, C) :-
       Y is denominator(Value),
       do_eval(X/Y, Type, C)
     ).
+
+epsilon(T, E) :-
+    reserve_eps(N),
+    eval(T, N*epsilon, E).
+
+epsilon(T, N, E) :-
+    epsilon(T, R),
+    eval(T, R*N, E).
+
+compare(Type, Op, A, B) :-
+    eval(Type, A, X),
+    eval(Type, B, Y),
+    compare_b(Op, Type, X, Y).
+
+near_compare(Type, Op, A, B) :-
+    eval(Type, A, X),
+    eval(Type, B, Y),
+    near_compare_b(Type, Op, X, Y).
+
+near_compare_b(Type, Op, X, Y) :-
+    ( compare_b(=, Type, X, Y)
+    ->compare_eq(Op)
+    ; epsilon(Type, max(abs(X), abs(Y)), E),
+      compare(Op, Type, X, Y, E)
+    ).
+
+compare(=,  T, A, B, E) :- compare(T, =<, abs(A - B), E).
+compare(=<, T, A, B, E) :- compare(T, =<, A - B, E).
+compare(>=, T, A, B, E) :- compare(T, =<, B - A, E).
+compare(<,  T, A, B, E) :- compare(T, >, B - A, E).
+compare(>,  T, A, B, E) :- compare(T, >, A - B, E).
+compare(\=, T, A, B, E) :- compare(T, >, abs(A - B), E).
+
+compare_b(Op, Type, X, Y) :-
+    op_pred(Op, Pred),
+    Body =.. [Pred, Type, X, Y],
+    necki,
+    Body.
+
+Head :-
+    op_pred(_, Pred),
+    Head =.. [Pred, Type, X, Y],
+    cd_preffix(Type, Pref),
+    atomic_list_concat([Pref, '_', Pred], F),
+    Body =.. [F, X, Y],
+    necki,
+    Body.

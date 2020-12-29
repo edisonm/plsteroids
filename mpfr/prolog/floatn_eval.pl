@@ -32,15 +32,13 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(floatn_eval,
-          [ eval/3
-          ]).
+:- module(floatn_eval, []).
 
 :- use_module(library(lists)).
 :- use_module(library(neck)).
 :- use_module(library(libfloatn)).
+:- use_module(library(compare_eq)).
 :- use_module(library(compilation_module)).
-:- include(library(eval)).
 :- compilation_module(library(list_sequence)).
 :- compilation_module(library(floatn_desc)).
 
@@ -51,7 +49,23 @@
           ] :: (+floatn_t * +floatn_t * int * -floatn_t)
         ].
 
-:- compilation_predicate expr_pred/2.
+cd_preffix(_, floatn).
+
+op_pred(=,  equal).
+op_pred(=<, lessequal).
+op_pred(>=, greaterequal).
+op_pred(<,  less).
+op_pred(>,  greater).
+op_pred(\=, not_equal).
+
+reserve_eps(1024).
+
+inner_cast(Type, Value, C) :-
+    floatn(Value, Type, C).
+
+floatn_not_equal(A, B) :- \+ floatn_equal(A, B).
+
+:- include(library(eval)).
 
 expr_pred(A/B, div(A, B)).
 expr_pred(A**B, pow(A, B)).
@@ -60,8 +74,13 @@ expr_pred(A+B, add(A, B)).
 expr_pred(A*B, mul(A, B)).
 expr_pred(A-B, sub(A, B)).
 expr_pred(-A, neg(A)).
-expr_pred(lgamma(A), lngamma(A)).
-expr_pred(atan(A, B), atan2(A, B)).
+expr_pred(lgamma(A),   lngamma(A)).
+expr_pred(atan(A, B),  atan2(A, B)).
+expr_pred(integer(A),  rint_round(A)).
+expr_pred(floor(A),    rint_floor(A)).
+expr_pred(ceiling(A),  rint_ceil(A)).
+expr_pred(ceil(A),     rint_ceil(A)).
+expr_pred(truncate(A), rint_trunc(A)).
 expr_pred(Pred, Pred) :-
     member(Desc, [pl_, pc_]),
     floatn_desc(Desc, FL, A2),
@@ -72,9 +91,6 @@ expr_pred(Pred, Pred) :-
     \+ expr_pred(Pred, _),
     neck.
 
-inner_cast(Type, Value, C) :-
-    floatn(Value, Type, C).
-
 do_eval(cputime, P, C) :- do_eval_cputime(P, C).
 do_eval(epsilon, P, C) :- do_eval_epsilon(P, C).
 do_eval(eval(A), P, C) :- eval(P, A, C).
@@ -83,6 +99,15 @@ do_eval(+(A), P, C) :- eval(P, A, C).
 do_eval(e, P, V) :-
     floatn(1, P, F1),
     floatn_exp(P, V, F1).
+do_eval(sign(X), Type, C) :-
+    eval(Type, X, V),
+    do_eval_z(Type, Z),
+    ( compare_b(<, Type, Z, V)
+    ->do_eval_1(Type, C)
+    ; compare(Type, >, Z, X)
+    ->do_eval_m1(Type, C)
+    ; C = Z
+    ).
 do_eval(Expr, P, C) :-
     expr_pred(Expr, Pred),
     Pred =.. [Name|Args],
@@ -93,6 +118,12 @@ do_eval(Expr, P, C) :-
     necki,
     EvalS,
     AC.
+
+do_eval_z(Type, C) :- cast(Type, 0, C).
+
+do_eval_1(Type, C) :- cast(Type, 1, C).
+
+do_eval_m1(Type, C) :- cast(Type, -1, C).
 
 do_eval_cputime(P, V) :-
     X is cputime,
