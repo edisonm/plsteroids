@@ -1,4 +1,4 @@
-/*  CLP for multiple precision floating-point computation
+/*  Constraint logic programming over continuous domains
 
     Author:        Edison Mera Menendez
     E-mail:        efmera@gmail.com
@@ -32,17 +32,61 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(cdmpfr, []).
+:- public cd_type/2.
 
-:- use_module(library(neck)).
-:- use_module(library(clpcd/domain_ops)).
-:- use_module(library(clpcd/nf)).
-:- use_module(library(clpcd)).
-:- use_module(library(floatn_eval)).
-:- use_module(library(libfloatn)).
+clpcd_domain_ops:compare_d(Domain, Op, A, B) :-
+    cd_type(Domain, Type),
+    neck,
+    near_compare(Type, Op, A, B).
 
-cd_type(cdfloatn, 53). % :- mpfr_get_default_prec(N).
+clpcd_domain_ops:eval_d(C, F, R) :-
+    cd_type(C, T),
+    neck,
+    eval(T, F, R).
 
-int(_, A, B) :- floatn_get_si(A, B).
+clpcd_domain_ops:div_d(Domain, A, B, C) :-
+    cd_type(Domain, Type),
+    neck,
+    eval(Type, A/B, C).
 
-:- include(library(cd_common)).
+clpcd_domain_ops:cast_d(Domain, A, B) :-
+    cd_type(Domain, Type),
+    neck,
+    cast(Type, A, B).
+
+clpcd_domain_ops:floor_d(Domain, A, B) :-
+    cd_type(Domain, Type),
+    neck,
+    epsilon(Type, abs(A), E),
+    eval(Type, floor(A+E), B).
+
+clpcd_domain_ops:ceiling_d(Domain, A, B) :-
+    cd_type(Domain, Type),
+    neck,
+    epsilon(Type, abs(A), E),
+    eval(Type, ceiling(A-E), B).
+
+clpcd_domain_ops:integerp(Domain, A, C) :-
+    cd_type(Domain, Type),
+    neck,
+    eval(Type, integer(A), B),
+    compare(=, A, B), % near_compare(=, A, B)
+    int(Type, C, B).
+
+clpcd_nf:nl_invertible(C,F) :-
+    cd_type(C, _),
+    neck,
+    cd_invertible(F).
+
+clpcd_nf:nl_invert(C,F,X,Y,Res) :-
+    cd_type(C, _),
+    neck,
+    cd_invert(F,C,X,Y,N),
+    cast_d(C,N,Res).
+
+:- use_module(library(cdqr), []).
+
+clpcd_nf:nonlin(C, Term, AL, Skel, SL) :-
+    cd_type(C, _),
+    neck,
+    cd_nonlin(Term, AL, Skel, SL).
