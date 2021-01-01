@@ -54,7 +54,10 @@ eval(Type, Expr, C) :-
     do_eval(Expr, Type, C),
     !.
 eval(Type, Value, C) :-
-    cast(Type, Value, C).
+    cast(Type, Value, C),
+    !.
+eval(Type, Value, _) :-
+    throw(error(type_error(evaluable, Type:Value), _)).
 
 cast(Type, Value, C) :-
     ( inner_cast(Type, Value, C)

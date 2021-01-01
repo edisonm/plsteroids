@@ -1,3 +1,5 @@
+:- begin_tests(clpcd).
+
 :- [mip].
 
 test(entailed) :-
@@ -51,3 +53,5 @@ test(bb_inf) :-
     example(flugpl,Obj,_,Ints,_),
     bb_inf(Ints, Obj, Inf),
     assertion({Inf = 1201500}).
+
+:- end_tests(clpcd).

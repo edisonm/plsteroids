@@ -77,10 +77,12 @@ expr_pred(-A, neg(A)).
 expr_pred(lgamma(A),   lngamma(A)).
 expr_pred(atan(A, B),  atan2(A, B)).
 expr_pred(integer(A),  rint_round(A)).
+expr_pred(round(A),    rint_round(A)).
 expr_pred(floor(A),    rint_floor(A)).
 expr_pred(ceiling(A),  rint_ceil(A)).
 expr_pred(ceil(A),     rint_ceil(A)).
 expr_pred(truncate(A), rint_trunc(A)).
+expr_pred(mod(A, B),   fmod(A, B)).
 expr_pred(Pred, Pred) :-
     member(Desc, [pl_, pc_]),
     floatn_desc(Desc, FL, A2),
