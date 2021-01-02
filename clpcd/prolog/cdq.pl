@@ -45,9 +45,9 @@
 :- use_module(library(cdqr), []).
 :- reexport(library(clpcd)).
 
-clpcd_highlight:clpcd_module(cdq).
+clpcd_domain_ops:clpcd_module(cdq, cdq).
 
-:- set_clpcd(cdq).
+:- initialization(set_clpcd(cdq)).
 
 clpcd_domain_ops:compare_d(cdq, Op, A, B) :-
     compare_q(Op, A, B).
@@ -85,12 +85,3 @@ clpcd_domain_ops:floor_d(cdq, A, B) :- B is floor(A).
 clpcd_domain_ops:ceiling_d(cdq, A, B) :- B is ceiling(A).
 
 clpcd_domain_ops:integerp(cdq, A, A) :- integer(A).
-
-clpcd_itf:numbers_only(cdq, Y) :-
-	(   var(Y)
-	;   integer(Y)
-	;   float(Y)
-	;   rational(Y)
-	;   throw(type_error(_X = Y,2,'a rational number',Y))
-	),
-	!.

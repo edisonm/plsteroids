@@ -38,7 +38,10 @@
 :- use_module(library(clpcd/domain_ops)).
 :- use_module(library(bid_eval)).
 
-cd_type(cddd,  bid64).
+cd_type(cddd, bid64 ).
 cd_type(cdqd, bid128).
+
+cd_text(cddd, 'a double decimal number').
+cd_text(cdqd, 'a quadruple decimal number').
 
 :- include(library(cd_common)).

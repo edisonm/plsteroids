@@ -40,21 +40,9 @@
 :- module(cdqd, []).
 
 :- license(gpl_swipl, 'CLP(CDQD)').
-:- use_module(library(libbid)).
 :- use_module(library(cdbid)).
 :- reexport(library(clpcd)).
 
-clpcd_highlight:clpcd_module(cdqd).
+clpcd_domain_ops:clpcd_module(cdqd, cdqd).
 
-:- set_clpcd(cdqd).
-
-clpcd_itf:numbers_only(cdqd, Y) :-
-    (   var(Y)
-    ;   integer(Y)
-    ;   float(Y)
-    ;   rational(Y)
-    ;   bid64_t(Y)
-    ;   bid128_t(Y)
-    ;   throw(type_error(_X = Y,2,'a quadruple decimal number',Y))
-    ),
-    !.
+:- initialization(set_clpcd(cdqd)).

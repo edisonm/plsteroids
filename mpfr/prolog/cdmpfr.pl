@@ -37,10 +37,9 @@
 :- use_module(library(neck)).
 :- use_module(library(clpcd/domain_ops)).
 :- use_module(library(floatn_eval)).
-:- use_module(library(libfloatn)).
 
-cd_type(cdfloatn, 53). % :- mpfr_get_default_prec(N).
+cd_type(cdfloatn(P), floatn(P)).
 
-int(_, A, B) :- floatn_get_si(A, B).
+cd_text(cdfloatn(_), 'a multiple precison floating point number').
 
 :- include(library(cd_common)).

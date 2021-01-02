@@ -17,7 +17,7 @@ test(sup) :-
       Z=30*X+50*Y
     },
     sup(Z,Sup),
-    assertion({Sup = 310}).
+    assertion({Sup = 310 }).
 
 test(inf) :-
     { 2*X+Y=<16,
@@ -26,7 +26,7 @@ test(inf) :-
       Z= -30*X-50*Y
     },
     inf(Z,Inf),
-    assertion({Inf = -310}).
+    assertion({Inf = -310 }).
 
 test(maximize) :-
     { 2*X+Y=<16,

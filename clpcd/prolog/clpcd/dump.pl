@@ -39,35 +39,18 @@
 
 
 :- module(clpcd_dump,
-	[
-	    dump/3,
+	  [ dump/3,
 	    projecting_assert/1
-	]).
-:- use_module(class,
-	[
-	    class_allvars/2
-	]).
-:- use_module(geler,
-	[
-	    collect_nonlin/3
-	]).
-:- use_module(library(assoc),
-	[
-	    empty_assoc/1,
-	    get_assoc/3,
-	    put_assoc/4,
-	    assoc_to_list/2
-	]).
-:- use_module(itf,
-	[
-	    dump_linear/3,
-	    dump_nonzero/3
-	]).
+	  ]).
+
+:- use_module(library(assoc)).
+:- use_module(library(clpcd/class)).
+:- use_module(library(clpcd/geler)).
+:- use_module(library(clpcd/itf)).
+:- use_module(library(clpcd/highlight)).
 :- use_module(library(clpcd/attributes)).
-:- use_module(ordering,
-	[
-	    ordering/1
-	]).
+:- use_module(library(clpcd/domain_ops)).
+:- use_module(library(clpcd/ordering)).
 
 %% dump(+Target,-NewVars,-Constraints) is det.
 %
@@ -105,7 +88,7 @@ projecting_assert(QClause) :-
 	strip_module(QClause, Module, Clause),  % JW: SWI-Prolog not always qualifies the term!
 	copy_term_clpcd(Clause,Copy,Constraints),
 	l2c(Constraints,Conj),			% fails for []
-        clpcd_highlight:clpcd_module(Sm),
+        clpcd_module(Sm),
 	!,
 	(   Copy = (H:-B)
 	->  % former rule
@@ -226,7 +209,7 @@ nonlin_crux(All,Gss) :-
 % Removes the goals from Gs that are not from solver Solver.
 
 nonlin_strip([],[]).
-nonlin_strip([_:What|Gs],Res) :-
+nonlin_strip([_CLP:What|Gs],Res) :-
 	(   What = {G}
 	->  Res = [G|Gss]
 	;   Res = [What|Gss]

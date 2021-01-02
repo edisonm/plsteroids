@@ -33,6 +33,7 @@
 */
 
 :- public cd_type/2.
+:- public cd_text/2.
 
 clpcd_domain_ops:compare_d(Domain, Op, A, B) :-
     cd_type(Domain, Type),
@@ -72,3 +73,14 @@ clpcd_domain_ops:integerp(Domain, A, C) :-
     eval(Type, integer(A), B),
     compare(=, A, B), % near_compare(=, A, B)
     int(Type, C, B).
+
+clpcd_domain_ops:numbers_only(Domain, Y) :-
+    cd_type(Domain, Type),
+    cd_text(Domain, Text),
+    neck,
+    (   var(Y)
+    ;   number(Y)
+    ;   castable(Type, Y)
+    ;   throw(type_error(_X = Y,2,Text,Y))
+    ),
+    !.

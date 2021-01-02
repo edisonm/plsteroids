@@ -32,7 +32,7 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(floatn_eval, []).
+:- module(floatn_eval, [int/3]).
 
 :- use_module(library(lists)).
 :- use_module(library(neck)).
@@ -49,7 +49,9 @@
           ] :: (+floatn_t * +floatn_t * int * -floatn_t)
         ].
 
-cd_preffix(_, floatn).
+cd_preffix(floatn(P), floatn, [P]).
+
+int(_, A, B) :- floatn_get_si(A, B).
 
 op_pred(=,  equal).
 op_pred(=<, lessequal).
@@ -60,12 +62,7 @@ op_pred(\=, not_equal).
 
 reserve_eps(1024).
 
-inner_cast(Type, Value, C) :-
-    floatn(Value, Type, C).
-
 floatn_not_equal(A, B) :- \+ floatn_equal(A, B).
-
-:- include(library(eval)).
 
 expr_pred(A/B, div(A, B)).
 expr_pred(A**B, pow(A, B)).
@@ -93,14 +90,16 @@ expr_pred(Pred, Pred) :-
     \+ expr_pred(Pred, _),
     neck.
 
+is_floatn(X) :- floatn_t(X).
+
+:- include(library(eval)).
+
 do_eval(cputime, P, C) :- do_eval_cputime(P, C).
 do_eval(epsilon, P, C) :- do_eval_epsilon(P, C).
 do_eval(eval(A), P, C) :- eval(P, A, C).
 do_eval(root(E, N), P, V) :- do_eval(E^(1/N), P, V).
 do_eval(+(A), P, C) :- eval(P, A, C).
-do_eval(e, P, V) :-
-    floatn(1, P, F1),
-    floatn_exp(P, V, F1).
+do_eval(e, P, V) :- do_eval(exp(1), P, V).
 do_eval(sign(X), Type, C) :-
     eval(Type, X, V),
     do_eval_z(Type, Z),
@@ -110,12 +109,11 @@ do_eval(sign(X), Type, C) :-
     ->do_eval_m1(Type, C)
     ; C = Z
     ).
-do_eval(Expr, P, C) :-
+do_eval(Expr, Type, C) :-
     expr_pred(Expr, Pred),
     Pred =.. [Name|Args],
-    maplist(eval_1(P), Args, EvalL, EAs),
-    atomic_list_concat([floatn, '_', Name], BN),
-    AC =.. [BN, P, C|EAs],
+    maplist(eval_1(Type), Args, EvalL, EAs),
+    AC =.. [Name, Type, C|EAs],
     list_sequence(EvalL, EvalS),
     necki,
     EvalS,
@@ -129,14 +127,10 @@ do_eval_m1(Type, C) :- cast(Type, -1, C).
 
 do_eval_cputime(P, V) :-
     X is cputime,
-    floatn(X, P, V).
+    inner_cast(P, X, V).
 
-do_eval_epsilon(P, V) :-
-    ( var(P)
-    ->mpfr_get_default_prec(N)
-    ; N=P
-    ),
+do_eval_epsilon(floatn(N), V) :-
     N1 is 1-N,
-    floatn(2,  P, F2),
-    floatn(N1, P, FN),
-    floatn_pow(P, V, F2, FN).
+    floatn(2,  N, F2),
+    floatn(N1, N, FN),
+    floatn_pow(N, V, F2, FN).

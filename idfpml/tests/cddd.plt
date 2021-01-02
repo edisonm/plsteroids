@@ -1,3 +1,3 @@
-:- use_module(library(cddd)).
+:- [library(cddd)].
 
 :- ['..'/'..'/clpcd/tests/clpcd_common].

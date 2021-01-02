@@ -45,6 +45,7 @@
 
 :- use_module(library(clpcd/domain_ops)).
 :- use_module(library(clpcd/bv)).
+:- use_module(library(clpcd/nf)).
 :- use_module(library(clpcd/solve)).
 
 %
@@ -229,19 +230,19 @@ strictness_parts(Strict,Lower,Upper) :-
 % does not result in a failure, this predicate fails.
 
 negate_l(0,CLP,L,X) :-
-	CLP:{L > X},
+	add_constraint(L > X, CLP),
 	!,
 	fail.
 negate_l(1,CLP,L,X) :-
-	CLP:{L > X},
+	add_constraint(L > X, CLP),
 	!,
 	fail.
 negate_l(2,CLP,L,X) :-
-	CLP:{L >= X},
+	add_constraint(L >= X, CLP),
 	!,
 	fail.
 negate_l(3,CLP,L,X) :-
-	CLP:{L >= X},
+	add_constraint(L >= X, CLP),
 	!,
 	fail.
 negate_l(_,_,_,_).
@@ -253,19 +254,19 @@ negate_l(_,_,_,_).
 % does not result in a failure, this predicate fails.
 
 negate_u(0,CLP,U,X) :-
-	CLP:{U < X},
+	add_constraint(U < X, CLP),
 	!,
 	fail.
 negate_u(1,CLP,U,X) :-
-	CLP:{U =< X},
+	add_constraint(U =< X, CLP),
 	!,
 	fail.
 negate_u(2,CLP,U,X) :-
-	CLP:{U < X},
+        add_constraint(U < X, CLP),
 	!,
 	fail.
 negate_u(3,CLP,U,X) :-
-	CLP:{U =< X},
+	add_constraint(U =< X, CLP),
 	!,
 	fail.
 negate_u(_,_,_,_).

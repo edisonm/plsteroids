@@ -7,5 +7,5 @@ swi_cmd () {
 }
 
 run_cmd () {
-    echo -e "[library(plunit),library(debug),'${1%.*}.plt'],time($RUN_TESTS)->halt(0);halt(1).\n"
+    echo -e "[library(plunit),library(debug),'${1%.*}.plt'].\ntime($RUN_TESTS)->halt(0);halt(1).\n"
 }

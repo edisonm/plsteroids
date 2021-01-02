@@ -45,9 +45,9 @@
 :- use_module(library(cdqr), []).
 :- reexport(library(clpcd)).
 
-clpcd_highlight:clpcd_module(cdr).
+clpcd_domain_ops:clpcd_module(cdr, cdr).
 
-:- set_clpcd(cdr).
+:- initialization(set_clpcd(cdr)).
 
 clpcd_domain_ops:compare_d(cdr, Op, A, B) :-
     near_compare(Op, A, B).
@@ -73,12 +73,3 @@ clpcd_domain_ops:ceiling_d(cdr, A, B) :-
 clpcd_domain_ops:integerp(cdr, X, I) :-
     I is round(X),
     near_compare(=, X, I).
-
-clpcd_itf:numbers_only(cdr,Y) :-
-	(   var(Y)
-	;   integer(Y)
-	;   float(Y)
-        ;   rational(Y)
-	;   throw(type_error(_X = Y,2,'a real number',Y))
-	),
-	!.

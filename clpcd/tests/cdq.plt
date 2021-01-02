@@ -1,3 +1,3 @@
-:- use_module(library(cdq)).
+:- [library(cdq)].
 
 :- [clpcd_common].

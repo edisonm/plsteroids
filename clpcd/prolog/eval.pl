@@ -36,11 +36,14 @@
 :- export(epsilon/3).
 :- export(eval/3).
 :- export(cast/3).
+:- export(castable/2).
 :- export(compare/4).
 :- export(near_compare/4).
 
+:- compilation_module(library(solution_sequences)).
+
 :- compilation_predicate op_pred/2.
-:- compilation_predicate cd_preffix/2.
+:- compilation_predicate cd_preffix/3.
 :- compilation_predicate expr_pred/2.
 :- public eval_1/4.
 
@@ -70,6 +73,20 @@ cast(Type, Value, C) :-
       Y is denominator(Value),
       do_eval(X/Y, Type, C)
     ).
+
+castable(Type, Value) :-
+    cd_preffix(Type, Pref, _),
+    atom_concat(is_, Pref, Func),
+    Body =.. [Func, Value],
+    necki,
+    Body.
+
+inner_cast(Type, Value, C) :-
+    cd_preffix(Type, Pref, EAL),
+    append([Value|EAL], [C], AL),
+    Body =.. [Pref|AL],
+    necki,
+    Body.
 
 epsilon(T, E) :-
     reserve_eps(N),
@@ -112,8 +129,19 @@ compare_b(Op, Type, X, Y) :-
 Head :-
     op_pred(_, Pred),
     Head =.. [Pred, Type, X, Y],
-    cd_preffix(Type, Pref),
+    cd_preffix(Type, Pref, _),
     atomic_list_concat([Pref, '_', Pred], F),
     Body =.. [F, X, Y],
+    necki,
+    Body.
+
+Head :-
+    distinct(Pred, expr_pred(_, Pred)),
+    Pred =.. [Name|AL],
+    Head =.. [Name, Type, C|AL],
+    cd_preffix(Type, Pref, EAL),
+    atomic_list_concat([Pref, '_', Name], BN),
+    append(EAL, [C|AL], BL),
+    Body =.. [BN|BL],
     necki,
     Body.

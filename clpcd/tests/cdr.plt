@@ -1,3 +1,3 @@
-:- use_module(library(cdr)).
+:- [library(cdr)].
 
 :- [clpcd_common].

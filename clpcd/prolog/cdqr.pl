@@ -39,3 +39,17 @@ clpcd_nf:nl_invert(C,F,X,Y,Res) :-
     neck,
     cd_invert(F,C,X,Y,N),
     cast_d(C,N,Res).
+
+:- public cdqr_text/2.
+
+cdqr_text(cdq, 'a rational number').
+cdqr_text(cdr, 'a real number').
+
+clpcd_domain_ops:numbers_only(C,Y) :-
+    cdqr_text(C, Txt),
+    neck,
+    (   var(Y)
+    ;   number(Y)
+    ;   throw(type_error(_X = Y, 2, Txt, Y))
+    ),
+    !.

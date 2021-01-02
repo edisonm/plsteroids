@@ -35,20 +35,9 @@
 :- module(cdfloatn, []).
 
 :- license(gpl_swipl, 'CLP(FLOATN)').
-:- use_module(library(libfloatn)).
 :- use_module(library(cdmpfr)).
 :- reexport(library(clpcd)).
 
-clpcd_highlight:clpcd_module(cdfloatn).
+clpcd_domain_ops:clpcd_module(cdfloatn(_), cdfloatn).
 
-:- set_clpcd(cdfloatn).
-
-clpcd_itf:numbers_only(cdfloatn, Y) :-
-    (   var(Y)
-    ;   integer(Y)
-    ;   float(Y)
-    ;   rational(Y)
-    ;   floatn_t(Y)
-    ;   throw(type_error(_X = Y,2,'a multiple precison floating point number',Y))
-    ),
-    !.
+:- initialization(set_clpcd(cdfloatn(53))).

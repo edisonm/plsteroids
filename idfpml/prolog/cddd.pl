@@ -40,21 +40,9 @@
 :- module(cddd, []).
 
 :- license(gpl_swipl, 'CLP(CDDD)').
-:- use_module(library(lists)).
-:- use_module(library(libbid)).
 :- use_module(library(cdbid)).
 :- reexport(library(clpcd)).
 
-clpcd_highlight:clpcd_module(cddd).
+clpcd_domain_ops:clpcd_module(cddd, cddd).
 
-:- set_clpcd(cddd).
-
-clpcd_itf:numbers_only(cddd, Y) :-
-    (   var(Y)
-    ;   integer(Y)
-    ;   float(Y)
-    ;   rational(Y)
-    ;   bid64_t(Y)
-    ;   throw(type_error(_X = Y,2,'a double decimal number',Y))
-    ),
-    !.
+:- initialization(set_clpcd(cddd)).

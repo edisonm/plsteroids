@@ -34,28 +34,34 @@
 
 :- module(clpcd_highlight, []).
 
+:- use_module(library(clpcd/domain_ops)).
+
 :- multifile
-        clpcd_module/1,
-	prolog_colour:goal_colours/3.
+    prolog_colour:goal_colours/3.
 
 prolog_colour:goal_colours({Constraints}, imported(File), Colours) :-
-	clpcd_module(Module),
-	module_property(Module, file(File)), !,
-	Colours = goal(imported(File)) - ConstraintColours,
-	constraint_colours(Constraints,	Module, ConstraintColours).
+    clpcd_module(Module),
+    module_property(Module, file(File)),
+    !,
+    Colours = goal(imported(File)) - ConstraintColours,
+    constraint_colours(Constraints, Module, ConstraintColours).
 
 constraint_colours(Var, _, classify) :-
-	var(Var), !.
-constraint_colours((R1,R2), M, classify-[C1,C2]) :- !,
-	constraint_colours(R1, M, C1),
-	constraint_colours(R2, M, C2).
-constraint_colours((R1;R2), M, classify-[C1,C2]) :- !,
-	constraint_colours(R1, M, C1),
-	constraint_colours(R2, M, C2).
+    var(Var),
+    !.
+constraint_colours((R1,R2), M, classify-[C1,C2]) :-
+    !,
+    constraint_colours(R1, M, C1),
+    constraint_colours(R2, M, C2).
+constraint_colours((R1;R2), M, classify-[C1,C2]) :-
+    !,
+    constraint_colours(R1, M, C1),
+    constraint_colours(R2, M, C2).
 constraint_colours(Term,   M, constraint(M)-[classify,classify]) :-
-	clpcd_constraint(Term), !.
+    clpcd_constraint(Term),
+    !.
 constraint_colours(_, M, type_error(clpcd_constraint(M))) :-
-        clpcd_module(M).
+    clpcd_module(M).
 
 clpcd_constraint(_ > _).
 clpcd_constraint(_ >= _).

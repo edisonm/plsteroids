@@ -261,9 +261,6 @@ attr_unify_hook(t(CLP,Ty,St,Li,Or,Cl,_,No,_,_,_),Y) :-
 	do_checks(CLP,Y,Ty,St,Li,Or,Cl,No,Later),
 	maplist(call,Later).
 
-:- multifile
-        numbers_only/2.
-
 do_checks(CLP,Y,Ty,St,Li,Or,Cl,No,Later) :-
     numbers_only(CLP,Y),
     verify_nonzero(No,CLP,Y),

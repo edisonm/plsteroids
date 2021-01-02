@@ -32,9 +32,7 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(bid_eval,
-          [ int/3
-          ]).
+:- module(bid_eval, [int/3]).
 
 :- use_module(library(lists)).
 :- use_module(library(neck)).
@@ -43,13 +41,17 @@
 :- use_module(library(compilation_module)).
 :- compilation_module(library(list_sequence)).
 :- compilation_module(library(bid_desc)).
-
 :- compilation_predicate cd_type/1.
 
 cd_type(bid64).
 cd_type(bid128).
 
-cd_preffix(Type, Type) :- cd_type(Type).
+cd_preffix(Type, Type, []) :-
+    cd_type(Type),
+    neck.
+
+int(bid64,  A, B) :- bid64_int( A, B).
+int(bid128, A, B) :- bid128_int(A, B).
 
 op_pred(=,  quiet_equal).
 op_pred(=<, quiet_less_equal).
@@ -59,14 +61,6 @@ op_pred(>,  quiet_greater).
 op_pred(\=, quiet_not_equal).
 
 reserve_eps(1000 ).
-
-inner_cast(Type, Value, C) :-
-    cd_type(Type),
-    Body =.. [Type, Value, C],
-    neck,
-    Body.
-
-:- include(library(eval)).
 
 expr_pred(atan(A, B), atan2(A, B)).
 % expr_pred(copysign(A, B), copysign(A, B)).
@@ -100,6 +94,13 @@ expr_pred(Pred, Pred) :-
     \+ expr_pred(_, Pred),
     \+ expr_pred(Pred, _),
     neck.
+
+is_bid64(X) :- bid64_t(X).
+
+is_bid128(X) :- bid64_t(X).
+is_bid128(X) :- bid128_t(X).
+
+:- include(library(eval)).
 
 do_eval(cputime, Type, C) :-
     X is cputime,
@@ -139,23 +140,6 @@ do_eval(Expr, Type, C) :-
     EvalS,
     AC.
 
-Head :-
-    bid_desc(Desc, FL, A),
-    ( memberchk(Desc, [pl_, pn_]),
-      member(F, FL)
-    ; Desc = pi_,
-      member(F/A, [int/2]),
-      memberchk(F, FL)
-    ),
-    functor(Pred, F, A),
-    Pred =.. [N, Result|AL],
-    Head =.. [N, Type, Result|AL],
-    cd_type(Type),
-    atomic_list_concat([Type, '_', N], BN),
-    Body =.. [BN, Result|AL],
-    necki,
-    Body.
-
 do_eval_z(Type, C) :-
     cd_type(Type),
     cast(Type, 0, C),
@@ -173,7 +157,8 @@ do_eval_m1(Type, C) :-
 
 do_eval_e(Type, C) :-
     cd_type(Type),
-    do_eval(exp(1), Type, C),
+    do_eval_1(Type, F1),
+    exp(Type, C, F1),
     neck.
 
 do_eval_pi(Type, C) :-
