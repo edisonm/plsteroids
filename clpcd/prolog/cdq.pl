@@ -37,26 +37,17 @@
     the GNU General Public License.
 */
 
-:- module(cdq,
-	  [ {}/1,
-	    maximize/1,
-	    minimize/1,
-	    inf/2,
-            inf/4,
-            sup/2,
-            sup/4,
-	    bb_inf/3,
-	    bb_inf/4,
-	    entailed/1
-	  ]).
+:- module(cdq, []).
 
 :- license(gpl_swipl, 'CLP(CDQ)').
+:- use_module(library(neck)).
 :- use_module(library(near_utils)).
 :- use_module(library(cdqr), []).
+:- reexport(library(clpcd)).
 
-clpcd(cdq).
+clpcd_highlight:clpcd_module(cdq).
 
-:- include(library(cd_cmd)).
+:- set_clpcd(cdq).
 
 clpcd_domain_ops:compare_d(cdq, Op, A, B) :-
     compare_q(Op, A, B).

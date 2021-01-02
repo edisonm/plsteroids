@@ -43,10 +43,11 @@
 :- use_module(library(lists)).
 :- use_module(library(libbid)).
 :- use_module(library(cdbid)).
+:- reexport(library(clpcd)).
 
-clpcd(cddd).
+clpcd_highlight:clpcd_module(cddd).
 
-:- include(library(cd_cmd)).
+:- set_clpcd(cddd).
 
 clpcd_itf:numbers_only(cddd, Y) :-
     (   var(Y)

@@ -4,7 +4,7 @@
 :- use_module(library(neck)).
 :- use_module(library(clpcd/domain_ops)).
 :- use_module(library(clpcd/nf)).
-:- use_module(library(clpcd)).
+:- use_module(library(clpcd/inv)).
 :- use_module(library(arithex)).
 
 :- meta_predicate cdqr_eval_d(+,?).
@@ -39,8 +39,3 @@ clpcd_nf:nl_invert(C,F,X,Y,Res) :-
     neck,
     cd_invert(F,C,X,Y,N),
     cast_d(C,N,Res).
-
-clpcd_nf:nonlin(C, Term, AL, Skel, SL) :-
-    cdqr(C),
-    neck,
-    cd_nonlin(Term, AL, Skel, SL).

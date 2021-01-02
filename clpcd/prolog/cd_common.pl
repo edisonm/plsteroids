@@ -72,21 +72,3 @@ clpcd_domain_ops:integerp(Domain, A, C) :-
     eval(Type, integer(A), B),
     compare(=, A, B), % near_compare(=, A, B)
     int(Type, C, B).
-
-clpcd_nf:nl_invertible(C,F) :-
-    cd_type(C, _),
-    neck,
-    cd_invertible(F).
-
-clpcd_nf:nl_invert(C,F,X,Y,Res) :-
-    cd_type(C, _),
-    neck,
-    cd_invert(F,C,X,Y,N),
-    cast_d(C,N,Res).
-
-:- use_module(library(cdqr), []).
-
-clpcd_nf:nonlin(C, Term, AL, Skel, SL) :-
-    cd_type(C, _),
-    neck,
-    cd_nonlin(Term, AL, Skel, SL).

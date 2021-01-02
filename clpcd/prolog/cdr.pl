@@ -38,26 +38,16 @@
     the GNU General Public License.
 */
 
-:- module(cdr,
-	  [ {}/1,
-	    maximize/1,
-	    minimize/1,
-	    inf/2,
-            inf/4,
-            sup/2,
-            sup/4,
-	    bb_inf/3,
-	    bb_inf/4,
-	    entailed/1
-	  ]).
+:- module(cdr, []).
 
 :- license(gpl_swipl, 'CLP(CDR)').
 :- use_module(library(near_utils)).
 :- use_module(library(cdqr), []).
+:- reexport(library(clpcd)).
 
-clpcd(cdr).
+clpcd_highlight:clpcd_module(cdr).
 
-:- include(library(cd_cmd)).
+:- set_clpcd(cdr).
 
 clpcd_domain_ops:compare_d(cdr, Op, A, B) :-
     near_compare(Op, A, B).

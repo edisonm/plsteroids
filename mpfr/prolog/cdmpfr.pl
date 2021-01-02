@@ -36,8 +36,6 @@
 
 :- use_module(library(neck)).
 :- use_module(library(clpcd/domain_ops)).
-:- use_module(library(clpcd/nf)).
-:- use_module(library(clpcd)).
 :- use_module(library(floatn_eval)).
 :- use_module(library(libfloatn)).
 
