@@ -6,7 +6,7 @@
 [subrepo]
 	remote = https://github.com/edisonm/clpcd.git
 	branch = master
-	commit = 564e9d90e7c92d04a831677bd5bffdafdc06086b
-	parent = e3350e66ad6767a365413002be66f5bd19cda981
+	commit = 028652aad1ffba7c6dc30aa4c0dfd3d2b0ae692a
+	parent = a71ea99e7838a05126d588d78eeab4b0332bac0b
 	method = merge
 	cmdver = 0.3.1
