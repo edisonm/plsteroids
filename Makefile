@@ -83,8 +83,14 @@ stests: $(addsuffix .stest,$(CHECKERS))
 %.stest: noop
 	$(CONCURRENT) bin/run_stest '$@'
 
-tests:
-	$(MAKE) stests utests
+bin/benchtests.txt:
+	for test in $(addsuffix .stest,$(CHECKERS)) $(shell find * -name "*.plt") ; do \
+	  echo `if [ -f target/$$test.stderr ] ; then tail -n1 target/$$test.stderr | awk '{print $$2}' | sed -e s:','::g ; else echo 0 ; fi` $$test ; \
+	  done | sort -n -r | awk '{print $$2}' > $@
+
+tests: bin/benchtests.txt
+	$(MAKE) `cat $<`
+	$(MAKE) bin/benchtests.txt -B
 
 get_plsteroids:
 	echo $(PLSTEROIDS)
