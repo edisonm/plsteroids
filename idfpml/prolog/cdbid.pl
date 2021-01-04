@@ -34,8 +34,6 @@
 
 :- module(cdbid, []).
 
-:- use_module(library(neck)).
-:- use_module(library(clpcd/domain_ops)).
 :- use_module(library(bid_eval)).
 
 cd_type(cddd, bid64 ).

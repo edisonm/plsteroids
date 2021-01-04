@@ -35,9 +35,15 @@
 :- module(cdfloatn, []).
 
 :- license(gpl_swipl, 'CLP(FLOATN)').
-:- use_module(library(cdmpfr)).
+:- use_module(library(floatn_eval)).
 :- reexport(library(clpcd)).
 
 clpcd_domain_ops:clpcd_module(cdfloatn(_), cdfloatn).
+
+cd_type(cdfloatn(P), floatn(P)).
+
+cd_text(cdfloatn(_), 'a multiple precison floating point number').
+
+:- include(library(cd_common)).
 
 :- initialization(set_clpcd(cdfloatn(53))).
