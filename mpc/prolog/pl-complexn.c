@@ -4,24 +4,20 @@
 #include <dlfcn.h>
 #include <foreign_interface.h>
 
-void complexn_to_str(complexn_t *ref, char **c)
-{
-    size_t size;
-    FILE *stream = open_memstream(c, &size);
-    mpc_out_str(stream, 10, 0, *ref, MPC_RNDNN);
-    fclose(stream);
-}
-
-static int write_complexn_ref(IOSTREAM *s, atom_t aref, int flags)
+static int write_complexn_ref(IOSTREAM *stream, atom_t aref, int flags)
 {
     complexn_t *ref = PL_blob_data(aref, NULL, NULL);
-    (void) flags;
-    char *c;
-    complexn_to_str(ref, &c);
-    Sfprintf(s, "%s", c);
-    free(c);
 
-    return TRUE;
+    floatn_t *imag = &mpc_imagref(*ref);
+    if (mpfr_zero_p(*imag)) {
+        return floatn_out_str(stream, &mpc_realref(*ref));
+    } else {
+        return (Sfprintf(stream, "(")>0)
+            && floatn_out_str(stream, &mpc_realref(*ref))
+            && Sfprintf(stream, ",")
+            && floatn_out_str(stream, imag)
+            && (Sfprintf(stream, ")")>0) ;
+    }
 }
 
 static int release_complexn(atom_t aref)

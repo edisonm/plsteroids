@@ -17,7 +17,7 @@ PL_blob_t *record_mpfr;
 
 int PL_unify_floatn_t(term_t t, floatn_t *fr);
 int PL_get_floatn_t(term_t t, floatn_t **fr);
-
+int floatn_out_str(IOSTREAM *stream, floatn_t *ref);
 void floatn_init();
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))

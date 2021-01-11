@@ -10,24 +10,77 @@
 #define DEFAULT_PRECISION 104
 #define DEFAULT_NUMDIGITS  34
 
-void floatn_to_str(floatn_t *ref, char **c)
-{
-    size_t size;
-    FILE *stream = open_memstream(c, &size);
-    mpfr_out_str(stream, 10, 0, *ref, MPFR_RNDN);
-    fclose(stream);
+int floatn_out_str(IOSTREAM *stream, floatn_t *ref) {
+    size_t l, t;
+    mpfr_exp_t e;
+    int err;
+    char *s0, *s, *p, c;
+
+    if (!mpfr_regular_p(*ref))
+    {
+        if (mpfr_nan_p(*ref))
+            Sfputs("1.5NaN", stream);
+        else if (mpfr_inf_p(*ref))
+            Sfputs(MPFR_SIGN(*ref) > 0 ? "1.0Inf" : "-1.0Inf", stream);
+        else
+            Sfputs(MPFR_SIGN(*ref) ? "0" : "-0", stream);
+        return TRUE;
+    }
+    
+    s = mpfr_get_str(NULL, &e, 10, 0, *ref, MPFR_RNDN);
+    s0 = s;
+    err = (*s == '-' && Sputc (*s++, stream) == EOF);
+    p = s;
+    l = strlen (s);
+    t = MAX(0, e);
+    
+    while ((l > t) && (s[l-1] == '0'))
+        l--;
+
+    if (e == l) {
+        e = 0;
+    } else if ((e>=-2)&&(e<=0)) {
+        err = err
+            || Sputc ((unsigned char) '0', stream) == EOF
+            || Sputc ((unsigned char) '.', stream) == EOF;
+        while (e<0) {
+            err = err || Sputc ((unsigned char) '0', stream) == EOF;
+            e++;
+        }
+    } else if ((e>0) && e < l) {
+        while (e!=0) {
+            err = err || Sputc ((unsigned char) *s++, stream) == EOF;
+            e--;
+        }
+        err = err || Sputc ((unsigned char) '.', stream) == EOF;
+    } else {
+        err = err
+            || Sputc (*s++, stream) == EOF  /* leading digit */
+            || Sputc ((unsigned char) '.', stream) == EOF;
+        e--;  /* due to the leading digit */
+    }
+    c = p[l];
+    p[l] = '\0';
+    err = err || Sfputs (s, stream) == EOF;
+    p[l] = c;
+    mpfr_free_str(s0);
+    if (e!=0) {
+        err = err
+            || Sputc ((unsigned char) 'e', stream) == EOF
+            || (e >0 && Sputc ((unsigned char) '+', stream) == EOF);
+        if (err)
+            return FALSE;
+        Sfprintf(stream, "%ld", e);
+    } else if (err)
+        return FALSE;
+    return TRUE;
 }
 
-static int write_floatn_ref(IOSTREAM *s, atom_t aref, int flags)
+static int write_floatn_ref(IOSTREAM *stream, atom_t aref, int flags)
 {
     floatn_t *ref = PL_blob_data(aref, NULL, NULL);
-    (void) flags;
-    char *c;
-    floatn_to_str(ref, &c);
-    Sfprintf(s, "%s", c);
-    free(c);
-
-    return TRUE;
+    return floatn_out_str(stream, ref);
+    
 }
 
 static int release_floatn(atom_t aref)
