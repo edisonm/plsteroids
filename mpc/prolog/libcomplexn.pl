@@ -1,7 +1,7 @@
-:- module(complexn,
-          [ complexn_new_value/4,
-            complexn_evalfunc/4,
-            complexn_domain_args/1]).
+:- module(libcomplexn,
+          [ complexn_t/1,
+            complexn/4
+          ]).
 
 :- use_module(library(neck)).
 :- use_module(library(assertions)).
@@ -9,43 +9,38 @@
 :- use_module(library(substitute)).
 :- use_module(library(extend_args)).
 :- use_module(library(plprops)).
-:- use_module(library(float/evaluator)).
-:- use_module(library(float/floatn)).
-:- use_module(library(float/float_props)).
 :- use_module(library(foreign/foreign_generator)).
 :- use_module(library(foreign/foreign_interface)).
 :- use_module(library(foreign/foreign_props)).
+:- use_module(library(libfloatn), []).
 % :- extra_compiler_opts('-O2 -gdwarf-2 -g3 -lmpfr').
-:- extra_compiler_opts('-lmpc -lgmp').
+:- extra_compiler_opts('-lmpc -lmpfr -lgmp').
+:- include_foreign_dir('../../mpfr/prolog').
 :- use_foreign_header('pl-complexn').
 :- use_foreign_source('pl-complexn').
 :- gen_foreign_library(plbin(libcomplexn)).
+:- use_module(library(gen_complexn)).
+:- gen_complexn.
 
-:- type complexn/1 + native(is_complexn).
+:- type [ complexn_t/1
+        ] + native(prefix(is_)).
 
-:- pred [ [ complexn_new_value(+term, int, int, -term)
-          ] + native,
-          [ [ [ sqrt/4, neg/4,  log/4,  log10/4, exp/4,  cos/4,    sin/4,   tan/4, acos/4, asin/4,
-                atan/4, cosh/4, sinh/4, tanh/4,  acosh/4, asinh/4, atanh/4, proj/4
-              ] :: (+complexn * int * int * -complexn),
-              [ add/5, mul/5, sub/5, div/5, pow/5
-              ] :: (+complexn * +complexn * int * int * -complexn),
-              [ abs/4, arg/4, norm/4, real/4, imag/4
-              ] :: (+complexn * int * int * -floatn)
-            ] + native(prefix(complexn_)),
-            [ eval/4, (+)/4, (-)/4, cbrt/4
-            ] :: (+complexn * int * int * -complexn),
-            [ i/3
-            ] :: (int * int * -complexn),
-            [ cnan/3 :: (int * int * -complexn)
-            ] + native(complexn_set_nan),
-            [ c/5 :: (+floatn * +floatn * int * int * -complexn)
-            ] + native(complexn_set_fr_fr),
-            [ (/)/5, (+)/5, (*)/5, (-)/5, (**)/5, (^)/5, root/5
-            ] :: (+complexn * +complexn * int * int * -complexn)
-          ] + evaluable
+:- pred [ [ complexn(+term, int, int, -term)
+          ] + native(prefix(pl_))
+          % [ [ eval/4, (+)/4, (-)/4, cbrt/4
+          %   ] :: (+complexn * int * int * -complexn),
+          %   [ i/3
+          %   ] :: (int * int * -complexn),
+          %   [ c/5 :: (+floatn * +floatn * int * int * -complexn)
+          %   ] + native(complexn_set_fr_fr),
+          %   [ (/)/5, (+)/5, (*)/5, (-)/5, (**)/5, (^)/5, root/5
+          %   ] :: (+complexn * +complexn * int * int * -complexn)
+          % ] + evaluable
         ].
 
+:- include(plbin(complexn_auto)).
+
+/*
 eval(E, _, _, E).
 +(E, _, _, E).
 -(A, R, I, V) :- neg(A, R, I, V).
@@ -103,3 +98,4 @@ complexn_domain_args(FDom) :-
 floatn:floatn_domain_args(FDom) :- 
     complexn_domain_args(floatn(_), FDom),
     neck.
+*/

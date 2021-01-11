@@ -4,7 +4,7 @@
 #include <dlfcn.h>
 #include <foreign_interface.h>
 
-void complexn_to_str(complexn *ref, char **c)
+void complexn_to_str(complexn_t *ref, char **c)
 {
     size_t size;
     FILE *stream = open_memstream(c, &size);
@@ -14,7 +14,7 @@ void complexn_to_str(complexn *ref, char **c)
 
 static int write_complexn_ref(IOSTREAM *s, atom_t aref, int flags)
 {
-    complexn *ref = PL_blob_data(aref, NULL, NULL);
+    complexn_t *ref = PL_blob_data(aref, NULL, NULL);
     (void) flags;
     char *c;
     complexn_to_str(ref, &c);
@@ -26,23 +26,20 @@ static int write_complexn_ref(IOSTREAM *s, atom_t aref, int flags)
 
 static int release_complexn(atom_t aref)
 {
-    complexn *ref = PL_blob_data(aref, NULL, NULL);
-    char *c;
-    complexn_to_str(ref, &c);
+    complexn_t *ref = PL_blob_data(aref, NULL, NULL);
     mpc_clear(*ref);
     free(ref);
-    free(c);
 
     return TRUE;
 }
 
 static void aquire_complexn(atom_t aref)
 {
-    mpc_t *ref = PL_blob_data(aref, NULL, NULL);
+    complexn_t *ref = PL_blob_data(aref, NULL, NULL);
     (void) ref;
 }
 
-static PL_blob_t record_mpc =
+static PL_blob_t __record_mpc =
 {
     PL_BLOB_MAGIC,
     //PL_BLOB_UNIQUE|
@@ -54,24 +51,23 @@ static PL_blob_t record_mpc =
     aquire_complexn
 };
 
-foreign_t is_complexn(term_t v) {
+PL_blob_t *record_mpc = &__record_mpc;
+
+foreign_t is_complexn_t(term_t v) {
     void *src;
     PL_blob_t *type;
     return PL_get_blob(v, (void *)&src, NULL, &type)
-        && type == &record_mpc;
+        && type == record_mpc;
 }
 
-int is_mpc_prec_t(term_t v) {
-    return PL_is_integer(v);
-}
-
-#define COMPLEXN_FUNCTION0(name)                                        \
-    foreign_t complexn_##name(term_t p_r, term_t p_i, term_t r)         \
+/*
+#define GEN_COMPLEXN_pc_3(name)                                         \
+    foreign_t pc_complexn_##name(term_t p_r, term_t p_i, term_t r)      \
     {                                                                   \
-        complexn *cx;                                                   \
+        complexn_t *cx;                                                 \
         PL_blob_t *type;                                                \
         mpfr_prec_t prec_r, prec_i;                                     \
-        cx = malloc(sizeof(complexn));                                  \
+        cx = malloc(sizeof(complexn_t));                                \
         if (!PL_get_long(p_r, &prec_r))                                 \
             prec_r = mpfr_get_default_prec();                           \
         if (!PL_get_long(p_i, &prec_i))                                 \
@@ -80,32 +76,43 @@ int is_mpc_prec_t(term_t v) {
         mpc_##name(*cx, MPC_RNDNN);                                     \
         return PL_unify_complexn(r, cx);                                \
     }
+*/
 
-#define COMPLEXN_FUNCTION0n(name)                                       \
-    foreign_t complexn_##name(term_t p_r, term_t p_i, term_t r)         \
+#define GEN_COMPLEXN_pc_3(name)                                         \
+    foreign_t pc_complexn_##name(term_t p_r, term_t p_i, term_t r)      \
     {                                                                   \
-        complexn *cx;                                                   \
+        complexn_t *cx;                                                 \
         PL_blob_t *type;                                                \
         mpfr_prec_t prec_r, prec_i;                                     \
-        cx = malloc(sizeof(complexn));                                  \
+        cx = malloc(sizeof(complexn_t));                                \
         if (!PL_get_long(p_r, &prec_r))                                 \
             prec_r = mpfr_get_default_prec();                           \
         if (!PL_get_long(p_i, &prec_i))                                 \
             prec_i = mpfr_get_default_prec();                           \
         mpc_init3(*cx, prec_r, prec_i);                                 \
         mpc_##name(*cx);                                                \
-        return PL_unify_complexn(r, cx);                                \
+        return PL_unify_complexn_t(r, cx);                              \
     }
 
-#define COMPLEXN_FUNCTION1(name)                                        \
-    foreign_t complexn_##name(term_t a, term_t p_r, term_t p_i, term_t r) \
+#define GEN_COMPLEXN_pi_3(name)                                         \
+    foreign_t pi_complexn_##name(term_t r, term_t x, term_t y)          \
     {                                                                   \
-        complexn *cx;                                                   \
+        complexn_t *cx, *cy;                                            \
+        __rtcheck(PL_get_complexn_t(x, &cx));                           \
+        __rtcheck(PL_get_complexn_t(y, &cy));                           \
+        return PL_unify_integer(r, mpc_##name(*cx, *cy));               \
+    }
+
+// COMPLEXN_FUNCTION1
+#define GEN_COMPLEXN_pl_4(name)                                         \
+    foreign_t pl_complexn_##name(term_t p_r, term_t p_i, term_t r, term_t a) \
+    {                                                                   \
+        complexn_t *cx;                                                 \
         PL_blob_t *type;                                                \
         mpfr_prec_t prec_ar, prec_r, prec_i, prec_ai;                   \
-        complexn *ra;                                                   \
-        __rtcheck(PL_get_complexn(a, &ra));                             \
-        cx = malloc(sizeof(complexn));                                  \
+        complexn_t *ra;                                                 \
+        __rtcheck(PL_get_complexn_t(a, &ra));                           \
+        cx = malloc(sizeof(complexn_t));                                \
         mpc_get_prec2(&prec_ar, &prec_ai, *ra);                         \
         if (!PL_get_long(p_r, &prec_r))                                 \
             prec_r = prec_ar;                                           \
@@ -113,18 +120,19 @@ int is_mpc_prec_t(term_t v) {
             prec_i = prec_ai;                                           \
         mpc_init3(*cx, prec_r, prec_i);                                 \
         mpc_##name(*cx, *ra, MPC_RNDNN);                                \
-        return PL_unify_complexn(r, cx);                                \
+        return PL_unify_complexn_t(r, cx);                              \
     }
 
-#define FLOATN_FUNCTION1(name)                                          \
-    foreign_t complexn_##name(term_t a, term_t p_r, term_t p_i, term_t r) \
+// FLOATN_FUNCTION1
+#define GEN_COMPLEXN_pf_4(name)                                         \
+    foreign_t pf_complexn_##name(term_t p_r, term_t p_i, term_t r, term_t a) \
     {                                                                   \
-        floatn *fr;                                                     \
+        floatn_t *fr;                                                   \
         PL_blob_t *type;                                                \
         mpfr_prec_t prec_r, prec_i, prec_ar, prec_ai;                   \
-        complexn *ra;                                                   \
-        __rtcheck(PL_get_complexn(a, &ra));                             \
-        fr = malloc(sizeof(floatn));                                    \
+        complexn_t *ra;                                                 \
+        __rtcheck(PL_get_complexn_t(a, &ra));                           \
+        fr = malloc(sizeof(floatn_t));                                  \
         mpc_get_prec2(&prec_ar, &prec_ai, *ra);                         \
         if (!PL_get_long(p_r, &prec_r))                                 \
             prec_r = prec_ar;                                           \
@@ -132,19 +140,20 @@ int is_mpc_prec_t(term_t v) {
             prec_i = prec_ai;                                           \
         mpfr_init2(*fr, MAX(prec_r, prec_i));                           \
         mpc_##name(*fr, *ra, MPFR_RNDN);                                \
-        return PL_unify_floatn(r, fr);                                  \
+        return PL_unify_floatn_t(r, fr);                                \
     }
 
-#define COMPLEXN_FUNCTION2(name)                                        \
-    foreign_t complexn_##name(term_t a, term_t b, term_t p_r, term_t p_i, term_t r) \
+// COMPLEXN_FUNCTION2
+#define GEN_COMPLEXN_pl_5(name)                                         \
+    foreign_t pl_complexn_##name(term_t p_r, term_t p_i, term_t r, term_t a, term_t b) \
     {                                                                   \
-        complexn *cx;                                                   \
+        complexn_t *cx;                                                 \
         PL_blob_t *type;                                                \
         mpfr_prec_t prec_r, prec_i, prec_ar, prec_ai, prec_br, prec_bi; \
-        complexn *ra, *rb;                                              \
-        __rtcheck(PL_get_complexn(a, &ra));                             \
-        __rtcheck(PL_get_complexn(b, &rb));                             \
-        cx = malloc(sizeof(complexn));                                  \
+        complexn_t *ra, *rb;                                            \
+        __rtcheck(PL_get_complexn_t(a, &ra));                           \
+        __rtcheck(PL_get_complexn_t(b, &rb));                           \
+        cx = malloc(sizeof(complexn_t));                                \
         mpc_get_prec2(&prec_ar, &prec_ai, *ra);                         \
         mpc_get_prec2(&prec_br, &prec_bi, *rb);                         \
         if (!PL_get_long(p_r, &prec_r))                                 \
@@ -153,97 +162,65 @@ int is_mpc_prec_t(term_t v) {
             prec_i = MAX(prec_ai, prec_bi);                             \
         mpc_init3(*cx, prec_r, prec_i);                                 \
         mpc_##name(*cx, *ra, *rb, MPC_RNDNN);                           \
-        return PL_unify_complexn(r, cx);                                \
+        return PL_unify_complexn_t(r, cx);                              \
     }
 
-#define COMPLEXN_FUNCTION2f(name)                                       \
-    foreign_t complexn_##name(term_t a, term_t b, term_t p_r, term_t p_i, term_t r) \
+// COMPLEXN_FUNCTION2f
+#define GEN_COMPLEXN_pf_5(name)                                         \
+    foreign_t pf_complexn_##name(term_t a, term_t b, term_t p_r, term_t p_i, term_t r) \
     {                                                                   \
-        complexn *cx;                                                   \
+        complexn_t *cx;                                                 \
         PL_blob_t *type;                                                \
         mpfr_prec_t prec_r, prec_i;                                     \
-        floatn *ra, *rb;                                                \
-        __rtcheck(PL_get_floatn(a, &ra));                               \
-        __rtcheck(PL_get_floatn(b, &rb));                               \
-        cx = malloc(sizeof(complexn));                                  \
+        floatn_t *ra, *rb;                                              \
+        __rtcheck(PL_get_floatn_t(a, &ra));                             \
+        __rtcheck(PL_get_floatn_t(b, &rb));                             \
+        cx = malloc(sizeof(complexn_t));                                \
         if (!PL_get_long(p_r, &prec_r))                                 \
             prec_r = mpfr_get_prec(*ra);                                \
         if (!PL_get_long(p_i, &prec_i))                                 \
             prec_i = mpfr_get_prec(*rb);                                \
         mpc_init3(*cx, prec_r, prec_i);                                 \
         mpc_##name(*cx, *ra, *rb, MPC_RNDNN);                           \
-        return PL_unify_complexn(r, cx);                                \
+        return PL_unify_complexn_t(r, cx);                              \
     }
 
 /* not available, some to implement in prolog
-COMPLEXN_FUNCTION1(cbrt)
-COMPLEXN_FUNCTION1(log2)
-COMPLEXN_FUNCTION1(log1p)
-COMPLEXN_FUNCTION1(exp2)
-COMPLEXN_FUNCTION1(expm1)
-COMPLEXN_FUNCTION1(sec)
-COMPLEXN_FUNCTION1(csc)
-COMPLEXN_FUNCTION1(cot)
-COMPLEXN_FUNCTION1(exp10)
-COMPLEXN_FUNCTION1(sech)
-COMPLEXN_FUNCTION1(csch)
-COMPLEXN_FUNCTION1(coth)
-COMPLEXN_FUNCTION1(eint)
-COMPLEXN_FUNCTION1(li2)
-COMPLEXN_FUNCTION1(gamma)
-COMPLEXN_FUNCTION1(lngamma)
-COMPLEXN_FUNCTION1(digamma)
-COMPLEXN_FUNCTION1(zeta)
-COMPLEXN_FUNCTION1(erf)
-COMPLEXN_FUNCTION1(erfc)
-COMPLEXN_FUNCTION1(j0)
-COMPLEXN_FUNCTION1(j1)
-COMPLEXN_FUNCTION1(y0)
-COMPLEXN_FUNCTION1(y1)
-COMPLEXN_FUNCTION1(ai)
+GEN_COMPLEXN_pl_4(cbrt)
+GEN_COMPLEXN_pl_4(log2)
+GEN_COMPLEXN_pl_4(log1p)
+GEN_COMPLEXN_pl_4(exp2)
+GEN_COMPLEXN_pl_4(expm1)
+GEN_COMPLEXN_pl_4(sec)
+GEN_COMPLEXN_pl_4(csc)
+GEN_COMPLEXN_pl_4(cot)
+GEN_COMPLEXN_pl_4(exp10)
+GEN_COMPLEXN_pl_4(sech)
+GEN_COMPLEXN_pl_4(csch)
+GEN_COMPLEXN_pl_4(coth)
+GEN_COMPLEXN_pl_4(eint)
+GEN_COMPLEXN_pl_4(li2)
+GEN_COMPLEXN_pl_4(gamma)
+GEN_COMPLEXN_pl_4(lngamma)
+GEN_COMPLEXN_pl_4(digamma)
+GEN_COMPLEXN_pl_4(zeta)
+GEN_COMPLEXN_pl_4(erf)
+GEN_COMPLEXN_pl_4(erfc)
+GEN_COMPLEXN_pl_4(j0)
+GEN_COMPLEXN_pl_4(j1)
+GEN_COMPLEXN_pl_4(y0)
+GEN_COMPLEXN_pl_4(y1)
+GEN_COMPLEXN_pl_4(ai)
 */
-COMPLEXN_FUNCTION0n(set_nan)
-
-COMPLEXN_FUNCTION1(sqrt)
-COMPLEXN_FUNCTION1(neg)
-COMPLEXN_FUNCTION1(log)
-COMPLEXN_FUNCTION1(log10)
-COMPLEXN_FUNCTION1(exp)
-COMPLEXN_FUNCTION1(cos)
-COMPLEXN_FUNCTION1(sin)
-COMPLEXN_FUNCTION1(tan)
-COMPLEXN_FUNCTION1(acos)
-COMPLEXN_FUNCTION1(asin)
-COMPLEXN_FUNCTION1(atan)
-COMPLEXN_FUNCTION1(cosh)
-COMPLEXN_FUNCTION1(sinh)
-COMPLEXN_FUNCTION1(tanh)
-COMPLEXN_FUNCTION1(acosh)
-COMPLEXN_FUNCTION1(asinh)
-COMPLEXN_FUNCTION1(atanh)
-COMPLEXN_FUNCTION1(proj)
-
-FLOATN_FUNCTION1(abs)
-FLOATN_FUNCTION1(arg)
-FLOATN_FUNCTION1(norm)
-FLOATN_FUNCTION1(real)
-FLOATN_FUNCTION1(imag)
-
-COMPLEXN_FUNCTION2(add)
-COMPLEXN_FUNCTION2(mul)
-COMPLEXN_FUNCTION2(sub)
-COMPLEXN_FUNCTION2(div)
-COMPLEXN_FUNCTION2(pow)
-COMPLEXN_FUNCTION2f(set_fr_fr)
 
 /* COMPLEXN_FUNCTION2i2(rootn_ui) */
-/* COMPLEXN_FUNCTION2(atan2) */
-/* COMPLEXN_FUNCTION2(gamma_inc) */
-/* COMPLEXN_FUNCTION2(beta) */
+/* GEN_COMPLEXN_pl_5(atan2) */
+/* GEN_COMPLEXN_pl_5(gamma_inc) */
+/* GEN_COMPLEXN_pl_5(beta) */
 /* COMPLEXN_FUNCTION2i1(jn) */
 /* COMPLEXN_FUNCTION2i1(yn) */
-/* COMPLEXN_FUNCTION2(agm) */
-/* COMPLEXN_FUNCTION2(hypot) */
+/* GEN_COMPLEXN_pl_5(agm) */
+/* GEN_COMPLEXN_pl_5(hypot) */
 
 /* COMPLEXN_FUNCTION3(fma) */
 /* COMPLEXN_FUNCTION3(fms) */
@@ -251,9 +228,11 @@ COMPLEXN_FUNCTION2f(set_fr_fr)
 /* COMPLEXN_FUNCTION4(fmma) */
 /* COMPLEXN_FUNCTION4(fmms) */
 
-foreign_t complexn_new_value(term_t expr, term_t precision_r, term_t precision_i, term_t value)
+#define GEN_COMPLEXN_ALL(__pre, __func) GEN_COMPLEXN_##__pre(__func)
+
+foreign_t pl_complexn(term_t expr, term_t precision_r, term_t precision_i, term_t value)
 {
-    complexn *ref;
+    complexn_t *ref;
     int prec_r, prec_i, undefined_prec_r, undefined_prec_i;
     undefined_prec_r = PL_is_variable(precision_r);
     undefined_prec_i = PL_is_variable(precision_i);
@@ -274,7 +253,7 @@ foreign_t complexn_new_value(term_t expr, term_t precision_r, term_t precision_i
             prec_r = mpfr_get_default_prec();
         if (!prec_i)
             prec_i = mpfr_get_default_prec();
-        ref = malloc(sizeof(complexn));
+        ref = malloc(sizeof(complexn_t));
         mpc_init3(*ref, prec_r, prec_i);
         break; // NAN
     case PL_INTEGER:
@@ -286,7 +265,7 @@ foreign_t complexn_new_value(term_t expr, term_t precision_r, term_t precision_i
             prec_r = MAX(mpfr_get_default_prec(), mpz_sizeinbase(i, 2));
         if (!prec_i)
             prec_i = MAX(mpfr_get_default_prec(), mpz_sizeinbase(i, 2));
-        ref = malloc(sizeof(complexn));
+        ref = malloc(sizeof(complexn_t));
         mpc_init3(*ref, prec_r, prec_i);
         mpc_set_z(*ref, i, MPC_RNDNN);
         mpz_clear(i);
@@ -302,7 +281,7 @@ foreign_t complexn_new_value(term_t expr, term_t precision_r, term_t precision_i
             prec_r = mpfr_get_default_prec();
         if (!prec_i)
             prec_i = mpfr_get_default_prec();
-        ref = malloc(sizeof(complexn));
+        ref = malloc(sizeof(complexn_t));
         mpc_init3(*ref, prec_r, prec_i);
         mpc_set_q(*ref, q, MPC_RNDNN);
         mpq_clear(q);
@@ -316,7 +295,7 @@ foreign_t complexn_new_value(term_t expr, term_t precision_r, term_t precision_i
             prec_r = MAX(mpfr_get_default_prec(), strlen(c)*10/3);
         if (!prec_i)
             prec_i = MAX(mpfr_get_default_prec(), strlen(c)*10/3);
-        ref = malloc(sizeof(complexn));
+        ref = malloc(sizeof(complexn_t));
         mpc_init3(*ref, prec_r, prec_i);
         mpc_strtoc(*ref, c, &p, 0, MPC_RNDNN);
         if (p==c)
@@ -336,7 +315,7 @@ foreign_t complexn_new_value(term_t expr, term_t precision_r, term_t precision_i
             prec_r = MAX(mpfr_get_default_prec(), strlen(c)*10/3);
         if (!prec_i)
             prec_i = MAX(mpfr_get_default_prec(), strlen(c)*10/3);
-        ref = malloc(sizeof(complexn));
+        ref = malloc(sizeof(complexn_t));
         mpc_init3(*ref, prec_r, prec_i);
         mpc_strtoc(*ref, c, 0, 0, MPC_RNDNN);
         if (p==c)
@@ -355,7 +334,7 @@ foreign_t complexn_new_value(term_t expr, term_t precision_r, term_t precision_i
             prec_r = mpfr_get_default_prec();
         if (!prec_i)
             prec_i = mpfr_get_default_prec();
-        ref = malloc(sizeof(complexn));
+        ref = malloc(sizeof(complexn_t));
         mpc_init3(*ref, prec_r, prec_i);
         mpc_set_d(*ref, d, MPC_RNDNN);
         break;
@@ -365,8 +344,8 @@ foreign_t complexn_new_value(term_t expr, term_t precision_r, term_t precision_i
         void *b;
         PL_blob_t *type;
         PL_get_blob(expr, (void *)&b, NULL, &type);
-        if (type == &record_mpc) {
-            complexn *v = b;
+        if (type == record_mpc) {
+            complexn_t *v = b;
             mpfr_prec_t vp_r, vp_i;
             mpc_get_prec2(&vp_r, &vp_i, *v);
             if (!prec_r) prec_r = vp_r;
@@ -382,18 +361,18 @@ foreign_t complexn_new_value(term_t expr, term_t precision_r, term_t precision_i
                 } else
                     return FALSE;
             } else {
-                ref = malloc(sizeof(complexn));
+                ref = malloc(sizeof(complexn_t));
                 mpc_init3(*ref, prec_r, prec_i);
                 mpc_set(*ref, *v, MPC_RNDNN);
             }
         }
         else if (type == record_mpfr) {
-            floatn *f = b;
+            floatn_t *f = b;
             mpfr_prec_t vp;
             vp = mpfr_get_prec(*f);
             if (!prec_r) prec_r = vp;
             if (!prec_i) prec_i = vp;
-            ref = malloc(sizeof(complexn));
+            ref = malloc(sizeof(complexn_t));
             mpc_init3(*ref, prec_r, prec_i);
             mpc_set_fr(*ref, *f, MPC_RNDNN);
         } else
@@ -407,20 +386,22 @@ foreign_t complexn_new_value(term_t expr, term_t precision_r, term_t precision_i
         __rtcheck(PL_unify_integer(precision_r, prec_r));
     if (undefined_prec_i)
         __rtcheck(PL_unify_integer(precision_i, prec_i));
-    return PL_unify_complexn(value, ref);
+    return PL_unify_complexn_t(value, ref);
 }
 
-int PL_unify_complexn(term_t t, complexn *fr)
+int PL_unify_complexn_t(term_t t, complexn_t *fr)
 {
-    return PL_unify_blob(t, *fr, sizeof(complexn), &record_mpc);
+    return PL_unify_blob(t, fr, sizeof(complexn_t), record_mpc);
 }
 
-int PL_get_complexn(term_t t, complexn **fr)
+int PL_get_complexn_t(term_t t, complexn_t **fr)
 {
     PL_blob_t *type;
     
-    if (PL_get_blob(t, (void **)fr, NULL, &type) && type == &record_mpc)
+    if (PL_get_blob(t, (void **)fr, NULL, &type) && type == record_mpc)
         return TRUE;
     
     return FALSE;
 }
+
+#include "pl-complexn_auto.h"

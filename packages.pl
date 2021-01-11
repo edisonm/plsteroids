@@ -17,5 +17,6 @@ package(clpcd).
 package(lambda).
 package(idfpml).
 package(mpfr).
+package(mpc).
 
 :- assertz(ref_msgtype:rstats_db).

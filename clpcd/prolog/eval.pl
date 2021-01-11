@@ -45,6 +45,7 @@
 :- compilation_predicate op_pred/2.
 :- compilation_predicate cd_preffix/3.
 :- compilation_predicate expr_pred/2.
+
 :- public eval_1/4.
 
 eval_1(Type, Arg, eval(Type, Arg, EA), EA).
