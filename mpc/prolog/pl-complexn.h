@@ -14,4 +14,6 @@ typedef mpc_t complexn_t;
 int PL_unify_complexn_t(term_t t, complexn_t *fr);
 int PL_get_complexn_t(term_t t, complexn_t **fr);
 
+#define mpc_carg(a, b, c) mpc_arg((a), (b), (c))
+
 #endif

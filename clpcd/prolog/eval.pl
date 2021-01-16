@@ -45,6 +45,7 @@
 :- compilation_predicate op_pred/2.
 :- compilation_predicate cd_preffix/3.
 :- compilation_predicate expr_pred/2.
+:- compilation_predicate reserve_eps/1.
 
 :- public eval_1/4.
 
@@ -89,8 +90,15 @@ inner_cast(Type, Value, C) :-
     necki,
     Body.
 
+do_eval_cputime(T, V) :-
+    X is cputime,
+    inner_cast(T, X, V).
+
+do_eval_z(Type, C) :- cast(Type, 0, C).
+
 epsilon(T, E) :-
     reserve_eps(N),
+    neck,
     eval(T, N*epsilon, E).
 
 epsilon(T, N, E) :-

@@ -6,8 +6,6 @@
 :- use_module(library(neck)).
 :- use_module(library(assertions)).
 :- use_module(library(lists)).
-:- use_module(library(substitute)).
-:- use_module(library(extend_args)).
 :- use_module(library(plprops)).
 :- use_module(library(foreign/foreign_generator)).
 :- use_module(library(foreign/foreign_interface)).
@@ -41,6 +39,10 @@
 :- include(plbin(complexn_auto)).
 
 /*
+
+:- use_module(library(substitute)).
+:- use_module(library(extend_args)).
+
 eval(E, _, _, E).
 +(E, _, _, E).
 -(A, R, I, V) :- neg(A, R, I, V).

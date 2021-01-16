@@ -74,7 +74,7 @@ expr_pred(-A, neg(A)).
 % expr_pred(truncate(A), rint_trunc(A)).
 % expr_pred(mod(A, B),   fmod(A, B)).
 expr_pred(Pred, Pred) :-
-    member(Desc, [pl_, pc_]),
+    member(Desc, [pl_, pc_, pf_]),
     complexn_desc(Desc, FL, A2),
     member(F, FL),
     A is A2 - 3,
@@ -98,11 +98,9 @@ do_eval(i, P, V) :- do_eval_i(P, V).
 do_eval(sign(X), Type, C) :-
     eval(Type, X, V),
     do_eval_z(Type, Z),
-    ( compare_b(<, Type, Z, V)
-    ->do_eval_1(Type, C)
-    ; compare(Type, >, Z, X)
-    ->do_eval_m1(Type, C)
-    ; C = Z
+    ( compare_b(=, Type, Z, V)
+    ->C = Z
+    ; do_eval(V/abs(V), Type, C)
     ).
 do_eval((A, B), Type, C) :-
     do_eval_i(Type, I),
@@ -117,17 +115,7 @@ do_eval(Expr, Type, C) :-
     EvalS,
     AC.
 
-do_eval_z(Type, C) :- cast(Type, 0, C).
-
-do_eval_1(Type, C) :- cast(Type, 1, C).
-
 do_eval_i(Type, C) :- cast(Type, "(0 1)", C).
-
-do_eval_m1(Type, C) :- cast(Type, -1, C).
-
-do_eval_cputime(T, V) :-
-    X is cputime,
-    inner_cast(T, X, V).
 
 do_eval_epsilon(complexn(NR, NI), V) :-
     N1 is 1 - min(NR, NI),

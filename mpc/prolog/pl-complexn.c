@@ -123,20 +123,24 @@ foreign_t is_complexn_t(term_t v) {
 #define GEN_COMPLEXN_pf_4(name)                                         \
     foreign_t pf_complexn_##name(term_t p_r, term_t p_i, term_t r, term_t a) \
     {                                                                   \
-        floatn_t *fr;                                                   \
+        complexn_t *cx;                                                 \
+        floatn_t fr;                                                    \
         PL_blob_t *type;                                                \
         mpfr_prec_t prec_r, prec_i, prec_ar, prec_ai;                   \
         complexn_t *ra;                                                 \
         __rtcheck(PL_get_complexn_t(a, &ra));                           \
-        fr = malloc(sizeof(floatn_t));                                  \
+        cx = malloc(sizeof(complexn_t));                                \
         mpc_get_prec2(&prec_ar, &prec_ai, *ra);                         \
         if (!PL_get_long(p_r, &prec_r))                                 \
             prec_r = prec_ar;                                           \
         if (!PL_get_long(p_i, &prec_i))                                 \
             prec_i = prec_ai;                                           \
-        mpfr_init2(*fr, MAX(prec_r, prec_i));                           \
-        mpc_##name(*fr, *ra, MPFR_RNDN);                                \
-        return PL_unify_floatn_t(r, fr);                                \
+        mpc_init3(*cx, prec_r, prec_i);                                 \
+        mpfr_init2(fr, MAX(prec_r, prec_i));                            \
+        mpc_##name(fr, *ra, MPFR_RNDN);                                 \
+        mpc_set_fr(*cx, fr, MPC_RNDNN);                                 \
+        mpfr_clear(fr);                                                 \
+        return PL_unify_complexn_t(r, cx);                              \
     }
 
 // COMPLEXN_FUNCTION2
@@ -269,19 +273,36 @@ foreign_t pl_complexn(term_t expr, term_t precision_r, term_t precision_i, term_
     }
     case PL_TERM:
     {
-        mpq_t q;
-        mpq_init(q);
-        if (!PL_get_mpq(expr, q))
-            return FALSE;
         if (!prec_r)
             prec_r = mpfr_get_default_prec();
         if (!prec_i)
             prec_i = mpfr_get_default_prec();
-        ref = malloc(sizeof(complexn_t));
-        mpc_init3(*ref, prec_r, prec_i);
-        mpc_set_q(*ref, q, MPC_RNDNN);
-        mpq_clear(q);
-        break;
+        
+        mpq_t q;
+        mpq_init(q);
+        if (PL_get_mpq(expr, q)) {
+            ref = malloc(sizeof(complexn_t));
+            mpc_init3(*ref, prec_r, prec_i);
+            mpc_set_q(*ref, q, MPC_RNDNN);
+            mpq_clear(q);
+            break;
+        } else {
+            mpq_clear(q);
+            return FALSE;
+        }
+        mpfr_t *r;
+        if (PL_get_floatn_t(expr, &r)) {
+            if (!prec_r)
+                prec_r = mpfr_get_default_prec();
+            if (!prec_i)
+                prec_i = mpfr_get_default_prec();
+            ref = malloc(sizeof(complexn_t));
+            mpc_init3(*ref, prec_r, prec_i);
+            mpc_set_fr(*ref, *r, MPC_RNDNN);
+            break;
+        } else {
+            return FALSE;
+        }
     }
     case PL_ATOM:
     {

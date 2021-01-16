@@ -102,9 +102,7 @@ is_bid128(X) :- bid128_t(X).
 
 :- include(library(eval)).
 
-do_eval(cputime, Type, C) :-
-    X is cputime,
-    cast(Type, X, C).
+do_eval(cputime, Type, C) :- do_eval_cputime(Type, C).
 do_eval(epsilon, Type, C) :- do_eval_epsilon(Type, C).
 do_eval(0,  Type, C) :- do_eval_z(Type, C).
 do_eval(1,  Type, C) :- do_eval_1(Type, C).
@@ -125,7 +123,7 @@ do_eval(+(Expr), Type, C) :- eval(Type, Expr, C).
 do_eval(-(Expr), Type, C) :- do_eval(0-Expr, Type, C).
 do_eval(abs(Expr), Type, C) :-
     eval(Type, Expr, V),
-    do_eval_z(Type, Z),
+    do_eval_z_(Type, Z),
     ( compare_b(>, Type, Z, V)
     ->do_eval(-V, Type, C)
     ; C = V
@@ -140,9 +138,9 @@ do_eval(Expr, Type, C) :-
     EvalS,
     AC.
 
-do_eval_z(Type, C) :-
+do_eval_z_(Type, C) :-
     cd_type(Type),
-    cast(Type, 0, C),
+    do_eval_z(Type, C),
     neck.
 
 do_eval_1(Type, C) :-

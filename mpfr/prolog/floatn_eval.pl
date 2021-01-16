@@ -119,15 +119,9 @@ do_eval(Expr, Type, C) :-
     EvalS,
     AC.
 
-do_eval_z(Type, C) :- cast(Type, 0, C).
-
 do_eval_1(Type, C) :- cast(Type, 1, C).
 
 do_eval_m1(Type, C) :- cast(Type, -1, C).
-
-do_eval_cputime(P, V) :-
-    X is cputime,
-    inner_cast(P, X, V).
 
 do_eval_epsilon(floatn(N), V) :-
     N1 is 1-N,
