@@ -4,7 +4,7 @@
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 [subrepo]
-	remote = https://github.com/edisonm/assertions.git
+	remote = git@github.com:edisonm/assertions.git
 	branch = master
 	commit = 7fd63c42d6458a7534a59109cb5fd1dd5f82876e
 	parent = 88f9d013cd730ac54e26edc0128ab30618309051

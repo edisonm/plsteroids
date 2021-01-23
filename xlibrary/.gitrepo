@@ -4,7 +4,7 @@
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 [subrepo]
-	remote = https://github.com/edisonm/xlibrary.git
+	remote = git@github.com:edisonm/xlibrary.git
 	branch = master
 	commit = 89963266ae5d44119cc8ab3d73a09b2074557338
 	parent = 1a2244f22f69a56ac7a2783bf58cc6c0fe5e0f2a

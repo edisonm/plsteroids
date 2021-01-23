@@ -4,7 +4,7 @@
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 [subrepo]
-	remote = https://github.com/edisonm/refactor.git
+	remote = git@github.com:edisonm/refactor.git
 	branch = master
 	commit = 3b760a2ff07484d2adba1358b1428b9f436305fb
 	parent = b22f568c94f9298829cb51a7f6af5b55824f1cd5

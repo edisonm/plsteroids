@@ -4,7 +4,7 @@
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 [subrepo]
-	remote = https://github.com/edisonm/rtchecks.git
+	remote = git@github.com:edisonm/rtchecks.git
 	branch = master
 	commit = 92a97fcaeff9d06a70f6387df3a97c4b9d1d666b
 	parent = 936a3a12737a23c5598f5d0f7c298317d2751875

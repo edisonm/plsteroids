@@ -4,7 +4,7 @@
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 [subrepo]
-	remote = https://github.com/edisonm/idfpml.git
+	remote = git@github.com:edisonm/idfpml.git
 	branch = master
 	commit = f1c5b93b963b34e265f8ccd8eeb625b763b0ad7a
 	parent = 9a95f16f272e69b7d4e2b979d740a41f04f7cafb
