@@ -1,5 +1,6 @@
 :- module(plsloader,
           [packages/1,
+           read_file/2,
            scanpacks/2,
            scanpacks/3,
            pack_set_path/1,

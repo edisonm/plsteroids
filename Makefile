@@ -102,3 +102,7 @@ get_plsteroids:
 
 doc:
 	swipl -s plsdoc.pl
+
+showdeps:
+	swipl -q -s ./plsteroids -g "[collect_deps,library(show_tree)],collect_deps(A),reduce_tree(A,B),maplist(show_tree,B), halt"
+
