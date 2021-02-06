@@ -32,13 +32,27 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(collect_deps, [packs_trees/1]).
+:- module(module_trees,
+          [ modules_trees/2,
+            modrevs_trees/2
+          ]).
 
-:- use_module(plsconfig).
-:- use_module(plsloader).
-:- use_module(library(apply)).
-:- use_module(library(packs_trees)).
+:- use_module(library(dependency_trees)).
 
-packs_trees(TreeL) :-
-    packages(PackL),
-    packs_trees(PackL, TreeL).
+modules_trees(ModuleL, TreeL) :- modules_trees(dep, ModuleL, TreeL).
+modrevs_trees(ModuleL, TreeL) :- modules_trees(rev, ModuleL, TreeL).
+
+modules_trees(Direction, ModuleL, TreeL) :-
+    working_directory(SourceDir, SourceDir),
+    dependency_trees(module_edge(Direction, SourceDir), ModuleL, TreeL).
+
+module_edge(dep, SourceDir, Context, Module) :-
+    '$load_context_module'(File, Context, _Options),
+    atom(File),
+    atom_concat(SourceDir, _, File),
+    '$current_module'(Module, File).
+module_edge(rev, SourceDir, Module, Context) :-
+    '$current_module'(Module, File),
+    atom(File),
+    atom_concat(SourceDir, _, File),
+    '$load_context_module'(File, Context, _Options).

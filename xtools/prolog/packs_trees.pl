@@ -32,13 +32,23 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(collect_deps, [packs_trees/1]).
+:- module(packs_trees,
+          [ packs_trees/2 % +PackL, -TreeL
+          ]).
 
-:- use_module(plsconfig).
-:- use_module(plsloader).
-:- use_module(library(apply)).
-:- use_module(library(packs_trees)).
+:- use_module(library(dependency_trees)).
+:- use_module(library(read_file)).
 
-packs_trees(TreeL) :-
-    packages(PackL),
-    packs_trees(PackL, TreeL).
+packs_trees(PackL, TreeL) :-
+    dependency_trees(pack_dep, PackL, TreeL).
+
+pack_options(Pack, Options) :-
+    absolute_file_name(Pack/pack, File, [file_type(prolog)]),
+    read_file(File, Options).
+
+pack_dep(Pack, ReqPack) :-
+    distinct(ReqPack,
+             order_by([asc(ReqPack)],
+                      ( pack_options(Pack, Options),
+                        member(requires(ReqPack), Options)
+                      ))).

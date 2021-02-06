@@ -103,6 +103,11 @@ get_plsteroids:
 doc:
 	swipl -s plsdoc.pl
 
-showdeps:
-	swipl -q -s ./plsteroids -g "[collect_deps,library(show_tree)],collect_deps(A),reduce_tree(A,B),maplist(show_tree,B), halt"
+packstrees:
+	swipl -q -s ./plsteroids -g "[collect_deps,library(packs_trees),library(show_tree)],packs_trees(A),show_trees(A),halt"
 
+%.modulestree:
+	swipl -q -s ./plsteroids -g "[collect_deps,library(modules_trees),library(show_tree)],modules_trees([$*],A),show_trees(A),halt"
+
+%.modrevstree:
+	swipl -q -s ./plsteroids -g "[collect_deps,library(modules_trees),library(show_tree)],modrevs_trees([$*],A),show_trees(A),halt"
