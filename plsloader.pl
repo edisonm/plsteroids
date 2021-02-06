@@ -1,6 +1,5 @@
 :- module(plsloader,
           [packages/1,
-           read_file/2,
            scanpacks/2,
            scanpacks/3,
            pack_set_path/1,
@@ -12,6 +11,7 @@
 :- use_module(library(option)).
 :- use_module(library(pairs)).
 :- use_module(library(prolog_source)).
+:- use_module(xlibrary/prolog/read_file).
 :- use_module(library(sort)).
 
 :- meta_predicate
@@ -42,20 +42,6 @@ scanpacks(Action, DepAction, Loaded, Pack) :-
     concurrent_maplist(scanpacks(Action, DepAction, [Pack|Loaded]), PackL),
     maplist(DepAction, PackL),
     with_mutex(Pack, call(Action, Pack)).
-
-read_file(F, Terms) :-
-    setup_call_cleanup(
-        open(F, read, S),
-        findall(Term,
-                ( repeat,
-                  read_term(S, Term, []),
-                  ( Term==end_of_file
-                  ->!,
-                    fail
-                  ; true
-                  )
-                ), Terms),
-        close(S)).
 
 pack_set_path(Pack) :-
     assertz(user:file_search_path(pltool, plroot(Pack))).
