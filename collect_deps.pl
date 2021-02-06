@@ -36,7 +36,6 @@
 
 :- use_module(plsconfig).
 :- use_module(plsloader).
-:- use_module(library(apply)).
 :- use_module(library(packs_trees)).
 
 packs_trees(TreeL) :-
