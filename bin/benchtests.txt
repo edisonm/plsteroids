@@ -2,8 +2,8 @@ idfpml/tests/cdqd.plt
 idfpml/tests/cddd.plt
 mpfr/tests/mpfr.plt
 useless_cuts.stest
-assertions.stest
 xtools/tests/checkers_5.plt
+assertions.stest
 clpcd/tests/cdr.plt
 clpcd/tests/cdq.plt
 dupcode.stest
@@ -13,11 +13,11 @@ rtchecks/tests/rtchecks.plt
 xtools/tests/assrt_meta.plt
 imports.stest
 xtools/tests/ctchecks.plt
-refactor/tests/refactor_33.plt
 wrong_dynamic.stest
-trivial_fails.stest
+refactor/tests/refactor_33.plt
 module_loops.stest
 deprecated.stest
+trivial_fails.stest
 meta_decls.stest
 undefined.stest
 non_loaded.stest
