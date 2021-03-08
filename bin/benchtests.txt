@@ -29,8 +29,8 @@ refactor/tests/refactor_49.plt
 refactor/tests/refactor_01.plt
 refactor/tests/refactor_28.plt
 refactor/tests/refactor_42.plt
-refactor/tests/refactor_29.plt
 assertions/tests/foreign/foreign.plt
+refactor/tests/refactor_29.plt
 refactor/tests/refactor_31.plt
 refactor/tests/refactor_40.plt
 refactor/tests/refactor_35.plt

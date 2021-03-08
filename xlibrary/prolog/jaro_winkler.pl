@@ -39,9 +39,9 @@
 :- use_module(library(assertions)).
 :- use_module(library(foreign/foreign_interface)).
 :- use_module(library(foreign/foreign_props)).
-:- gen_foreign_library(plbin(jaro_winkler)).
-:- use_foreign_source(jaro_winkler).
-:- use_foreign_header(jaro_winkler).
+:- gen_foreign_library(plbin(libjaro_winkler)).
+:- use_foreign_header('pl-jaro_winkler').
+:- use_foreign_source('pl-jaro_winkler').
 
 :- style_check(-singleton).
 

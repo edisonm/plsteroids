@@ -4,7 +4,7 @@
  */
 
 #include <string.h>
-#include "jaro_winkler.h"
+#include "pl-jaro_winkler.h"
 
 #define max(X,Y) ((X)>(Y)?(X):(Y))
 
