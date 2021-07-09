@@ -15,6 +15,7 @@ loadpacks(Loader) :-
                   mpfr/prolog/floatn_auto,
                   refactor/prolog/i18n/i18n_trans,
                   xtools/prolog/ws_source,
+                  xlibrary/prolog/concurrent_forall,
                   refactor/prolog/ref_expand,
                   refactor/prolog/ref_replace,
                   refactor/prolog/ref_replacers,
