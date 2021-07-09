@@ -10,3 +10,4 @@ download('https://github.com/edisonm/mpc.git').
 requires(xlibrary).
 requires(assertions).
 requires(clpcd).
+requires(mpfr).
