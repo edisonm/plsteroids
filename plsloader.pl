@@ -6,12 +6,12 @@
            pack_set_local_path/1,
            pack_load_local/3]).
 
-:- use_module(library(apply)).
 :- use_module(library(lists)).
 :- use_module(library(option)).
 :- use_module(library(pairs)).
 :- use_module(library(prolog_source)).
 :- use_module(xlibrary/prolog/read_file).
+:- use_module(xlibrary/prolog/conc_forall).
 :- use_module(library(sort)).
 
 :- meta_predicate
@@ -29,7 +29,7 @@ scanpacks(Action, DepAction) :-
     scanpacks(PackL, Action, DepAction).
 
 scanpacks(PackL, Action, DepAction) :-
-    concurrent_maplist(scanpacks(Action, DepAction, []), PackL).
+    conc_forall(member(P, PackL), scanpacks(Action, DepAction, [], P)).
 
 scanpacks(_, _, Loaded, Pack) :-
     memberchk(Pack, Loaded),
@@ -39,8 +39,8 @@ scanpacks(Action, DepAction, Loaded, Pack) :-
     absolute_file_name(Pack/pack, F, [file_type(prolog)]),
     read_file(F, PackOptions),
     findall(ReqPack, member(requires(ReqPack), PackOptions), PackL),
-    concurrent_maplist(scanpacks(Action, DepAction, [Pack|Loaded]), PackL),
-    maplist(DepAction, PackL),
+    conc_forall(member(P, PackL), scanpacks(Action, DepAction, [Pack|Loaded], P)),
+    forall(member(P, PackL), call(DepAction, P)),
     with_mutex(Pack, call(Action, Pack)).
 
 pack_set_path(Pack) :-
