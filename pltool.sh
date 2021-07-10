@@ -92,10 +92,13 @@ case $1 in
 	swipl -q -s loadall.pl
 	;;
     compile)
+        mkdir -p target/lib/target/bin
         for i in `find . -name pack.pl`; do
             pack=`basename ${i%/pack.pl}`
             find $pack/prolog -type d -exec mkdir -p target/lib/{} \;
-            find $pack/prolog -type f -name "*.pl" -exec ln -s ${PWD}/{} target/lib/{} \;
+            find $pack/prolog -type f -name "*.pl" -exec ln -sf ${PWD}/{} target/lib/{} \;
+            find $pack/prolog -type f -name "*.c" -exec ln -sf ${PWD}/{} target/lib/{} \;
+            find $pack/prolog -type f -name "*.h" -exec ln -sf ${PWD}/{} target/lib/{} \;
         done
 	swipl -q -s qcompile.pl
 	;;
