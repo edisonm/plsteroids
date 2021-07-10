@@ -32,8 +32,8 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- export(epsilon/2).
-:- export(epsilon/3).
+:- export(eepsilon/2).
+:- export(eepsilon/3).
 :- export(eval/3).
 :- export(cast/3).
 :- export(castable/2).
@@ -96,13 +96,13 @@ do_eval_cputime(T, V) :-
 
 do_eval_z(Type, C) :- cast(Type, 0, C).
 
-epsilon(T, E) :-
+eepsilon(T, E) :-
     reserve_eps(N),
     neck,
     eval(T, N*epsilon, E).
 
-epsilon(T, N, E) :-
-    epsilon(T, R),
+eepsilon(T, N, E) :-
+    eepsilon(T, R),
     eval(T, R*N, E).
 
 compare(Type, Op, A, B) :-
@@ -118,7 +118,7 @@ near_compare(Type, Op, A, B) :-
 near_compare_b(Type, Op, X, Y) :-
     ( compare_b(=, Type, X, Y)
     ->compare_eq(Op)
-    ; epsilon(Type, max(abs(X), abs(Y)), E),
+    ; eepsilon(Type, max(abs(X), abs(Y)), E),
       compare(Op, Type, X, Y, E)
     ).
 

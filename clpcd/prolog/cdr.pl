@@ -63,11 +63,11 @@ clpcd_domain_ops:cast_d(cdr, A, B) :-
     ).
 
 clpcd_domain_ops:floor_d(cdr, A, B) :-
-    epsilon(abs(A), E),
+    repsilon(abs(A), E),
     B is floor(A+E).
 
 clpcd_domain_ops:ceiling_d(cdr, A, B) :-
-    epsilon(abs(A), E),
+    repsilon(abs(A), E),
     B is ceiling(A-E).
 
 clpcd_domain_ops:integerp(cdr, X, I) :-

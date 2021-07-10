@@ -61,13 +61,13 @@ clpcd_domain_ops:cast_d(Domain, A, B) :-
 clpcd_domain_ops:floor_d(Domain, A, B) :-
     cd_type(Domain, Type),
     neck,
-    epsilon(Type, abs(A), E),
+    eepsilon(Type, abs(A), E),
     eval(Type, floor(A+E), B).
 
 clpcd_domain_ops:ceiling_d(Domain, A, B) :-
     cd_type(Domain, Type),
     neck,
-    epsilon(Type, abs(A), E),
+    eepsilon(Type, abs(A), E),
     eval(Type, ceiling(A-E), B).
 
 clpcd_domain_ops:integerp(Domain, A, C) :-

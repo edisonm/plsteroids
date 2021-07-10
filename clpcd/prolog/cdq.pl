@@ -64,7 +64,7 @@ clpcd_domain_ops:div_d(cdq, A, B, C) :- C is A rdiv B.
 :- public reserved_digits/1.
 
 reserved_digits(R) :-
-    epsilon(E),
+    repsilon(E),
     R is E/epsilon.
 
 clpcd_domain_ops:cast_d(cdq, A, B) :-
