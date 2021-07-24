@@ -32,7 +32,7 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(checkers, []).
+:- module(stchecks, []).
 
 :- reexport(library(checker)).
 :- use_module(library(check_useless_cuts)).
