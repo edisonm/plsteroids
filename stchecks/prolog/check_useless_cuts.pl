@@ -45,7 +45,7 @@
 :- use_module(library(qualify_meta_goal)).
 :- use_module(library(safe_prolog_cut_to)).
 :- use_module(library(checkable_predicate)).
-:- use_module(library(checkers/checker)).
+:- use_module(library(checker)).
 :- use_module(library(check), []).
 
 :- multifile

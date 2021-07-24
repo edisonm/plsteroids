@@ -37,7 +37,7 @@
 :- use_module(library(apply)).
 :- use_module(library(lists)).
 :- use_module(library(option)).
-:- use_module(library(checkers/checker)).
+:- use_module(library(checker)).
 :- use_module(library(check), []).
 :- use_module(library(clambda)).
 :- use_module(library(compact_pi_list)).

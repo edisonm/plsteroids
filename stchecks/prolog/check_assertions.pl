@@ -39,7 +39,7 @@
 :- use_module(library(option)).
 :- use_module(library(yall)).
 :- use_module(library(pairs)).
-:- use_module(library(checkers/checker)).
+:- use_module(library(checker)).
 :- use_module(library(assertions)).
 :- use_module(library(check), []).
 :- use_module(library(codewalk)).

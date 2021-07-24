@@ -19,5 +19,6 @@ package(idfpml).
 package(mpfr).
 package(mpc).
 package(andorra).
+package(stchecks).
 
 :- assertz(ref_msgtype:rstats_db).

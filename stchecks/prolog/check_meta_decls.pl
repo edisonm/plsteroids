@@ -34,7 +34,7 @@
 
 :- module(check_meta_decls, []).
 
-:- use_module(library(checkers/checker)).
+:- use_module(library(checker)).
 :- use_module(library(prolog_metainference), []).
 :- use_module(library(is_entry_point)).
 :- use_module(library(location_utils)).

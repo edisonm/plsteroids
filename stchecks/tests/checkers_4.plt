@@ -1,8 +1,8 @@
 :- begin_tests(checkers_4).
 
 :- use_module(library(infer_meta)).
-:- use_module(library(checkers/checker)).
-:- use_module(library(checkers/check_wrong_dynamic)).
+:- use_module(library(checker)).
+:- use_module(library(check_wrong_dynamic)).
 :- use_module(checkers_hooks).
 
 :- use_module(cwda).
