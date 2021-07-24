@@ -18,5 +18,6 @@ package(lambda).
 package(idfpml).
 package(mpfr).
 package(mpc).
+package(andorra).
 
 :- assertz(ref_msgtype:rstats_db).
