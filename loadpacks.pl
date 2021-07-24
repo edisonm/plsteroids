@@ -20,9 +20,7 @@ loadpacks(Loader) :-
                   refactor/prolog/ref_replacers,
                   % library(compound_expand),
                   refactor/prolog/ref_scenarios,
-                  xtools/prolog/checkers,
-                  playground/prolog/float/floatn,
-                  playground/prolog/float/floatn_so
+                  xtools/prolog/checkers
                  ])
             ], Loader),
         pack_set_local_path).
