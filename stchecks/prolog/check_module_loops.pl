@@ -1,6 +1,6 @@
 /*  Part of Static Checks
 
-    Author:        Edison Mera Menendez
+    Author:        Edison Mera
     E-mail:        efmera@gmail.com
     WWW:           https://github.com/edisonm/xtools
     Copyright (C): 2020, Process Design Center, Breda, The Netherlands.

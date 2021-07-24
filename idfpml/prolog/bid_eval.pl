@@ -1,6 +1,6 @@
 /*  CLP over binary integer decimal numbers
 
-    Author:        Edison Mera Menendez
+    Author:        Edison Mera
     E-mail:        efmera@gmail.com
     WWW:           https://github.com/edisonm/assertions
     Copyright (C): 2020, Process Design Center, Breda, The Netherlands.

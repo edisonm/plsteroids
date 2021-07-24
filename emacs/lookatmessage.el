@@ -1,4 +1,4 @@
-;; Author: Edison Mera Menendez
+;; Author: Edison Mera
 ;; Hook to point at the given ERROR using one keystroke
 
 (defun look-at-message ()
