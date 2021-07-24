@@ -6,8 +6,3 @@ author('Edison Mera Menendez', 'http://www.edisonm.com/').
 packager('Edison Mera Menendez', 'http://www.edisonm.com/').
 maintainer('Edison Mera Menendez', 'http://www.edisonm.com/').
 home('https://github.com/edisonm/plsteroids').
-requires(xtools).
-requires(xlibrary).
-requires(assertions).
-requires(lambda).
-requires(clpcd).
