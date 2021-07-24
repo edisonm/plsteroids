@@ -4,7 +4,7 @@
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 [subrepo]
-	remote = https://github.com/edisonm/andorra.git
+	remote = git@github.com/edisonm/andorra.git
 	branch = master
 	commit = 603de014ad95564549e34410632f06f9da1bbb8a
 	parent = d034f6c7ce8ef545321901be794d9a17e8c6a0b7
