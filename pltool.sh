@@ -13,11 +13,11 @@ forallpacks () {
 
 if [ "$#" == "2" ] ; then
     to_load=`find . -name $2.plt`
-    extra_opt=" -g assertz(package(xtools)) -g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs,library(assertions),library(checkers)]"
+    extra_opt=" -g assertz(package(xtools)) -g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs,library(assertions),library(stchecks)]"
     run_tests="run_tests($2)"
 elif [ "$#" == "3" ] ; then
     to_load=`find . -name $2.plt`
-    extra_opt=" -g assertz(package(xtools)) -g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs,library(assertions),library(checkers)]"
+    extra_opt=" -g assertz(package(xtools)) -g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs,library(assertions),library(stchecks)]"
     run_tests="run_tests($2:$3)"
 else
     to_load="autotester.pl"

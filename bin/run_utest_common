@@ -3,7 +3,7 @@
 . bin/run_test
 
 swi_cmd () {
-    swipl -g "[plsteroids,library(assertions),library(checkers)]"
+    swipl -g "[plsteroids,library(assertions),library(stchecks)]"
 }
 
 run_cmd () {

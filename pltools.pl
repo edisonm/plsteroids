@@ -9,7 +9,7 @@
 :- use_module(library(rtchecks)).
 :- use_module(library(assertions)).
 :- use_module(library(assrt_meta)).
-:- use_module(library(checkers)).
+:- use_module(library(stchecks)).
 :- use_module(library(ws_cover)).
 :- use_module(library(i18n/i18n_op)).
 /*

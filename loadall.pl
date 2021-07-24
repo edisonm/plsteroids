@@ -11,5 +11,5 @@ use_module_ne(Lib) :- use_module(Lib, []).
 :- loadpacks(use_module_ne).
 :- set_prolog_flag(autoload, true).
 
-:- [library(checkers)].
+:- [library(stchecks)].
 :- [library(ws_source)].

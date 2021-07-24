@@ -1,9 +1,9 @@
-:- begin_tests(checkers_unused).
+:- begin_tests(stchecks_unused).
 
 :- use_module(library(infer_meta)).
 :- use_module(library(checker)).
 :- use_module(library(check_unused)).
-:- use_module(checkers_hooks).
+:- use_module(stchecks_hooks).
 
 :- use_module(cwda).
 
@@ -22,4 +22,4 @@ test(cu) :-
     check_results(unused, Results, [files([stchecks/tests/cwda, stchecks/tests/cwdb])]),
     assertion(length(Results, 9)).
 
-:- end_tests(checkers_unused).
+:- end_tests(stchecks_unused).

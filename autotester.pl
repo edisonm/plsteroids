@@ -10,7 +10,6 @@
 :- [xlibrary/tests/i18n/'i18n_2.plt'].
 :- [xlibrary/tests/i18n/'i18n.plt'].
 :- [xtools/tests/'assrt_meta.plt'].
-:- [xtools/tests/'ctchecks.plt'].
-:- [xtools/tests/'checkers.plt'].
+:- [stchecks/tests/'stchecks.plt'].
 :- [library(gcover)].
 :- [library(ws_cover)].

@@ -20,7 +20,7 @@ loadpacks(Loader) :-
                   refactor/prolog/ref_replacers,
                   % library(compound_expand),
                   refactor/prolog/ref_scenarios,
-                  xtools/prolog/checkers
+                  stchecks/prolog/stchecks
                  ])
             ], Loader),
         pack_set_local_path).

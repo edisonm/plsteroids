@@ -2,7 +2,7 @@
 :- use_module(library(apply_macros)). % Load it proactively
 :- use_module(pldoc(doc_modes)).
 :- use_module(library(filesex)).
-:- [library(checkers)].
+:- [library(stchecks)].
 :- [loadpacks].
 
 :- set_prolog_flag(autoload, false).

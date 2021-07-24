@@ -49,8 +49,6 @@
 % you use source_codewalk instead:
 :- use_module(library(ai_extra_clauses), []).
 
-user:file_search_path(checkers, library(checkers)).
-
 :- multifile
     prepare_results/3,  % Custom preparation method
     check/3.            % Hook to define new analyses

@@ -1,4 +1,4 @@
-:- module(checkers_hooks, []).
+:- module(stchecks_hooks, []).
 
 checkable_predicate:application_predicate(M:_) :-
     application_module(M).
