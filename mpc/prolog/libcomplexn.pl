@@ -97,7 +97,7 @@ complexn_domain_args(FDom) :-
     complexn_domain_args(complexn(_, _), FDom),
     neck.
 
-floatn:floatn_domain_args(FDom) :- 
+floatn:floatn_domain_args(FDom) :-
     complexn_domain_args(floatn(_), FDom),
     neck.
 */

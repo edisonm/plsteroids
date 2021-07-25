@@ -53,18 +53,18 @@ builtin_export(atomic_basic,atom_concat,3,0) .
 builtin_export(atomic_basic,sub_atom,4,0) .
 builtin_export(basic_props,int,1,0) .
 builtin_export(basic_props,nnegint,1,0) .
-builtin_export(basic_props,flt,1,0) .     
+builtin_export(basic_props,flt,1,0) .
 builtin_export(basic_props,num,1,0) .
 builtin_export(basic_props,atm,1,0) .
 builtin_export(basic_props,struct,1,0) .
 builtin_export(basic_props,gnd,1,0) .
 builtin_export(basic_props,constant,1,0) .
 builtin_export(basic_props,callable,1,0) .
-builtin_export(term_typing,atom,1,0) . 
-builtin_export(term_typing,integer,1,0) . 
-builtin_export(term_typing,float,1,0) . 
-builtin_export(term_typing,number,1,0) . 
-builtin_export(term_typing,atomic,1,0) .  
+builtin_export(term_typing,atom,1,0) .
+builtin_export(term_typing,integer,1,0) .
+builtin_export(term_typing,float,1,0) .
+builtin_export(term_typing,number,1,0) .
+builtin_export(term_typing,atomic,1,0) .
 builtin_export(term_basic,arg,3,0) .
 builtin_export(term_basic,functor,3,0) .
 builtin_export(term_basic,=..,2,0) .
@@ -79,22 +79,22 @@ builtin_constrain(arithmetic,=:=,2,0) .
 builtin_constrain(arithmetic,=\=,2,0) .
 builtin_constrain(basic_props,int,1,0) .
 builtin_constrain(basic_props,nnegint,1,0) .
-builtin_constrain(basic_props,flt,1,0) .         
+builtin_constrain(basic_props,flt,1,0) .
 builtin_constrain(basic_props,num,1,0) .
 builtin_constrain(basic_props,atm,1,0) .
 builtin_constrain(basic_props,struct,1,0) .
 builtin_constrain(basic_props,constant,1,0) .
 builtin_constrain(basic_props,callable,1,0) .
-builtin_constrain(term_typing,atom,1,0) . 
-builtin_constrain(term_typing,integer,1,0) . 
-builtin_constrain(term_typing,float,1,0) . 
-builtin_constrain(term_typing,number,1,0) . 
-builtin_constrain(term_typing,atomic,1,0) .  
+builtin_constrain(term_typing,atom,1,0) .
+builtin_constrain(term_typing,integer,1,0) .
+builtin_constrain(term_typing,float,1,0) .
+builtin_constrain(term_typing,number,1,0) .
+builtin_constrain(term_typing,atomic,1,0) .
 
 
 % nothing have to be done with these builtins
 determinate_builtin(basiccontrol,true,0,0) .
-determinate_builtin(basiccontrol,fail,0,0) . 
+determinate_builtin(basiccontrol,fail,0,0) .
 determinate_builtin(term_basic,=,2,0).
 determinate_builtin(basic_props,term,1,0) .
 determinate_builtin(data_facts,close_predicate,1,close_predicate(fact)) .
@@ -115,17 +115,17 @@ sensitive_builtin(write,write,2,0).
 sensitive_builtin(term_typing,var,1,0) .
 sensitive_builtin(term_typing,nonvar,1,0) .
 sensitive_builtin(term_typing,ground,1,0) .
-sensitive_builtin(term_typing,type,2,0) . 
+sensitive_builtin(term_typing,type,2,0) .
 %prueba
-%sensitive_builtin(term_compare,==,2,0). 
+%sensitive_builtin(term_compare,==,2,0).
 %prueba
 %sensitive_builtin(term_compare,\==,2,0).
-sensitive_builtin(term_compare,@<,2,0). 
-sensitive_builtin(term_compare,@=<,2,0). 
-sensitive_builtin(term_compare,@>,2,0). 
-sensitive_builtin(term_compare,@>=,2,0). 
+sensitive_builtin(term_compare,@<,2,0).
+sensitive_builtin(term_compare,@=<,2,0).
+sensitive_builtin(term_compare,@>,2,0).
+sensitive_builtin(term_compare,@>=,2,0).
 sensitive_builtin(term_compare,compare,3,0).
-sensitive_builtin(basiccontrol,repeat,0,0). 
+sensitive_builtin(basiccontrol,repeat,0,0).
 sensitive_builtin(data_facts,asserta_fact,1,asserta_fact(fact)) .
 sensitive_builtin(data_facts,asserta_fact,2,asserta_fact(fact,?)) .
 sensitive_builtin(data_facts,assertz_fact,1,assertz_fact(fact)) .
