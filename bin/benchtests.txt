@@ -42,7 +42,9 @@ refactor/tests/refactor_31.plt
 refactor/tests/refactor_40.plt
 refactor/tests/refactor_35.plt
 refactor/tests/refactor_45.plt
+refactor/tests/term_width.plt
 refactor/tests/refactor_27.plt
+refactor/tests/conj_width.plt
 refactor/tests/refactor_19.plt
 refactor/tests/refactor_38.plt
 refactor/tests/refactor_32.plt
@@ -94,3 +96,4 @@ assertions/tests/metaprops.plt
 xlibrary/tests/interface.plt
 xlibrary/tests/i18n/i18n.plt
 refactor/tests/refactor_30.plt
+refactor/tests/linearize.plt
