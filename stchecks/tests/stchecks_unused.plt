@@ -18,7 +18,7 @@
 % Warning: * cwdb.pl:3:11: unreferenced dynamic: cwdb:b/1
 
 test(cu) :-
-    % showcheck(unused, [files([xtools/tests/cwda, xtools/tests/cwdb])]),
+    % showcheck(unused, [files([stchecks/tests/cwda, stchecks/tests/cwdb])]),
     check_results(unused, Results, [files([stchecks/tests/cwda, stchecks/tests/cwdb])]),
     assertion(length(Results, 9)).
 

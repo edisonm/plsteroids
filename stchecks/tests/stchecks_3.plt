@@ -8,7 +8,7 @@
 :- use_module(cwda).
 
 test(cwd_3) :-
-    check_results(wrong_dynamic, Results, [files([xtools/tests/cwda])]),
+    check_results(wrong_dynamic, Results, [files([stchecks/tests/cwda])]),
     assertion(Results = []).
 
 :- end_tests(stchecks_3).

@@ -9,7 +9,7 @@
 :- use_module(cwdb).
 
 test(cwd_2) :-
-    check_results(wrong_dynamic, Results, [files([xtools/tests/cwda, xtools/tests/cwdb])]),
+    check_results(wrong_dynamic, Results, [files([stchecks/tests/cwda, stchecks/tests/cwdb])]),
     assertion(Results = []).
 
 :- end_tests(stchecks_2).

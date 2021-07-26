@@ -8,7 +8,7 @@
 :- use_module(cwdc).
 
 test(cwd_5, [setup(cleanup_inferred_meta)]) :-
-    check_results(wrong_dynamic, Results, [files([xtools/tests/cwdc])]),
+    check_results(wrong_dynamic, Results, [files([stchecks/tests/cwdc])]),
     assertion(Results = []).
 
 :- end_tests(stchecks_5).

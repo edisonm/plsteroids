@@ -1,8 +1,8 @@
-/*  Part of Extended Tools for SWI-Prolog
+/*  Part of plsteroids
 
     Author:        Edison Mera
     E-mail:        efmera@gmail.com
-    WWW:           https://github.com/edisonm/xtools
+    WWW:           https://github.com/edisonm/plsteroids
     Copyright (C): 2021, Process Design Center, Breda, The Netherlands.
     All rights reserved.
 

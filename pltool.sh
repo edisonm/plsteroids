@@ -2,7 +2,7 @@
 
 set -e
 
-PACKS="assertions rtchecks refactor xlibrary xtools"
+PACKS="assertions rtchecks stchecks refactor xlibrary xtools"
 
 forallpacks () {
     for pack in $PACKS; do
@@ -13,11 +13,11 @@ forallpacks () {
 
 if [ "$#" == "2" ] ; then
     to_load=`find . -name $2.plt`
-    extra_opt=" -g assertz(package(xtools)) -g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs,library(assertions),library(stchecks)]"
+    extra_opt=" -g assertz(package(stchecks)) -g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs,library(assertions),library(stchecks)]"
     run_tests="run_tests($2)"
 elif [ "$#" == "3" ] ; then
     to_load=`find . -name $2.plt`
-    extra_opt=" -g assertz(package(xtools)) -g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs,library(assertions),library(stchecks)]"
+    extra_opt=" -g assertz(package(stchecks)) -g assertz(package(`echo $to_load|sed -e 's:\/: :g'|awk '{print $2}'`)),[plsdirs,library(assertions),library(stchecks)]"
     run_tests="run_tests($2:$3)"
 else
     to_load="autotester.pl"
@@ -73,7 +73,7 @@ case $1 in
         ;;
     updatedoc)
         swipl -q -s loadall.pl -g "[pltoolmisc]" \
-              -g "updatedoc('xtools/README.md'),halt"
+              -g "updatedoc('stchecks/README.md'),halt"
         ;;
     doc)
         swipl -s plsdoc.pl

@@ -9,7 +9,7 @@
 :- use_module(cwdb).
 
 test(cwd_4) :- % There is an issue that does not refers to module cwda
-    check_results(wrong_dynamic, Results, [module(cwda), files([xtools/tests/cwdb])]),
+    check_results(wrong_dynamic, Results, [module(cwda), files([stchecks/tests/cwdb])]),
     assertion(Results = []).
 
 :- end_tests(stchecks_4).
