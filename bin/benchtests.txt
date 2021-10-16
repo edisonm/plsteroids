@@ -17,8 +17,8 @@ rtchecks/tests/rtchecks.plt
 xtools/tests/assrt_meta.plt
 imports.stest
 stchecks/tests/stchecks.plt
-wrong_dynamic.stest
 refactor/tests/refactor_33.plt
+wrong_dynamic.stest
 andorra/tests/fib.plt
 module_loops.stest
 deprecated.stest

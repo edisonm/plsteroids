@@ -49,7 +49,7 @@
           ] :: (+floatn_t * +floatn_t * int * -floatn_t)
         ].
 
-cd_preffix(floatn(P), floatn, [P]).
+cd_prefix(floatn(P), floatn, [P]).
 
 int(_, A, B) :- floatn_get_si(A, B).
 

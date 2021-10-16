@@ -42,7 +42,7 @@
 :- compilation_module(library(list_sequence)).
 :- compilation_module(library(complexn_desc)).
 
-cd_preffix(complexn(R, I), complexn, [R, I]).
+cd_prefix(complexn(R, I), complexn, [R, I]).
 
 op_pred(=,  equal).
 % op_pred(=<, lessequal).

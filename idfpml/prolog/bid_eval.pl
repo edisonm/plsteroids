@@ -46,7 +46,7 @@
 cd_type(bid64).
 cd_type(bid128).
 
-cd_preffix(Type, Type, []) :-
+cd_prefix(Type, Type, []) :-
     cd_type(Type),
     neck.
 
