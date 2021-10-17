@@ -99,3 +99,5 @@ assertions/tests/metaprops.plt
 xlibrary/tests/interface.plt
 xlibrary/tests/i18n/i18n.plt
 refactor/tests/refactor_30.plt
+refactor/tests/refactor_57.plt
+refactor/tests/refactor_56.plt
