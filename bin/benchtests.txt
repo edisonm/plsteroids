@@ -4,8 +4,8 @@ idfpml/tests/cddd.plt
 mpfr/tests/mpfr.plt
 andorra/tests/money.plt
 useless_cuts.stest
-stchecks/tests/stchecks_5.plt
 assertions.stest
+stchecks/tests/stchecks_5.plt
 clpcd/tests/cdr.plt
 clpcd/tests/cdq.plt
 dupcode.stest
@@ -32,8 +32,8 @@ andorra/tests/mutest.plt
 andorra/tests/map.plt
 refactor/tests/refactor_44.plt
 refactor/tests/refactor_20.plt
-refactor/tests/refactor_49.plt
 assertions/tests/foreign/foreign.plt
+refactor/tests/refactor_49.plt
 refactor/tests/refactor_01.plt
 refactor/tests/refactor_28.plt
 refactor/tests/refactor_42.plt
@@ -57,12 +57,12 @@ refactor/tests/refactor_52.plt
 refactor/tests/refactor_51.plt
 refactor/tests/refactor_43.plt
 refactor/tests/refactor_14.plt
+stchecks/tests/stchecks_2.plt
 refactor/tests/refactor_53.plt
 refactor/tests/refactor_36.plt
 refactor/tests/refactor_37.plt
 refactor/tests/refactor_34.plt
 refactor/tests/refactor_24.plt
-stchecks/tests/stchecks_2.plt
 refactor/tests/refactor_06.plt
 refactor/tests/refactor_39.plt
 refactor/tests/refactor_05.plt
@@ -82,13 +82,15 @@ refactor/tests/refactor_41.plt
 refactor/tests/refactor_02.plt
 refactor/tests/refactor_23.plt
 refactor/tests/refactor_46.plt
+refactor/tests/refactor_56.plt
+refactor/tests/refactor_57.plt
 refactor/tests/refactor_21.plt
 refactor/tests/refactor_25.plt
 refactor/tests/refactor_04.plt
 refactor/tests/refactor_22.plt
-refactor/tests/refactor_13.plt
 stchecks/tests/stchecks_1.plt
 stchecks/tests/stchecks_3.plt
+refactor/tests/refactor_13.plt
 stchecks/tests/stchecks_6.plt
 stchecks/tests/stchecks_4.plt
 refactor/tests/refactor_16.plt
@@ -99,5 +101,3 @@ assertions/tests/metaprops.plt
 xlibrary/tests/interface.plt
 xlibrary/tests/i18n/i18n.plt
 refactor/tests/refactor_30.plt
-refactor/tests/refactor_57.plt
-refactor/tests/refactor_56.plt
