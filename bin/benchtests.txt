@@ -4,8 +4,8 @@ idfpml/tests/cddd.plt
 mpfr/tests/mpfr.plt
 andorra/tests/money.plt
 useless_cuts.stest
-stchecks/tests/stchecks_5.plt
 assertions.stest
+stchecks/tests/stchecks_5.plt
 clpcd/tests/cdr.plt
 clpcd/tests/cdq.plt
 dupcode.stest
@@ -55,6 +55,7 @@ refactor/tests/refactor_10.plt
 refactor/tests/refactor_50.plt
 refactor/tests/refactor_52.plt
 refactor/tests/refactor_51.plt
+refactor/tests/refactor_59.plt
 refactor/tests/refactor_43.plt
 refactor/tests/refactor_14.plt
 refactor/tests/refactor_53.plt
@@ -102,3 +103,4 @@ assertions/tests/metaprops.plt
 xlibrary/tests/interface.plt
 xlibrary/tests/i18n/i18n.plt
 refactor/tests/refactor_30.plt
+refactor/tests/refactor_60.plt
