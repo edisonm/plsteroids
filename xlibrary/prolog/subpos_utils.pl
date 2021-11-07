@@ -59,7 +59,7 @@ location_subpos(term_position(_, _, _, _, PosL), N, Pos) :-
     nth1(N, PosL, Pos).
 location_subpos(PPos, N, Pos) :-
     member(IniP-PPos, [inip(Pos1)-list_position(From, To, PosL, Tail),
-                       frto(BTo)-sub_list_position(From, To, BTo, _, PosL, Tail)
+                       frto(BTo)-sub_list_position(From, To, BTo, _, _, PosL, Tail)
                       ]),
     neck,
     ( N = 1
@@ -74,8 +74,16 @@ location_subpos(PPos, N, Pos) :-
       ; PosL = [Pos1|PosL1],
         lspi(IniP, BTo1),
         PosL1 = [Pos2|_],
-        arg(1, Pos2, PTo),
-        Pos = sub_list_position(From, To, BTo1, PTo, PosL1, Tail)
+        arg(2, Pos1, PTo1),
+        arg(1, Pos2, PTo2),
+        
+        % Example: sublist_position for [c, d]:
+        %
+        % [    a,   b,    c,  d ]
+        % ^    ^     ^    ^     ^
+        % From BTo1  PTo1 PTo2  To
+        
+        Pos = sub_list_position(From, To, BTo1, PTo1, PTo2, PosL1, Tail)
       )
     ).
 location_subpos(brace_term_position(_, _, Pos), 1, Pos).
