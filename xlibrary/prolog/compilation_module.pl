@@ -91,7 +91,7 @@ term_expansion(end_of_file, ClauseL) :-
             ( member(@(Context, Module:F/A), CompileTimeCalledL),
               functor(H, F, A),
               abolish(Context:F/A)
-            ), ClauseL).
+            ), ClauseL, [end_of_file]).
 
 current_export([E|L], _, _, F, A) :- member(F/A, [E|L]).
 current_export(all, Context, Module, F, A) :-
