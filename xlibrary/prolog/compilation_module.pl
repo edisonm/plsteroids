@@ -35,6 +35,7 @@
 :- module(compilation_module,
           [ compilation_module/1,
             compilation_module/2,
+            compile_time_called/3,
             (compilation_predicate)/1,
             op(1150, fx, compilation_predicate)
           ]).
@@ -47,6 +48,8 @@
         compilation_module(:),
         compilation_module(:,+),
         compilation_predicate(:).
+
+:- multifile compile_time_called/3.
 
 compilation_module(A)    :- use_module(A).
 
@@ -68,21 +71,26 @@ term_expansion((:- compilation_predicate(Seq)),
                [(:- discontiguous '$compilation_predicate'/2)|ClauseL]) :-
     sequence_list(Seq, List, []),
     foldl(compilation_predicate_clause, List, ClauseL, []).
-term_expansion(end_of_file, end_of_file) :-
+term_expansion(end_of_file, ClauseL) :-
     prolog_load_context(module, Context),
     prolog_load_context(source, Source),
     module_property(Context, file(Source)),
-    forall(( current_predicate(Context:'$compilation_module'/2),
-             Context:'$compilation_module'(Alias, Exports),
-             absolute_file_name(Alias, File, [file_type(prolog), access(read)]),
-             module_property(Module, file(File)),
-             current_export(Exports, Context, Module, F, A)
-           ; current_predicate(Context:'$compilation_predicate'/2),
-             Context:'$compilation_predicate'(F, A)
-           ),
-           abolish(Context:F/A)),
+    findall(@(Context, Module:F/A),
+            ( current_predicate(Context:'$compilation_module'/2),
+              Context:'$compilation_module'(Alias, Exports),
+              absolute_file_name(Alias, File, [file_type(prolog), access(read)]),
+              module_property(Module, file(File)),
+              current_export(Exports, Context, Module, F, A)
+            ; current_predicate(Context:'$compilation_predicate'/2),
+              Context:'$compilation_predicate'(F, A)
+            ), CompileTimeCalledL),
     abolish(Context:'$compilation_module'/2),
-    abolish(Context:'$compilation_predicate'/2).
+    abolish(Context:'$compilation_predicate'/2),
+    findall(compilation_module:compile_time_called(H, Module, Context),
+            ( member(@(Context, Module:F/A), CompileTimeCalledL),
+              functor(H, F, A),
+              abolish(Context:F/A)
+            ), ClauseL).
 
 current_export([E|L], _, _, F, A) :- member(F/A, [E|L]).
 current_export(all, Context, Module, F, A) :-
