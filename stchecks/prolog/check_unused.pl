@@ -46,6 +46,7 @@
 :- use_module(library(option)).
 :- use_module(library(checker)).
 :- use_module(library(clambda)).
+:- use_module(library(compilation_module)).
 :- use_module(library(commited_retract)).
 :- use_module(library(qualify_meta_goal)).
 :- use_module(library(checkable_predicate)).
@@ -106,9 +107,17 @@ check_unused(Options1, Pairs) :-
     option_files([module_files(MFileD)], FileD),
     walk_code([module_files(MFileD)|Options]),
     option(concurrent(Concurrent), Options, true),
+    mark_compile_time_called,
     mark(Concurrent),
     sweep(FileD, Pairs),
     cleanup_unused.
+
+mark_compile_time_called :-
+    forall(distinct(M:H,
+                    ( compile_time_called(H, M, C),
+                      M \= C
+                    )),
+           put_mark('<exported>'(M:H))).
 
 cleanup_unused :-
     retractall(calls_to_initialization(_, _)),
