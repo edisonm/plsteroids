@@ -132,7 +132,7 @@ static void PL_free_mp(void *mem, size_t size) {
     PL_free(mem);
 }
 
-void floatn_init() {
+void floatn_init(void) {
     // PL_action(PL_GMP_SET_ALLOC_FUNCTIONS, FALSE)
     // mp_set_memory_functions(NULL, NULL, NULL);
     // Use prolog alocation functions so that in case of an error, it will be

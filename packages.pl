@@ -2,6 +2,7 @@
         package/1.
 
 :- use_module(library(listing)).
+:- use_module(library(settings)).
 :- use_module(library(predicate_options)).
 
 :- set_setting(listing:tab_distance, 0).

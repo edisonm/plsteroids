@@ -8,7 +8,7 @@
 
 typedef mpfr_t floatn_t;
 
-PL_blob_t *record_mpfr;
+extern PL_blob_t *record_mpfr;
 
 #define FI_unify_floatn_t(t, v) PL_unify_floatn_t((t), (v))
 #define FI_get_floatn_t(_, t, v) PL_get_floatn_t((t), (v))
@@ -18,7 +18,7 @@ PL_blob_t *record_mpfr;
 int PL_unify_floatn_t(term_t t, floatn_t *fr);
 int PL_get_floatn_t(term_t t, floatn_t **fr);
 int floatn_out_str(IOSTREAM *stream, floatn_t *ref);
-void floatn_init();
+void floatn_init(void);
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 

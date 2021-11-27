@@ -1,5 +1,7 @@
 :- module(plsdirs, []).
 
+:- use_module(library(apply)).
+
 :- [plsconfig].
 :- [plsloader].
 
