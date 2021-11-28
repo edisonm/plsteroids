@@ -75,7 +75,7 @@ compats(N, T, (Cs * +T)) :-
 
 compats(Prefix, A1, T, Cs) :-
     member(Prefix, [pl_, pc_]),
-    neck,
+    necks,
     succ(A, A1), compats(A, T, Cs).
 compats(pi_, 4, T, int * -T * +int * +T).
 compats(pi_, 2, T, -int * +T).

@@ -75,7 +75,7 @@ compats(N, T, (Cs * +T)) :-
 
 compats(Prefix, A2, T, Cs) :-
     member(Prefix, [pl_, pc_]),
-    neck,
+    necks,
     A is A2 - 2,
     compats(A, T, Cs).
 % compats(pc_, 3, T, int * int * -T).

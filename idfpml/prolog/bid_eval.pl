@@ -35,10 +35,10 @@
 :- module(bid_eval, [int/3]).
 
 :- use_module(library(lists)).
-:- use_module(library(neck)).
 :- use_module(library(libbid)).
 :- use_module(library(compare_eq)).
 :- use_module(library(compilation_module)).
+:- use_module(library(neck)).
 :- compilation_module(library(list_sequence)).
 :- compilation_module(library(bid_desc)).
 :- compilation_predicate cd_type/1.
@@ -134,7 +134,7 @@ do_eval(Expr, Type, C) :-
     maplist(eval_1(Type), Args, EvalL, EAs),
     AC =.. [Name, Type, C|EAs],
     list_sequence(EvalL, EvalS),
-    necki,
+    necks,
     EvalS,
     AC.
 
