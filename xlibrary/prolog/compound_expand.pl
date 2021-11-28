@@ -103,11 +103,13 @@ compound_expansion(Type, Term1, Pos1, Term, Pos) :-
     call_lock(do_compound_expansion(Type, Term1, Pos1, Term, Pos), Type).
 
 system:goal_expansion(Goal1, Pos1, Goal, Pos) :-
+    \+ current_prolog_flag(xref, true),
     do_compound_expansion(goal, Goal1, Pos1, Goal, Pos).
 
 :- thread_local compounding/0.
 
 system:term_expansion(Term1, Pos1, Term, Pos) :-
+    \+ current_prolog_flag(xref, true),
     \+ compounding,
     compound_expansion(term, Term1, Pos1, Term2, Pos2),
     Term1 \== Term2,
