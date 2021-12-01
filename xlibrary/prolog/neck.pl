@@ -41,7 +41,6 @@
                  rtc_warning/3]).
 
 :- use_module(library(lists)).
-:- use_module(library(occurs)).
 :- use_module(library(ordsets)).
 :- use_module(library(solution_sequences)).
 :- reexport(library(compound_expand)).
@@ -105,7 +104,7 @@ current_seq_lit((H, T), S, L1, L, R1, R) :-
     ).
 
 :- thread_local '$neck_body'/3.
-:- use_module(library(gui_tracer)).
+
 term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
     '$current_source_module'(M),
     once(( current_seq_lit(Body1, Neck, Static, Right),
@@ -137,7 +136,8 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
       SepHead =.. [FNB|ArgNB],
       conj(LRight, SepHead, NeckBody),
       findall(Pattern-Head, Expanded, ClausePIL),
-      ( '$get_predicate_attribute'(M:SepHead, defined, 1)
+      ( '$get_predicate_attribute'(M:SepHead, defined, 1),
+        '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
       ->true
       ; ClausePIL \= [_]
       )
@@ -149,7 +149,9 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
                                   strip_module(M:H, IM, P),
                                   functor(P, F, A)
                                 ))),
-               ( {'$get_predicate_attribute'(M:SepHead, defined, 1)}
+               ( { '$get_predicate_attribute'(M:SepHead, defined, 1),
+                   '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
+                 }
                ->[]
                ; [(SepHead :- ExpBody)]
                )
@@ -159,7 +161,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
       RTHead = Head,
       ClauseL1 = []
     ),
-    phrase(( findall(Clause, member(Clause-Head, ClausePIL)),
+    phrase(( findall(Clause, member(Clause-_, ClausePIL)),
              findall(Clause,
                      ( \+ memberchk(Neck, [necks, necks(_, _)]),
                        Head \== '$decl',
@@ -176,7 +178,9 @@ st_body(Head, M, RTHead, ClausePIL, Clause) :-
     warning_body(IM, Pred, WB),
     (RTM = M->Body=WB; Body=M:WB),
     assertz('$neck_body'(M, RTM:RTPred, Body)),
-    member(Clause, [(:- dynamic RTM:RTF/RTA), (RTM:RTPred :- WB)]).
+    member(Clause, [(:- discontiguous RTM:RTF/RTA), % silent random warnings
+                    (:- multifile RTM:RTF/RTA), % silent audit warnings
+                    (:- dynamic RTM:RTF/RTA), (RTM:RTPred :- WB)]).
 
 warning_body(M, H, rtc_warning(M, H, file(File, Line, -1, _))) :-
     source_location(File, Line).
