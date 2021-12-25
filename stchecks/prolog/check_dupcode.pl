@@ -37,7 +37,6 @@
 :- use_module(library(apply)).
 :- use_module(library(lists)).
 :- use_module(library(pairs)).
-:- use_module(library(apply_macros), []).
 :- use_module(library(checker)).
 :- use_module(library(check), []).
 :- use_module(library(assertions)).
