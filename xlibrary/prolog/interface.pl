@@ -32,9 +32,9 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(interface, [implements/1,
-                      bind_interface/2,
-                      end_interface/0]).
+:- module(interface,
+          [ bind_interface/2
+          ]).
 
 :- use_module(library(lists)).
 :- use_module(library(apply)).
@@ -42,24 +42,9 @@
 :- use_module(library(compound_expand)).
 
 :- multifile
+    '$interface'/1,
     '$interface'/2,
     '$implementation'/2.
-
-:- meta_predicate implements(:).
-implements(Implementation:Alias) :-
-    Implementation:use_module(Alias, []), % Ensure that the module is loaded
-    absolute_file_name(Alias, File, [file_type(prolog), access(read)]),
-    module_property(Interface, file(File)),
-    '$interface'(Interface, PIL),
-    phrase(( [interface:'$implementation'(Implementation, Interface)],
-              findall((:- meta_predicate Implementation:Spec),
-                      ( member(F/A, PIL),
-                        functor(Pred, F, A),
-                        predicate_property(Interface:Pred, meta_predicate(Spec))
-                      ))
-           ), Clauses),
-    compile_aux_clauses(Clauses),
-    maplist(Implementation:export, PIL).
 
 direct_interface(M, F/A) :-
     \+ ( current_predicate(M:F/A),
@@ -68,19 +53,53 @@ direct_interface(M, F/A) :-
          \+ predicate_property(M:H, imported_from(_))
        ).
 
-:- module_transparent end_interface/0.
-end_interface :-
-    context_module(Interface),
-    end_interface(Interface, Clauses),
-    compile_aux_clauses(Clauses).
+end_interface(Interface, DIL) -->
+    [interface:'$interface'(Interface, DIL)],
+    findall((:- dynamic Interface:F/A),
+            member(F/A, DIL)).
 
-end_interface(Interface, Clauses) :-
+term_expansion_decl(implements(Alias), Clauses) :-
+    '$current_source_module'(Implementation),
+    Implementation:use_module(Alias, []), % Ensure that the module is loaded
+    absolute_file_name(Alias, File, [file_type(prolog), access(read)]),
+    module_property(Interface, file(File)),
+    term_expansion_decl(implements_mod(Interface), Clauses).
+term_expansion_decl(implements_mod(Interface), Clauses) :-
+    '$current_source_module'(Implementation),
+    '$interface'(Interface, PIL),
+    phrase(( [interface:'$implementation'(Implementation, Interface)],
+              findall((:- meta_predicate Implementation:Spec),
+                      ( member(F/A, PIL),
+                        functor(Pred, F, A),
+                        predicate_property(Interface:Pred, meta_predicate(Spec))
+                      )),
+              findall((:- export(PI)), member(PI, PIL))
+           ), Clauses).
+term_expansion_decl(interfaces(Alias), Clauses) :-
+    '$current_source_module'(Interface),
+    Interface:use_module(Alias, []),
+    absolute_file_name(Alias, File, [file_type(prolog), access(read)]),
+    module_property(Implementation, file(File)),
+    term_expansion_decl(interfaces_mod(Implementation), Clauses).
+term_expansion_decl(interfaces_mod(Implementation), Clauses) :-
+    '$current_source_module'(Interface),
+    module_property(Implementation, exports(PIL)),
+    phrase(( findall((:- export(PI)), member(PI, PIL)),
+             end_interface(Interface, PIL)
+           ), Clauses).
+term_expansion_decl(interface, interface:'$interface'(Interface)) :-
+    '$current_source_module'(Interface).
+
+term_expansion((:- Decl), Clauses) :-
+    term_expansion_decl(Decl, Clauses).
+term_expansion(end_of_file, Clauses) :-
+    '$current_source_module'(Interface),
+    '$interface'(Interface),
+    module_property(Interface, file(File)),
+    prolog_load_context(source, File),
     module_property(Interface, exports(PIL)),
     include(direct_interface(Interface), PIL, DIL),
-    phrase(( [interface:'$interface'(Interface, DIL)],
-             findall((:- dynamic Interface:F/A),
-                     member(F/A, DIL))
-           ), Clauses).
+    phrase(end_interface(Interface, DIL), Clauses, [end_of_file]).
 
 prolog:called_by(Pred, Interface, _, PredL) :-
     '$interface'(Interface, DIL),

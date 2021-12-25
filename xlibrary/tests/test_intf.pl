@@ -4,6 +4,6 @@
 
 :- use_module(library(interface)).
 
-:- meta_predicate intf_meta(0,+).
+:- interface.
 
-:- end_interface.
+:- meta_predicate intf_meta(0,+).
