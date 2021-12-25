@@ -32,7 +32,11 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(broker, []).
+:- module(broker,
+          [ add_server/2,
+            del_server/1,
+            module_server/2
+          ]).
 
 :- use_module(library(lists)).
 :- use_module(library(neck)).
@@ -55,9 +59,25 @@ balancing
 
 */
 
+:- dynamic
+    module_server/2.
+
+:- multifile
+    '$broker'/1.
+
+:- discontiguous
+    '$broker'/1.
+
 alias_file(RelTo, Alias, File) :-
-    absolute_file_name(Alias, File, [file_type(prolog),
-                                     relative_to(RelTo)]).
+    absolute_file_name(Alias, File, [file_type(prolog), relative_to(RelTo)]).
+
+add_server(Module, URL) :-
+    '$broker'(Module),
+    assertz(module_server(Module, URL)).
+
+del_server(Module) :-
+    '$broker'(Module),
+    retractall(module_server(Module, _)).
 
 generate_broker(Target, File, Module, AliasTo) -->
     { prolog_load_context(source, RelTo),
@@ -65,6 +85,7 @@ generate_broker(Target, File, Module, AliasTo) -->
       atom_concat(Module, '_remt', ImplRemote),
       atom_concat(Module, '_locl', ImplLocal)
     },
+    [broker:'$broker'(Module)],
     generate_interface(     File, RelTo, Module, Interface,  AliasTo, AliasIntf),
     generate_local( Target, File, RelTo, Module, ImplLocal,  AliasTo, AliasIntf),
     generate_remote(Target, File, RelTo, Module, ImplRemote, AliasTo, AliasIntf),

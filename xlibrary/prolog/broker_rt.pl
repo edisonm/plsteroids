@@ -35,6 +35,7 @@
 :- module(broker_rt, [remote_call/2]).
 
 :- use_module(library(http/websocket)).
+:- use_module(library(broker)).
 
 %  Note: remote call of meta predicates can not be supported, because the client
 %  context module could be inexistent in the server.
@@ -50,19 +51,20 @@ remote_call(MCall) :-
 
 remote_call(Call, M) :-
     term_variables(Call, Vars),
-    catch(
-        remote_call(Call, M, Vars),
-        error(socket_error(_, _), _),
-        call(M:Call)).
+    remote_call(Call, M, Vars).
 
 remote_call(Call, Module, Vars) :-
-    URL = 'ws://localhost:3333/broker',
-    directory_file_path(URL, Module, Path),
-    http_open_websocket(Path, WS, []),
-    setup_call_cleanup(
-        ws_send(WS, prolog(b(Call, Vars))),
-        remote_call_loop(WS, Vars),
-        ws_close(WS, 1000, "bye")).
+    ( module_server(Module, URL),
+      directory_file_path(URL, Module, Path),
+      catch(http_open_websocket(Path, WS, []),
+            error(socket_error(_, _), _),
+            fail)
+    ->setup_call_cleanup(
+          ws_send(WS, prolog(b(Call, Vars))),
+          remote_call_loop(WS, Vars),
+          ws_close(WS, 1000, "bye"))
+    ; Module:Call % fallback to local call
+    ).
 
 remote_call_loop(WS, Vars) :-
     repeat,
