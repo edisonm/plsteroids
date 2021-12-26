@@ -29,7 +29,7 @@
 
 :- module(andorra, []).
 
-:- reexport(library(compound_expand)).
+:- use_module(library(compound_expand)).
 :- reexport(library(andorra_op)).
 :- reexport(library(andorra_rt)).
 :- reexport(library(andorra_builtins)).
@@ -50,10 +50,10 @@ rule is based on the use of attributed variables
 @cite{holzbaur-plilp92,holzbaur-phd}.
 
 In order to test determinacy we verify only the heads of clauses and
-builtins in the bodies of clauses before the first cut, if any. 
+builtins in the bodies of clauses before the first cut, if any.
 By default, determinacy of a goal is detected dynamically: when called,
-if at most one clause matches, it is executed; otherwise, it is 
-delayed. For goals delayed the test is repeated each time a variable 
+if at most one clause matches, it is executed; otherwise, it is
+delayed. For goals delayed the test is repeated each time a variable
 appearing in the goal is instantiated.
 In addition, efficiency can be improved by using declarations
 that specify the determinacy conditions. These will be considered

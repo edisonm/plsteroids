@@ -34,7 +34,7 @@
 
 :- module(pe, []).
 
-:- reexport(library(compound_expand)).
+:- use_module(library(compound_expand)).
 
 pe_arithmetic(A, A) :-
     A == time,
