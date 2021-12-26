@@ -53,7 +53,7 @@ test(rtexec1) :-
     save_rtchecks(with_rtchecks(test1)),
     load_rtchecks(E),
     assertion(E=[assrchk(error(pp_check, check/1,
-                               [_/(rtchecks_example3: (0>0 ))-[]], file(_, _, _, _), _))]).
+                               [_/(rtchecks_example3: (0>0 ))-[]], _, _))]).
 
 test(rtexec2) :-
     intercept(with_rtchecks(test1), Error, print_message(information, Error)).
