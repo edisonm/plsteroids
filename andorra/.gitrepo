@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:edisonm/andorra.git
 	branch = master
-	commit = 22c1ddb0154a90f726b8d0b140a0da61af3c7461
-	parent = 3b50d29219cf79516b5349454f73921053a3b9d0
+	commit = 728c27f0db1a23649b888f56f64746249ca4b4de
+	parent = 51eab09e30adc62bd289a8ccd9be03e4127242f5
 	method = merge
 	cmdver = 0.3.1
