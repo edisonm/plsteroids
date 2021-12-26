@@ -52,24 +52,24 @@
 %!  necki(L, L) is det.
 %!  necks(L, L) is det.
 %
-%   Stablish that everything above it should be evaluated at compile time, be
-%   careful since such part can only contain predicates already defined.  In
-%   case of non-determinism, several clauses would be generated.  This is a
-%   practical way to generate automatic clauses with a proper instantiation of
+%   Establish that everything  above it should be evaluated at  compile time, be
+%   careful since  such part  can only contain  predicates already  defined.  In
+%   case  of non-determinism,  several clauses  would be  generated.  This  is a
+%   practical way to  generate automatic clauses with a  proper instantiation of
 %   the head. If neck can not be expanded, it will succeed without side effects.
 
-%   neck is used if you want to put the body in a separated predicate, and
-%   consider it the run-time only part of it, meaning that you can not use it
+%   neck is  used if  you want  to put the  body in  a separated  predicate, and
+%   consider it the  run-time only part of  it, meaning that you can  not use it
 %   until the compilation of the module has finished.
 
-%   necki (i=inlined) is used if you don't want to create ancillary predicates
+%   necki (i=inlined) is  used if you don't want to  create ancillary predicates
 %   for the body, but rather have the body inlined.
 
-%   necks (s=silent, or static) will not warn you if the non-expanded parts are
+%   necks (s=silent, or static) will not  warn you if the non-expanded parts are
 %   called at compile-time.
 
 %   these predicates can also be used in declarations, although in that case, no
-%   warnings will be shown about run-time parts being executed, since
+%   warnings  will  be   shown  about  run-time  parts   being  executed,  since
 %   declarations are executed at compile-time.
 
 neck.
@@ -184,6 +184,10 @@ st_body(Head, M, RTHead, ClausePIL, Clause) :-
 
 warning_body(M, H, rtc_warning(M, H, file(File, Line, -1, _))) :-
     source_location(File, Line).
+
+%!  rtc_warning(+Module, +Head, +Location).
+%
+%   Shows a warning about a run-time call during compile-time and fails.
 
 rtc_warning(M, H, Loc) :-
     source_location(File, Line),

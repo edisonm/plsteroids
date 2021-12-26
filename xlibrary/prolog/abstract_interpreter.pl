@@ -32,20 +32,22 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(abstract_interpreter, [abstract_interpreter/3,
-                                 abstract_interpreter/4,
-                                 abstract_interpreter_body/5,
-                                 get_state/3,
-                                 put_state/3,
-                                 match_head/4,
-                                 match_head_body/3,
-                                 bottom/2,
-                                 match_ai/5,
-                                 call_ai/1,
-                                 eval_ai/1,
-                                 skip_ai/1,
-                                 intr_ai/1,
-                                 match_noloops/4]).
+:- module(abstract_interpreter,
+          [ abstract_interpreter/3,
+            abstract_interpreter/4,
+            abstract_interpreter_body/5,
+            extra_clauses/4,              % +Goal, +Module, -Body, -From
+            get_state/3,
+            put_state/3,
+            match_head/4,
+            match_head_body/3,
+            bottom/2,
+            call_ai/1,
+            eval_ai/1,
+            skip_ai/1,
+            intr_ai/1,
+            match_noloops/4
+          ]).
 
 :- use_module(library(lists)).
 :- use_module(library(qualify_meta_goal)).
@@ -54,14 +56,24 @@
 :- use_module(library(terms_share)).
 :- use_module(library(neck)).
 
+/** <module> An abstract interpreter
+
+This module provides  support to implement some  abstract interpreter-based code
+scanner.  It tests statically an  oversimplification of the possible unification
+of terms  and call  hooks over  head and  literals in  the body  of a  clause to
+collect certain information.
+
+@author Edison Mera
+*/
+
 :- meta_predicate
-    match_head(0,*,*,*),
-    match_head_body(0,*,*),
-    match_ai(*,0,*,*,*),
-    match_noloops(0,*,*,*),
     abstract_interpreter(0,4,?),
     abstract_interpreter(0,4,+,-),
     abstract_interpreter_body(+,+,4,?,?),
+    extra_clauses(+,+,-,-),
+    match_head(0,*,*,*),
+    match_head_body(0,*,*),
+    match_noloops(0,*,*,*),
     call_ai(0),
     eval_ai(0),
     skip_ai(0).
@@ -149,13 +161,28 @@ replace_body_hook('$with_gloc'(G, _), ctrtchecks, G).
 replace_body_hook('$with_ploc'(G, _), ctrtchecks, G).
 replace_body_hook(intr_ai(G), _, G).
 
-% call during abstract interpretation and execution
+%!  call_ai(:Goal)
+%
+%   Calls Goal during abstract interpretation and execution
+
 call_ai(G) :- call(G).
-% call during abstract interpretation but ignore during execution
+
+%!  eval_ai(Goal)
+%
+%   Calls Goal during abstract interpretation but ignore during execution
+
 eval_ai(_).
-% ignore during abstract interpretation but call during execution
+
+%!  skip_ai(Goal)
+%
+%   Calls Goal during execution bug ignore during abstract interpretation
+
 skip_ai(G) :- call(G).
-% abstract interpret but ignore during execution
+
+%!  intr_ai(Goal)
+%
+%   Abstract interpret Goal but ignore during execution
+
 intr_ai(_).
 
 mod_qual(M, G as R, I:H as B:C) :- !,
@@ -175,15 +202,49 @@ default_on_error(Error) :-
     print_message(error, Error),
     backtrace(40 ).
 
+%!  abstract_interpreter(:Goal, :Abstraction, +Options, -State) is multi.
+%
+%   Abstract interpret :Goal, call(Abstraction, Literal, Body, State1, State2)
+%   is called over each found Literal to get an abstraction of the body of such
+%   literal.  For instance, if abstraction is: `abstraction(Literal, Body,
+%   State, State) :- clause(Literal, Body)`, the abstract interpreter becomes a
+%   typical prolog interpreter, although some optimizations makes that not
+%   accurate.
+%
+%   Valid options are:
+%
+%     * location(Loc)
+%     A location of the given Goal, used to report the location in case of error
+%
+%     * evaluable(Eval)
+%     Eval is a term or a list of term of the form:
+%
+%       - M:G as Repl
+%         if the literal being interpreted match with G, and M with the
+%         implementation module of literal, then Repl is called.
+%       - M:F/A
+%         equivalent to M:G as R, where functor(R, F, A) succeeds.
+%       - M:G :- Body
+%         if the literal being interpreted match with G, and M with the
+%         implementation module of literal, then continue with the
+%         interpretation of Body.
+%
+%    * on_error(OnErr)
+%    Calls call(OnErr, at_location(Loc, Error)) if Error is raised
+
 abstract_interpreter(M:Goal, Abstraction, Options, State) :-
     option(location(Loc),   Options, context(toplevel, Goal)),
     option(evaluable(Eval), Options, []),
     option(on_error(OnErr), Options, abstract_interpreter:default_on_error),
-    ( is_list(Eval)->EvalL = Eval ; EvalL = [Eval]), % make it easy
+    flatten(Eval, EvalL), % make it easy
     maplist(mod_qual(M), EvalL, MEvalL),
     abstract_interpreter_body(Goal, M, Abstraction,
                               state(Loc, MEvalL, M:OnErr, [], [], [], []),
                               State).
+
+%!  abstract_interpreter(:Goal, :Abstraction, +Options) is multi.
+%
+%   Same as abstract_interpreter(Goal, Abstraction, Options, _)
 
 abstract_interpreter(MGoal, Abstraction, Options) :-
     abstract_interpreter(MGoal, Abstraction, Options, _).
@@ -192,7 +253,15 @@ abstract_interpreter(MGoal, Abstraction, Options) :-
 catch(DCG, Ex, H, S1, S) :-
     catch(call(DCG, S1, S), Ex, H).
 
+%!  cut_to(Goal, ?State0, ?State)
+%
+%   Mark a place to where cut_from will come back.
+
 cut_to(Goal) --> catch(Goal, cut_from, true).
+
+%!  cut_from.
+%
+%   Jump to where the cut_to was called
 
 cut_from.
 cut_from :- throw(cut_from).
@@ -216,6 +285,22 @@ cut_to(Goal) -->
 cut_from :- send_signal(cut_from).
 */
 
+%!  bottom(State1, State) is det.
+%
+%   Sets the state of  the analysis to bottom, which means  that the analysis is
+%   unable to determine  a solution to the Goal (universe  set).  Note that this
+%   could  be due  to  a lack  of  precision  of the  analysis  or simply  being
+%   mathematically impossible to get a solution statically.
+
+bottom(state(Loc, EvalL, OnErr, CallL, D, Cont, _),
+       state(Loc, EvalL, OnErr, CallL, D, Cont, bottom)).
+
+%!  abstract_interpreter_body(+Goal, +M, :Abstraction, ?State1, ?State) is multi.
+%
+%   Like abstract_interpret(M:Goal,  Abstraction, Options, State),  where State1
+%   is determined using  Options, but intended to be  called recursivelly during
+%   the interpretation.
+            
 abstract_interpreter_body(Goal, M, _) -->
     {var(Goal) ; var(M)}, bottom, !.
 abstract_interpreter_body(M:Goal, _, Abs) -->
@@ -456,7 +541,15 @@ cut_if_no_bottom -->
     ; []
     ).
 
+%!  get_state(State, State, State).
+%
+%   Used in DCG's to get the current State
+
 get_state(State, State, State).
+
+%!  put_state(State, _, State).
+%
+%   Used in DCG's to set the current State
 
 put_state(State, _, State).
 
@@ -488,17 +581,10 @@ abstract_interpreter_lit(H, M, CM, Abs) -->
       )
     ).
 
-% top: empty set
-% bottom: I don't know, universe set.
-% true: exact result
-
-bottom(state(Loc, EvalL, OnErr, CallL, D, Cont, _),
-       state(Loc, EvalL, OnErr, CallL, D, Cont, bottom)).
-
-:- multifile match_ai/5.
-
-match_ai(head,    MG, Body) --> match_head(   MG, Body).
-match_ai(noloops, MG, Body) --> match_noloops(MG, Body).
+%!  match_head(:Goal, :Body, ?State1, ?State) is multi.
+%
+%   Implements the next abstraction: Only test matches of literals with heads of
+%   clauses, without digging into the body.
 
 match_head(MGoal, M:true) -->
     {predicate_property(MGoal, interpreted)},
@@ -515,9 +601,14 @@ match_head(MGoal, M:true) -->
     {strip_module(MGoal, M, _)},
     bottom.
 
+%!  match_head_body(:Goal, -Body, -From) is  multi.
+%
+%   Auxiliar  predicate  used to  implement  some  abstractions. Given  a  Goal,
+%   unifies  Body with  the body  of the  matching clauses  and From  with the
+%   location of the clause.
+
 match_head_body(MGoal, CMBody, From) :-
-    strip_module(MGoal, M, Goal),
-    ( extra_clauses(Goal, M, CMBody, From)
+    ( extra_clauses(MGoal, CMBody, From)
     ; From = clause(Ref),
       clause(MGoal, Body, Ref),
       clause_property(Ref, module(CM)),
@@ -525,6 +616,15 @@ match_head_body(MGoal, CMBody, From) :-
     ).
 
 :- use_module(library(interface), []).
+
+extra_clauses(M:Goal, Body, From) :-
+    extra_clauses(Goal, M, Body, From).
+    
+%!  extra_clauses(Goal, Module, :Body, -From) is multi.
+%
+%   Called   inside  match_head_body/3   to  increase   the  precision   of  the
+%   interpreter, it will define 'semantic' extra clauses, allowing for instance,
+%   analysis of dynamic predicates, interfaces, etc.
 
 :- multifile extra_clauses/4.
 
@@ -535,6 +635,12 @@ extra_clauses(Goal, CM, I:Goal, _From) :-
       memberchk(F/A, DIL)
     ->interface:'$implementation'(I, M)
     ).
+
+%!  match_noloops(:Goal, :Body, ?State1, ?State) is multi.
+%
+%   Implements the next abstraction: Only test matches of literals with heads of
+%   clauses, and digs into the body provided that there are not recursive calls,
+%   in such a case the analysis reach bottom and we stop the recursion.
 
 match_noloops(MGoal, Body) -->
     {predicate_property(MGoal, interpreted)},

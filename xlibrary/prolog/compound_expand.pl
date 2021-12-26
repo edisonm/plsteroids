@@ -36,16 +36,20 @@
           [op(1, fx, '$compound_expand') % Used to detect expansion modules
           ]).
 
-/* This module allows to define compositional term and goal expansions,
-   using this module in a module that already defines the predicates
+/* <module> Compound expansions
+
+   This module  allows to define  compositional term and goal  expansions, using
+   this   module   in   a   module   that   already   defines   the   predicates
    term_expansion/2/4 and goal_expansion/2/4 but don't export them.
 
-   The composition of expansions is instrumental to grammar and syntax
-   extensions, which is the key point of Ciao Prolog, but not supported in SWI
-   Prolog. We do not need to deal with all the complexity that the Ciao package
-   system have, so with this helper the port of Ciao Packages to SWI Prolog can
+   The  composition  of  expansions  is   instrumental  to  grammar  and  syntax
+   extensions, which is the  key point of Ciao Prolog, but  not supported in SWI
+   Prolog. We do not need to deal  with all the complexity that the Ciao package
+   system have, so with this helper the  port of Ciao Packages to SWI Prolog can
    be achieved smoothly and such modules can be used in SWI Programs that do not
    requires the Ciao dialect.
+
+@author Edison Mera
 */
 
 :- use_module(library(expansion_module)).

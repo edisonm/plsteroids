@@ -39,7 +39,7 @@
 :- use_module(library(lists)).
 :- use_module(library(apply)).
 :- use_module(library(error)).
-:- use_module(library(compound_expand)).
+:- reexport(library(compound_expand)).
 
 :- multifile
     '$interface'/1,
@@ -109,6 +109,10 @@ prolog:called_by(Pred, Interface, _, PredL) :-
             interface:'$implementation'(Implementation, Interface),
             PredL),
     PredL \= [].
+
+%!  bind_interface(+Interface:atom, +Implementation:atom) is semidet.
+%
+%   Connects Interface with Implementation.
 
 bind_interface(Interface, Implementation) :-
     ( '$interface'(Interface, DIL)

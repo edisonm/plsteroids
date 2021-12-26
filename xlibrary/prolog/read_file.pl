@@ -33,8 +33,20 @@
 */
 
 :- module(read_file,
-          [ read_file/2
+          [ read_file/2 % +File, -Term
           ]).
+
+/** <module> Read File
+
+Predicate to read files on backtracking
+
+@author Edison Mera
+*/
+
+%!  read_file(+File, -Term) is multi.
+%
+%   Unifies Term with the lines in File, and allows to get the next lines on
+%   backtracking. The terms are read using read_term(Stream, Term, []).
 
 read_file(F, Terms) :-
     setup_call_cleanup(

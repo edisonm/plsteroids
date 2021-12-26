@@ -48,6 +48,11 @@
         conc_forall(0, 0 ),
         conc_forall(0, 0, 0 ).
 
+/* <module> Concurrent forall/2
+
+@author Edison Mera
+*/
+
 %!  conc_forall(:Cond, :Action)  is semidet.
 %
 %  Concurrent  version   of  forall/2.    This  predicate  will   prove  several
