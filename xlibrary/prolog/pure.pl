@@ -54,6 +54,7 @@ is_pure_body(G, _, _) :-
     freeze(G, is_pure_pred(G)).
 is_pure_body(true, _, _) :- !.
 is_pure_body(fail, _, _) :- !.
+is_pure_body(_=_,  _, _) :- !.
 is_pure_body(@(G, CM), _, Stack) :-
     !,
     strip_module(CM:G, M, H),
