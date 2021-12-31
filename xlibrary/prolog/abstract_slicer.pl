@@ -46,8 +46,42 @@
     abstract_slice(0,+,?,-),
     slicer_abstraction(+,+,+,0,?, ?,?).
 
+/** <module> Abstract slicer
+
+Implements the next  abstract domain: find possible matches  of output arguments
+of the given predicate.
+
+*/
+
 abstract_slice(M:Head, Mode, OptL) :-
     abstract_slice(M:Head, Mode, OptL, _).
+
+%!  abstract_slice(:Head, +Mode:list, +Options, +State) is multi.
+%
+%   Returns  on  backtracking, the  possible  instances  in  the Head  of  those
+%   argument positions  marked with  a (-)  in Mode. State  is unified  with the
+%   result of the predicate abstract_interpreter/4, which is called inside.
+%
+%   Example:
+%
+%   consider the next predicate:
+%
+%   ```
+%   popt('option 1', Answer) :- append(_,_,Answer).
+%   popt('option 2', Answer) :- member(Answer, [1,2,3]).
+%   ```
+%
+%   If we just execute the predicate with Answer uninstatiated, we will get
+%   infinite solutions, but:
+%
+%   ==
+%   ?- abstract_slice(popt(A,X),[+,?],[]).
+%   A = 'option 1' ;
+%   A = 'option 2'.
+%   ==
+%
+%   Will 'abstract' the execution of popt/2 to get all the matches of A, slicing
+%   out X
 
 abstract_slice(M:Head, Mode, OptL, State) :-
     apply_mode(Head, Mask, Mode, Spec, RevS),
@@ -89,7 +123,8 @@ chain_of_dependencies(Spec, VarsR, Goal, ContL) :-
     ; select(Cont, ContL, ContL2),
       terms_share(Cont, VarsR, Goal),
       chain_of_dependencies(Spec, VarsR, Cont, ContL2)
-    ), !.
+    ),
+    !.
 
 slicer_abstraction(Spec, VarsR, Scope, MGoal, Body) -->
     {predicate_property(MGoal, interpreted)},
@@ -100,15 +135,18 @@ slicer_abstraction(Spec, VarsR, Scope, MGoal, Body) -->
       chain_of_dependencies(Spec, VarsR, Goal, Cont)
     ->match_head_body(M:Goal, Body1, Loc),
       ( Scope = body
-      ->Body = Body1
+      ->( terms_share(Spec, VarsR, Goal)
+        ->Body = Body1
+        ; Body1 = CM:Body2,
+          Body = CM:once(Body2)
+        )
       ; terms_share(Spec, VarsR, Goal)
       ->Body = Body1
       ; Body = M:true
       )
     ; % check if the body trivially fails:
       ( Scope = body
-      ->distinct(M:Goal,
-                 match_head_body(M:Goal, _, Loc))
+      ->once(match_head_body(M:Goal, _, Loc))
       ; Loc = Loc1
       ),
       Body = M:true
