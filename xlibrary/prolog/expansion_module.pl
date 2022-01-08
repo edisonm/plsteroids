@@ -38,26 +38,32 @@
 
 :- use_module(library(option)).
 
-expansion_module(EM, EM1, L) :-
-    current_op(1, fx, EM1:'$compound_expand'),
-    '$load_context_module'(CF, EM1, Opts),
-    module_property(CM, file(CF)),
-    ( CM = compound_expand
-    ->EM = EM1
-    ; option(reexport(true), Opts),
-      expansion_module(EM, CM, [EM1|L])
-    ),
-    \+ memberchk(EM, L).
+:- thread_local em_db/1.
 
 %!  expansion_module(+Module, ExpansionModule)
 %
 %   Kludge: using swipl internals. Perhaps is not a good idea --EMM
-%   Warning: could report duplicate solutions
 %
 expansion_module(M, EM) :-
-    '$load_context_module'(EF, M, _),
-    module_property(EM1, file(EF)),
-    expansion_module(EM, EM1, [M]).
+    setup_call_cleanup(
+        assertz(em_db(M)),
+        ( '$load_context_module'(File, M, _),
+          module_property(CM, file(File)),
+          expansion_module_rec(CM, EM)
+        ),
+        retractall(em_db(_))).
+
+expansion_module_rec(M, EM) :-
+    \+ em_db(M),
+    assertz(em_db(M)),
+    current_op(1, fx, M:'$compound_expand'),
+    '$load_context_module'(File, M, Opts),
+    module_property(CM, file(File)),
+    ( CM = compound_expand
+    ->EM = M
+    ; option(reexport(true), Opts),
+      expansion_module_rec(CM, EM)
+    ).
 
 is_expansion_module(EM) :-
     current_op(1, fx, EM:'$compound_expand'),
