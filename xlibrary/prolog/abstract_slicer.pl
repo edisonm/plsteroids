@@ -67,8 +67,10 @@ abstract_slice(M:Head, Mode, OptL) :-
 %   consider the next predicate:
 %
 %   ```
+%   popt('option'(A), [])    :- member(A, [1,2,3]).
 %   popt('option 1', Answer) :- append(_,_,Answer).
 %   popt('option 2', Answer) :- member(Answer, [1,2,3]).
+%   popt('option 3', []) :- member(_Answer, [1,2,3]).
 %   ```
 %
 %   If we just execute the predicate with Answer uninstatiated, we will get
@@ -76,8 +78,12 @@ abstract_slice(M:Head, Mode, OptL) :-
 %
 %   ==
 %   ?- abstract_slice(popt(A,X),[+,?],[]).
+%   A = option(1) ;
+%   A = option(2) ;
+%   A = option(3) ;
 %   A = 'option 1' ;
-%   A = 'option 2'.
+%   A = 'option 2' ;
+%   A = 'option 3'.
 %   ==
 %
 %   Will 'abstract' the execution of popt/2 to get all the matches of A, slicing
