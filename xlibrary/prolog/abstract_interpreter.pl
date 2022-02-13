@@ -253,7 +253,10 @@ abstract_interpreter(MGoal, Abstraction, Options) :-
 catch(DCG, Ex, H, S1, S) :-
     catch(call(DCG, S1, S), Ex, H).
 
-%!  cut_to(Goal, ?State0, ?State)
+
+:- meta_predicate cut_to(2, ?, ?).
+
+%!  cut_to(:Goal, ?State0, ?State)
 %
 %   Mark a place to where cut_from will come back.
 

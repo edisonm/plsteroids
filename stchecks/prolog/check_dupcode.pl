@@ -39,6 +39,7 @@
 :- use_module(library(pairs)).
 :- use_module(library(checker)).
 :- use_module(library(check), []).
+:- use_module(library(apply_macros), []).
 :- use_module(library(assertions)).
 :- use_module(library(clambda)).
 :- use_module(library(extend_args)).

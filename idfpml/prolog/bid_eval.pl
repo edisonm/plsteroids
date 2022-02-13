@@ -134,7 +134,7 @@ do_eval(Expr, Type, C) :-
     maplist(eval_1(Type), Args, EvalL, EAs),
     AC =.. [Name, Type, C|EAs],
     list_sequence(EvalL, EvalS),
-    necks,
+    neckis,
     EvalS,
     AC.
 

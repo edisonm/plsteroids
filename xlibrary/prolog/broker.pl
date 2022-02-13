@@ -120,6 +120,10 @@ generate_server(Target, File, RelTo, Module, Interface, AliasTo) -->
     neck,
     generate_file('_serv', File, RelTo, AliasTo, _, dump_server(Module, Interface)).
 
+:- meta_predicate
+    generate_file(+,+,+,+,+,2),
+    generate_file(+,+,+,+,+,2,?,?).
+
 generate_file(Suffix, File, RelTo, AliasIntf, AliasSuff, Dump) :-
     change_alias(add_suffix(Suffix), AliasIntf, AliasSuff),
     alias_file(RelTo, AliasSuff, FileSuff),
