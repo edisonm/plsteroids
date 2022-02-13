@@ -330,8 +330,7 @@ abstract_interpret_body_not(A, M, Abs) -->
 abstract_interpret_body_not(_, _, _) --> bottom.
 
 get_conts(Conts, State, State) :-
-    State = state(_, _, _, _, _, Conts, _),
-    neck.
+    State = state(_, _, _, _, _, Conts, _).
 
 put_conts(Conts,
           state(Loc, EvalL, OnErr, CallL, Data, _, Result),

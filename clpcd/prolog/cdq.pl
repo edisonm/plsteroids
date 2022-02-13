@@ -41,7 +41,8 @@
 
 :- license(gpl_swipl, 'CLP(CDQ)').
 :- use_module(library(neck)).
-:- use_module(library(near_utils)).
+:- use_module(library(compilation_module)).
+:- compilation_module(library(near_utils)).
 :- use_module(library(cdqr), []).
 :- reexport(library(clpcd)).
 
@@ -61,16 +62,13 @@ compare_q(\=, A, B) :- A =\= B.
 
 clpcd_domain_ops:div_d(cdq, A, B, C) :- C is A rdiv B.
 
-:- public reserved_digits/1.
-
-reserved_digits(R) :-
+cdq_epsilon(R) :-
     repsilon(E),
-    R is E/epsilon.
+    R is epsilon/E,
+    neck.
 
 clpcd_domain_ops:cast_d(cdq, A, B) :-
-    reserved_digits(R),
-    T is 1/R,
-    neck,
+    cdq_epsilon(T),
     ( number(A)
     ->( A >= T
       ->B is rationalize(A)

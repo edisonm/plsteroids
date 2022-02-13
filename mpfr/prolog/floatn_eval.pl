@@ -41,6 +41,7 @@
 :- use_module(library(compilation_module)).
 :- compilation_module(library(list_sequence)).
 :- compilation_module(library(floatn_desc)).
+:- include(library(floatn_reserve_eps)).
 
 :- pred [ [ e/2, epsilon/2, cputime/2 ] :: (int * -floatn_t),
           [ eval/3, (+)/3, (-)/3, lgamma/3
@@ -59,8 +60,6 @@ op_pred(>=, greaterequal).
 op_pred(<,  less).
 op_pred(>,  greater).
 op_pred(\=, not_equal).
-
-reserve_eps(1024).
 
 floatn_not_equal(A, B) :- \+ floatn_equal(A, B).
 

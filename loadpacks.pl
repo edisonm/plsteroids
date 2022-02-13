@@ -13,6 +13,7 @@ loadpacks(Loader) :-
                   clpcd/prolog/eval,
                   idfpml/prolog/bid_auto,
                   mpfr/prolog/floatn_auto,
+                  mpfr/prolog/floatn_reserve_eps,
                   refactor/prolog/i18n/i18n_trans,
                   xtools/prolog/ws_source,
                   refactor/prolog/ref_expand,

@@ -41,6 +41,7 @@
 :- use_module(library(compilation_module)).
 :- compilation_module(library(list_sequence)).
 :- compilation_module(library(complexn_desc)).
+:- include(library(floatn_reserve_eps)).
 
 cd_prefix(complexn(R, I), complexn, [R, I]).
 
@@ -50,8 +51,6 @@ op_pred(=,  equal).
 % op_pred(<,  less).
 % op_pred(>,  greater).
 op_pred(\=, not_equal).
-
-reserve_eps(1024).
 
 complexn_not_equal(A, B) :- \+ complexn_equal(A, B).
 

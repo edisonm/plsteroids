@@ -45,7 +45,6 @@
 :- compilation_predicate op_pred/2.
 :- compilation_predicate cd_prefix/3.
 :- compilation_predicate expr_pred/2.
-:- compilation_predicate reserve_eps/1.
 
 :- public eval_1/4.
 
@@ -98,7 +97,6 @@ do_eval_z(Type, C) :- cast(Type, 0, C).
 
 eepsilon(T, E) :-
     reserve_eps(N),
-    neck,
     eval(T, N*epsilon, E).
 
 eepsilon(T, N, E) :-

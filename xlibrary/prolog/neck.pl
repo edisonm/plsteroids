@@ -43,6 +43,7 @@
                  rtc_warning/3]).
 
 :- use_module(library(lists)).
+:- use_module(library(choicepoints)).
 :- use_module(library(ordsets)).
 :- use_module(library(solution_sequences)).
 :- use_module(library(compound_expand)).
@@ -130,6 +131,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
     term_variables(Head, HVars),
     '$expand':mark_vars_non_fresh(HVars),
     expand_goal(M:Static, Expanded),
+    HasCP = hascp(yes),
     ( memberchk(Neck, [neck, neck(_, _), necks, necks(_, _)]),
       Head \== '$decl',
       nonvar(SepBody),
@@ -146,7 +148,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
       format(atom(FNB), '__aux_neck_~w:~w', [M, Hash]),
       SepHead =.. [FNB|ArgNB],
       conj(LRight, SepHead, NeckBody),
-      findall(Pattern-Head, Expanded, ClausePIL),
+      findall(Pattern-Head, has_choicepoints(Expanded, nb_setarg(1, HasCP, no)), ClausePIL),
       ( '$get_predicate_attribute'(M:SepHead, defined, 1),
         '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
       ->true
@@ -168,9 +170,27 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
                )
              ), ClauseL1)
     ; expand_goal(M:Right, M:NeckBody),
-      findall(Pattern-Head, Expanded, ClausePIL),
+      findall(Pattern-Head, has_choicepoints(Expanded, nb_setarg(1, HasCP, no)), ClausePIL),
       RTHead = Head,
       ClauseL1 = []
+    ),
+    ( Head \== '$decl',
+      HasCP = hascp(no),
+      % Since this is a critical warning, we prevent app programmers to be able
+      % to disble it, in any case there is always a possibility to refactorize
+      % the code to prevent this warning --EMM
+      % \+ memberchk(Neck, [necks, necks(_, _), neckis, neckis(_, _)]),
+      \+ ( ClausePIL = [_-MHead],
+           strip_module(Head,  _, Head1),
+           strip_module(MHead, _, Head2),
+           arg(1, Head1, Arg1),
+           arg(1, Head2, Arg2),
+           var(Arg1),
+           nonvar(Arg2)
+         )
+    ->warning_nocp(M, Head),
+      fail
+    ; true
     ),
     phrase(( findall(Clause, member(Clause-_, ClausePIL)),
              findall(Clause,
@@ -210,6 +230,14 @@ rtc_warning(M, H, Loc) :-
                 Loc,
                 format("Attempt to call run-time part of ~w at compile-time", [M:H])))),
     fail.
+
+warning_nocp(M, H) :-
+    source_location(File, Line),
+    print_message(
+        warning,
+        at_location(
+            file(File, Line, -1, _),
+            format("Ignored ~w, since it has no effect or detrimental effect on performance", [M:H]))).
 
 term_expansion((Head :- Body), ClauseL) :-
     term_expansion_hb(Head, Body, NB, (Head :- NB), ClauseL).
