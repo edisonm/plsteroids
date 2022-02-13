@@ -38,6 +38,8 @@
                  necki/2,
                  necks/0,
                  necks/2,
+                 neckis/0,
+                 neckis/2,
                  rtc_warning/3]).
 
 :- use_module(library(lists)).
@@ -48,9 +50,11 @@
 %!  neck        is det.
 %!  necki       is det.
 %!  necks       is det.
+%!  neckis      is det.
 %!  neck( L, L) is det.
 %!  necki(L, L) is det.
 %!  necks(L, L) is det.
+%!  neckis(L, L) is det.
 %
 %   Establish that everything  above it should be evaluated at  compile time, be
 %   careful since  such part  can only contain  predicates already  defined.  In
@@ -68,6 +72,8 @@
 %   necks (s=silent, or static) will not  warn you if the non-expanded parts are
 %   called at compile-time.
 
+%   neckis is a combination of inlined and silent.
+
 %   these predicates can also be used in declarations, although in that case, no
 %   warnings  will  be   shown  about  run-time  parts   being  executed,  since
 %   declarations are executed at compile-time.
@@ -83,6 +89,10 @@ necki --> [].
 necks.
 
 necks --> [].
+
+neckis.
+
+neckis --> [].
 
 current_seq_lit(Seq, Lit, Left, Right) :-
     current_seq_lit(Seq, Lit, true, Left, true, Right).
@@ -108,7 +118,8 @@ current_seq_lit((H, T), S, L1, L, R1, R) :-
 term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
     '$current_source_module'(M),
     once(( current_seq_lit(Body1, Neck, Static, Right),
-           memberchk(Neck, [neck, neck(X, X), necki, necki(X, X), necks, necks(X, X)])
+           memberchk(Neck, [neck, neck(X, X), necki, necki(X, X),
+                            necks, necks(X, X), neckis, neckis(X, X)])
          )),
     once(( current_seq_lit(Right, !, LRight, SepBody),
            \+ current_seq_lit(SepBody, !, _, _)
@@ -163,7 +174,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
     ),
     phrase(( findall(Clause, member(Clause-_, ClausePIL)),
              findall(Clause,
-                     ( \+ memberchk(Neck, [necks, necks(_, _)]),
+                     ( \+ memberchk(Neck, [necks, necks(_, _), neckis, neckis(_, _)]),
                        Head \== '$decl',
                        SepBody \= true,
                        distinct(Clause, st_body(Head, M, RTHead, ClausePIL, Clause))
@@ -204,7 +215,7 @@ term_expansion((Head :- Body), ClauseL) :-
     term_expansion_hb(Head, Body, NB, (Head :- NB), ClauseL).
 term_expansion((Head --> Body), ClauseL) :-
     current_seq_lit(Body, Neck, _, _),
-    memberchk(Neck, [neck, necki, necks]),
+    memberchk(Neck, [neck, necki, necks, neckis]),
     dcg_translate_rule((Head --> Body), _, (H :- B), _),
     term_expansion_hb(H, B, NB, (H :- NB), ClauseL).
 term_expansion((:- Body), ClauseL) :-
