@@ -44,6 +44,7 @@
 
 :- use_module(library(lists)).
 :- use_module(library(choicepoints)).
+:- use_module(library(statistics)).
 :- use_module(library(ordsets)).
 :- use_module(library(solution_sequences)).
 :- use_module(library(compound_expand)).
@@ -148,7 +149,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
       format(atom(FNB), '__aux_neck_~w:~w', [M, Hash]),
       SepHead =.. [FNB|ArgNB],
       conj(LRight, SepHead, NeckBody),
-      findall(Pattern-Head, has_choicepoints(Expanded, nb_setarg(1, HasCP, no)), ClausePIL),
+      findall(t(Pattern, Head, T), has_choicepoints(call_time(Expanded, T), nb_setarg(1, HasCP, no)), ClausePIL),
       ( '$get_predicate_attribute'(M:SepHead, defined, 1),
         '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
       ->true
@@ -157,7 +158,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
     ->RTHead = SepHead,
       phrase(( findall((:- discontiguous IM:F/A),
                        distinct(IM:F/A,
-                                ( member(_-H, ClausePIL),
+                                ( member(t(_, H, _), ClausePIL),
                                   H \== '$decl',
                                   strip_module(M:H, IM, P),
                                   functor(P, F, A)
@@ -170,7 +171,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
                )
              ), ClauseL1)
     ; expand_goal(M:Right, M:NeckBody),
-      findall(Pattern-Head, has_choicepoints(Expanded, nb_setarg(1, HasCP, no)), ClausePIL),
+      findall(t(Pattern, Head, T), has_choicepoints(call_time(Expanded, T), nb_setarg(1, HasCP, no)), ClausePIL),
       RTHead = Head,
       ClauseL1 = []
     ),
@@ -180,19 +181,32 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
       % to disble it, in any case there is always a possibility to refactorize
       % the code to prevent this warning --EMM
       % \+ memberchk(Neck, [necks, necks(_, _), neckis, neckis(_, _)]),
-      \+ ( ClausePIL = [_-MHead],
-           strip_module(Head,  _, Head1),
-           strip_module(MHead, _, Head2),
-           arg(1, Head1, Arg1),
-           arg(1, Head2, Arg2),
-           var(Arg1),
-           nonvar(Arg2)
+      \+ ( ClausePIL = [t(_, MHead, T)],
+           ( strip_module(Head,  _, Head1),
+             compound(Head1),
+             strip_module(MHead, _, Head2),
+             arg(1, Head1, Arg1),
+             arg(1, Head2, Arg2),
+             var(Arg1),
+             nonvar(Arg2)
+           ; % TBD: optimize this branch
+             term_variables(Head-NeckBody, HNVarU),
+             term_variables(Expanded, ExVarU),
+             sort(HNVarU, HNVarL),
+             sort(ExVarU, ExVarL),
+             ord_intersection(ExVarL, HNVarL, AssignedL),
+             Inferences = T.inferences,
+             length(AssignedL, NumVarsAssigned),
+             % writeln(user_error, Expanded: NumVarsAssigned =< Inferences-5),
+             % For some unknown reason, it is biased by 5 steps
+             NumVarsAssigned =< Inferences-5
+           )
          )
     ->warning_nocp(M, Head),
       fail
     ; true
     ),
-    phrase(( findall(Clause, member(Clause-_, ClausePIL)),
+    phrase(( findall(Clause, member(t(Clause, _, _), ClausePIL)),
              findall(Clause,
                      ( \+ memberchk(Neck, [necks, necks(_, _), neckis, neckis(_, _)]),
                        Head \== '$decl',
@@ -202,7 +216,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
            ), ClauseL, ClauseL1).
 
 st_body(Head, M, RTHead, ClausePIL, Clause) :-
-    member(_-Head, ClausePIL),
+    member(t(_, Head, _), ClausePIL),
     strip_module(M:Head, IM, Pred),
     strip_module(M:RTHead, RTM, RTPred),
     functor(RTPred, RTF, RTA),
@@ -237,7 +251,7 @@ warning_nocp(M, H) :-
         warning,
         at_location(
             file(File, Line, -1, _),
-            format("Ignored ~w, since it has no effect or detrimental effect on performance", [M:H]))).
+            format("Ignored neck on ~w, since it has no effect or detrimental effect on performance", [M:H]))).
 
 term_expansion((Head :- Body), ClauseL) :-
     term_expansion_hb(Head, Body, NB, (Head :- NB), ClauseL).
