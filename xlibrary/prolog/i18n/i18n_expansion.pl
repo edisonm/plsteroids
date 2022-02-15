@@ -38,6 +38,9 @@
 :- reexport(library(i18n/i18n_op)).
 :- use_module(library(i18n/i18n_support)).
 
+:- multifile
+    translate_decl_hook/1.
+
 translate_args(Meta, M, Goal1, Goal) :-
     functor(Meta, F, A),
     functor(Goal, F, A),
@@ -152,7 +155,10 @@ term_expansion((:- init_i18n),
     tabulate_i18n_records(M).
 term_expansion((:- M:init_i18n), [])  :- !, tabulate_i18n_records(M).
 term_expansion((:- init_i18n(M)), []) :- !, tabulate_i18n_records(M).
-term_expansion((:- _), _) :- !, fail. % Skip declarations
+term_expansion((:- Decl), _) :-
+    \+ translate_decl_hook(Decl),
+    !,
+    fail. % Skip declarations
 term_expansion((Term1 :- Body), (Term :- Body)) :- !,
     translate_term(Term1, Term).
 term_expansion((Term1 --> Body), (Term --> Body)) :- !,
