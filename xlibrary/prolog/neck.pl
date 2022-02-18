@@ -119,7 +119,11 @@ current_seq_lit((H, T), S, L1, L, R1, R) :-
 
 :- thread_local '$neck_body'/3.
 
-assign_value(A, V, A=V).
+assign_value(A, V) -->
+    ( {var(V)}
+    ->{A=V}
+    ; [A=V]
+    ).
 
 term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
     '$current_source_module'(M),
@@ -137,7 +141,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
     '$expand':mark_vars_non_fresh(HVars),
     expand_goal(M:Static, Expanded),
     HasCP = hascp(yes),
-    term_variables(Head-NeckBody, HNVarU),
+    term_variables(Head-Right, HNVarU),
     term_variables(Expanded, ExVarU),
     sort(HNVarU, HNVarL),
     sort(ExVarU, ExVarL),
@@ -188,32 +192,35 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
       RTHead = Head,
       ClauseL1 = []
     ),
-    ( Head \== '$decl',
-      HasCP = hascp(no),
-      % Since this is a critical warning, we prevent app programmers to be able
-      % to disable it, in any case there is always a possibility to refactorize
-      % the code to prevent this warning --EMM
-      % \+ memberchk(Neck, [necks, necks(_, _), neckis, neckis(_, _)]),
-      \+ ( ClausePIL = [t(ClausePI, MHead, T)],
-           ( strip_module(Head,  _, Head1),
-             compound(Head1),
-             strip_module(MHead, _, Head2),
-             arg(1, Head1, Arg1),
-             arg(1, Head2, Arg2),
-             var(Arg1),
-             nonvar(Arg2)
-           ; % Compare performance with simple unification via =/2 to see if
-             % neck is improving the performance or not:
-             Inferences = T.inferences,
-             copy_term(Pattern-AssignedL, ClausePI-ValuesL),
-             maplist(assign_value, AssignedL, ValuesL, AVL),
-             list_sequence(AVL, Seq),
-             findall(T2, call_time(Seq, T2), [T2]),
-             Inferences2 = T2.inferences,
-             Inferences2 < Inferences
-           )
-         )
-    ->warning_nocp(M, Head),
+    ( Head == '$decl'
+    ->true
+    ; HasCP = hascp(yes)
+    ->true
+    % Since this is a critical warning, we prevent app programmers to be able
+    % to disable it, in any case there is always a possibility to refactorize
+    % the code to prevent this warning --EMM
+    % ; memberchk(Neck, [necks, necks(_, _), neckis, neckis(_, _)])
+    % ->true
+    ; ClausePIL = [t(_, MHead, T)],
+      strip_module(Head,  _, Head1),
+      compound(Head1),
+      strip_module(MHead, _, Head2),
+      arg(1, Head1, Arg1),
+      arg(1, Head2, Arg2),
+      var(Arg1),
+      nonvar(Arg2)
+    ->true
+    ; ClausePIL = [t(ClausePI, _, T)],
+      % Compare performance with simple unification via =/2 to see if
+      % neck is improving the performance or not:
+      Inferences = T.inferences,
+      copy_term(Pattern-AssignedL, ClausePI-ValuesL),
+      foldl(assign_value, AssignedL, ValuesL, AVL, []),
+      list_sequence(AVL, Seq),
+      findall(T2, call_time(Seq, T2), [T2]),
+      InfOptimal = T2.inferences,
+      InfOptimal >= Inferences
+    ->warning_nocp(M, Head, InfOptimal >= Inferences),
       fail
     ; true
     ),
@@ -256,13 +263,13 @@ rtc_warning(M, H, Loc) :-
                 format("Attempt to call run-time part of ~w at compile-time", [M:H])))),
     fail.
 
-warning_nocp(M, H) :-
+warning_nocp(M, H, Term) :-
     source_location(File, Line),
     print_message(
         warning,
         at_location(
             file(File, Line, -1, _),
-            format("Ignored neck on ~w, since it has no effect or detrimental effect on performance", [M:H]))).
+            format("Ignored neck on ~w, since it has no effect or detrimental effect on performance (~w)", [M:H, Term]))).
 
 term_expansion((Head :- Body), ClauseL) :-
     term_expansion_hb(Head, Body, NB, (Head :- NB), ClauseL).
