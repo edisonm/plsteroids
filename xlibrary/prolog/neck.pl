@@ -43,6 +43,8 @@
                  rtc_warning/3]).
 
 :- use_module(library(lists)).
+:- use_module(library(apply)).
+:- use_module(library(list_sequence)).
 :- use_module(library(choicepoints)).
 :- use_module(library(statistics)).
 :- use_module(library(ordsets)).
@@ -117,6 +119,8 @@ current_seq_lit((H, T), S, L1, L, R1, R) :-
 
 :- thread_local '$neck_body'/3.
 
+assign_value(A, V, A=V).
+
 term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
     '$current_source_module'(M),
     once(( current_seq_lit(Body1, Neck, Static, Right),
@@ -133,6 +137,11 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
     '$expand':mark_vars_non_fresh(HVars),
     expand_goal(M:Static, Expanded),
     HasCP = hascp(yes),
+    term_variables(Head-NeckBody, HNVarU),
+    term_variables(Expanded, ExVarU),
+    sort(HNVarU, HNVarL),
+    sort(ExVarU, ExVarL),
+    ord_intersection(ExVarL, HNVarL, AssignedL),
     ( memberchk(Neck, [neck, neck(_, _), necks, necks(_, _)]),
       Head \== '$decl',
       nonvar(SepBody),
@@ -149,7 +158,9 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
       format(atom(FNB), '__aux_neck_~w:~w', [M, Hash]),
       SepHead =.. [FNB|ArgNB],
       conj(LRight, SepHead, NeckBody),
-      findall(t(Pattern, Head, T), has_choicepoints(call_time(Expanded, T), nb_setarg(1, HasCP, no)), ClausePIL),
+      findall(t(Pattern, Head, T),
+              has_choicepoints(call_time(Expanded, T), nb_setarg(1, HasCP, no)),
+              ClausePIL),
       ( '$get_predicate_attribute'(M:SepHead, defined, 1),
         '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
       ->true
@@ -171,17 +182,19 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
                )
              ), ClauseL1)
     ; expand_goal(M:Right, M:NeckBody),
-      findall(t(Pattern, Head, T), has_choicepoints(call_time(Expanded, T), nb_setarg(1, HasCP, no)), ClausePIL),
+      findall(t(Pattern, Head, T),
+              has_choicepoints(call_time(Expanded, T), nb_setarg(1, HasCP, no)),
+              ClausePIL),
       RTHead = Head,
       ClauseL1 = []
     ),
     ( Head \== '$decl',
       HasCP = hascp(no),
       % Since this is a critical warning, we prevent app programmers to be able
-      % to disble it, in any case there is always a possibility to refactorize
+      % to disable it, in any case there is always a possibility to refactorize
       % the code to prevent this warning --EMM
       % \+ memberchk(Neck, [necks, necks(_, _), neckis, neckis(_, _)]),
-      \+ ( ClausePIL = [t(_, MHead, T)],
+      \+ ( ClausePIL = [t(ClausePI, MHead, T)],
            ( strip_module(Head,  _, Head1),
              compound(Head1),
              strip_module(MHead, _, Head2),
@@ -189,17 +202,15 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
              arg(1, Head2, Arg2),
              var(Arg1),
              nonvar(Arg2)
-           ; % TBD: optimize this branch
-             term_variables(Head-NeckBody, HNVarU),
-             term_variables(Expanded, ExVarU),
-             sort(HNVarU, HNVarL),
-             sort(ExVarU, ExVarL),
-             ord_intersection(ExVarL, HNVarL, AssignedL),
+           ; % Compare performance with simple unification via =/2 to see if
+             % neck is improving the performance or not:
              Inferences = T.inferences,
-             length(AssignedL, NumVarsAssigned),
-             % writeln(user_error, Expanded: NumVarsAssigned =< Inferences-5),
-             % For some unknown reason, it is biased by 5 steps
-             NumVarsAssigned =< Inferences-5
+             copy_term(Pattern-AssignedL, ClausePI-ValuesL),
+             maplist(assign_value, AssignedL, ValuesL, AVL),
+             list_sequence(AVL, Seq),
+             findall(T2, call_time(Seq, T2), [T2]),
+             Inferences2 = T2.inferences,
+             Inferences2 < Inferences
            )
          )
     ->warning_nocp(M, Head),
