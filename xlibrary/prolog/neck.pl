@@ -39,8 +39,7 @@
                  necks/0,
                  necks/2,
                  neckis/0,
-                 neckis/2,
-                 rtc_warning/3]).
+                 neckis/2]).
 
 :- use_module(library(lists)).
 :- use_module(library(apply)).
@@ -50,6 +49,7 @@
 :- use_module(library(ordsets)).
 :- use_module(library(solution_sequences)).
 :- use_module(library(compound_expand)).
+:- use_module(library(ontrace)).
 
 %!  neck        is det.
 %!  necki       is det.
@@ -117,13 +117,13 @@ current_seq_lit((H, T), S, L1, L, R1, R) :-
       current_seq_lit(T, S, L2, L, R1, R)
     ).
 
-:- thread_local '$neck_body'/3.
-
 assign_value(A, V) -->
     ( {var(V)}
     ->{A=V}
     ; [A=V]
     ).
+
+neck_prefix('__aux_neck_').
 
 term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
     '$current_source_module'(M),
@@ -159,12 +159,11 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
       sort(VarBU, VarBL),
       ord_intersection(VarHL, VarBL, ArgNB),
       variant_sha1(ArgNB-ExpBody, Hash),
-      format(atom(FNB), '__aux_neck_~w:~w', [M, Hash]),
+      neck_prefix(NeckPrefix),
+      format(atom(FNB), '~w~w:~w', [NeckPrefix, M, Hash]),
       SepHead =.. [FNB|ArgNB],
       conj(LRight, SepHead, NeckBody),
-      findall(t(Pattern, Head, T),
-              has_choicepoints(call_time(Expanded, T), nb_setarg(1, HasCP, no)),
-              ClausePIL),
+      findall(t(Pattern, Head), call_checks(Expanded, HasCP), ClausePIL),
       ( '$get_predicate_attribute'(M:SepHead, defined, 1),
         '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
       ->true
@@ -173,7 +172,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
     ->RTHead = SepHead,
       phrase(( findall((:- discontiguous IM:F/A),
                        distinct(IM:F/A,
-                                ( member(t(_, H, _), ClausePIL),
+                                ( member(t(_, H), ClausePIL),
                                   H \== '$decl',
                                   strip_module(M:H, IM, P),
                                   functor(P, F, A)
@@ -186,9 +185,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
                )
              ), ClauseL1)
     ; expand_goal(M:Right, M:NeckBody),
-      findall(t(Pattern, Head, T),
-              has_choicepoints(call_time(Expanded, T), nb_setarg(1, HasCP, no)),
-              ClausePIL),
+      findall(t(Pattern, Head), call_checks(Expanded, HasCP), ClausePIL),
       RTHead = Head,
       ClauseL1 = []
     ),
@@ -201,7 +198,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
     % the code to prevent this warning --EMM
     % ; memberchk(Neck, [necks, necks(_, _), neckis, neckis(_, _)])
     % ->true
-    ; ClausePIL = [t(_, MHead, T)],
+    ; ClausePIL = [t(_, MHead)],
       strip_module(Head,  _, Head1),
       compound(Head1),
       strip_module(MHead, _, Head2),
@@ -210,21 +207,23 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
       var(Arg1),
       nonvar(Arg2)
     ->true
-    ; ClausePIL = [t(ClausePI, _, T)],
-      % Compare performance with simple unification via =/2 to see if
-      % neck is improving the performance or not:
-      Inferences = T.inferences,
+    ; ClausePIL = [t(ClausePI, _)],
+      % Compare performance with simple unification via =/2 to see if neck is
+      % improving the performance or not. But note that this will compare
+      % interpreted prolog, not optimized/compiled code:
+      findall(T1, call_time(Expanded, T1), [T1]),
+      InfCurrent = T1.inferences,
       copy_term(Pattern-AssignedL, ClausePI-ValuesL),
       foldl(assign_value, AssignedL, ValuesL, AVL, []),
-      list_sequence(AVL, Seq),
-      findall(T2, call_time(Seq, T2), [T2]),
+      list_sequence(AVL, Sequence),
+      findall(T2, call_time(Sequence, T2), [T2]),
       InfOptimal = T2.inferences,
-      InfOptimal >= Inferences
-    ->warning_nocp(M, Head, InfOptimal >= Inferences),
+      InfOptimal >= InfCurrent
+    ->warning_nocp(M, Head, InfOptimal >= InfCurrent),
       fail
     ; true
     ),
-    phrase(( findall(Clause, member(t(Clause, _, _), ClausePIL)),
+    phrase(( findall(Clause, member(t(Clause, _), ClausePIL)),
              findall(Clause,
                      ( \+ memberchk(Neck, [necks, necks(_, _), neckis, neckis(_, _)]),
                        Head \== '$decl',
@@ -234,34 +233,12 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
            ), ClauseL, ClauseL1).
 
 st_body(Head, M, RTHead, ClausePIL, Clause) :-
-    member(t(_, Head, _), ClausePIL),
-    strip_module(M:Head, IM, Pred),
+    member(t(_, Head), ClausePIL),
     strip_module(M:RTHead, RTM, RTPred),
     functor(RTPred, RTF, RTA),
-    warning_body(IM, Pred, WB),
-    (RTM = M->Body=WB; Body=M:WB),
-    assertz('$neck_body'(M, RTM:RTPred, Body)),
-    member(Clause, [(:- discontiguous RTM:RTF/RTA), % silent random warnings
-                    (:- multifile RTM:RTF/RTA), % silent audit warnings
-                    (:- dynamic RTM:RTF/RTA), (RTM:RTPred :- WB)]).
-
-warning_body(M, H, rtc_warning(M, H, file(File, Line, -1, _))) :-
-    source_location(File, Line).
-
-%!  rtc_warning(+Module, +Head, +Location).
-%
-%   Shows a warning about a run-time call during compile-time and fails.
-
-rtc_warning(M, H, Loc) :-
-    source_location(File, Line),
-    print_message(
-        warning,
-        at_location(
-            file(File, Line, -1, _),
-            at_location(
-                Loc,
-                format("Attempt to call run-time part of ~w at compile-time", [M:H])))),
-    fail.
+    member(Clause, [(:- discontiguous RTM:RTF/RTA) % silent random warnings
+                    %(:- multifile RTM:RTF/RTA) % silent audit warnings
+                   ]).
 
 warning_nocp(M, H, Term) :-
     source_location(File, Line),
@@ -269,7 +246,7 @@ warning_nocp(M, H, Term) :-
         warning,
         at_location(
             file(File, Line, -1, _),
-            format("Ignored neck on ~w, since it has no effect or detrimental effect on performance (~w)", [M:H, Term]))).
+            format("Ignored neck on ~w, since it could cause performance degradation (~w)", [M:H, Term]))).
 
 term_expansion((Head :- Body), ClauseL) :-
     term_expansion_hb(Head, Body, NB, (Head :- NB), ClauseL).
@@ -281,17 +258,49 @@ term_expansion((Head --> Body), ClauseL) :-
 term_expansion((:- Body), ClauseL) :-
     term_expansion_hb('$decl', Body, NB, (:- NB), ClauseL).
 term_expansion(end_of_file, end_of_file) :-
-    '$current_source_module'(CM),
-    module_property(CM, file(File)),
-    prolog_load_context(source, File),
-    forall(( '$neck_body'(CM, Head, Body),
-             clause(Head, Body, Ref)
-           ),
-           erase(Ref)),
-    findall(IM:F/A,
-            ( retract('$neck_body'(CM, Head, _)),
-              strip_module(CM:Head, IM, Pred),
-              functor(Pred, F, A)
-            ), PIU),
-    sort(PIU, PIL),
-    compile_predicates(PIL).
+    forall(distinct([File, Line, Issues, PI, Loc],
+                    ( retract(issue_found(File, Line, Issues, PI, Loc1)),
+                      clause_pc_location(Loc1, Loc)
+                    )),
+           print_message(
+               warning,
+               at_location(
+                   file(File, Line, -1, _),
+                   at_location(
+                       Loc,
+                       format("~w ~w called at compile time", [Issues, PI]))))).
+
+clause_pc_location(clause_pc(Clause, PC), Loc) :-
+    clause_pc_location(Clause, PC, Loc),
+    !.
+clause_pc_location(Loc, Loc).
+
+:- thread_local
+    issue_found/5.
+
+call_checks(Call, HasCP) :-
+    source_location(File, Line),
+    has_choicepoints(ontrace(Call, handle_port(File, Line), []), nb_setarg(1, HasCP, no)).
+
+handle_port(File, Line, call, Frame, _, _, Loc, continue) :-
+    prolog_frame_attribute(Frame, goal, Goal),
+    ( findall(Issue,
+              ( member(Issue, [multifile, dynamic]),
+                predicate_property(Goal, Issue)
+              ), IssueL),
+      IssueL \= [],
+      atomic_list_concat(IssueL, ',', Issues),
+      prolog_frame_attribute(Frame, predicate_indicator, PI)
+    ; strip_module(Goal, _, C),
+      functor(C, F, _),
+      neck_prefix(NeckPrefix),
+      atom_concat(NeckPrefix, _, F),
+      Issues = 'already necked',
+      once(( prolog_frame_attribute(Frame, parent, Parent),
+             prolog_frame_attribute(Parent, predicate_indicator, PI)
+           ; prolog_frame_attribute(Frame, predicate_indicator, PI)
+           ))
+    ),
+    retractall(issue_found(File, Line, Issues, PI, Loc)),
+    assertz(issue_found(File, Line, Issues, PI, Loc)),
+    fail.

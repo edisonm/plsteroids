@@ -127,7 +127,8 @@ do_trace_port(Port, Frame, PC, OnTrace, ValidGoal, ValidFile, Action) :-
            )),
     find_parents(Port, Frame, ParentL, RFrame, Cl, SubLoc),
     check_and_call(Port, Frame, PC, OnTrace, ValidGoal, ValidFile, Action,
-                   ParentL, RFrame, Cl, SubLoc), !.
+                   ParentL, RFrame, Cl, SubLoc),
+    !.
 do_trace_port(_, _, _, _, _, _, continue).
 
 check_and_call(Port, Frame, PC, OnTrace, ValidGoal, ValidFile, Action,
@@ -192,6 +193,22 @@ clause_subloc(Cl, List, SubLoc) :-
     ; SubLoc = clause(Cl)
     ).
 
+read_term_at_line(File, Line, Module, Clause, TermPos) :-
+    setup_call_cleanup(
+        ( '$push_input_context'(ontrace_info),
+          catch(open(File, read, In), _, fail),
+          set_stream(In, newline(detect))
+        ),
+        read_source_term_at_location(
+            In, Clause,
+            [ line(Line),
+              module(Module),
+              subterm_positions(TermPos)
+            ]),
+        ( close(In),
+          '$pop_input_context'
+        )).
+
 file_line_module_subloc(Cl, List, File, Line, Module, SubLoc) :-
     ( read_term_at_line(File, Line, Module, Term, TermPos)
     % Usage of term positions has priority
@@ -204,24 +221,6 @@ file_line_module_subloc(Cl, List, File, Line, Module, SubLoc) :-
       SubLoc = file_term_position(File, SubPos)
     ; SubLoc = file(File, Line, -1, _)
     ).
-
-read_term_at_line(File, Line, Module, Clause, TermPos) :-
-    setup_call_cleanup(
-        '$push_input_context'(trace_info),
-        read_term_at_line_2(File, Line, Module, Clause, TermPos),
-        '$pop_input_context').
-
-read_term_at_line_2(File, Line, Module, Clause, TermPos) :-
-    catch(open(File, read, In), _, fail),
-    set_stream(In, newline(detect)),
-    call_cleanup(
-        read_source_term_at_location(
-            In, Clause,
-            [ line(Line),
-              module(Module),
-              subterm_positions(TermPos)
-            ]),
-        close(In)).
 
 list_pos(term_position(_, _, _, _, PosL), PosL).
 list_pos(list_position(_, _, PosL, _), PosL).

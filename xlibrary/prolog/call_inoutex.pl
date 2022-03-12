@@ -50,4 +50,3 @@ call_inout(Goal, OnIn, OnOut) :-
     prolog_current_choice(C2),
     (OnOut;OnIn,fail),
     (C1==C2 -> ! ;true).
-
