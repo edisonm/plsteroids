@@ -39,6 +39,8 @@
            substitute_values/3,
            is_subterm/2]).
 
+:- use_module(library(apply)).
+
 :- meta_predicate substitute(2, ?, ?).
 substitute(Comp, Term1, Term) :-
     ( call(Comp, Term1, Subs)
