@@ -279,12 +279,8 @@ clause_pc_location(Loc, Loc).
     issue_found/5.
 
 call_checks(Call, HasCP) :-
-    has_choicepoints(Call, nb_setarg(1, HasCP, no)).
-/*  TBD: figure out why this is triggering xterm --EMM
-call_checks(Call, HasCP) :-
     source_location(File, Line),
     has_choicepoints(ontrace(Call, handle_port(File, Line), []), nb_setarg(1, HasCP, no)).
-*/
 
 handle_port(File, Line, call, Frame, _, _, Loc, continue) :-
     prolog_frame_attribute(Frame, goal, Goal),

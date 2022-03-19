@@ -61,18 +61,20 @@ true_1(_).
 is_meta(goal).
 is_meta(file).
 
-:- multifile
-    user:prolog_trace_interception/4.
-
 :- thread_local
     ontrace_enabled/4.
 
 user:prolog_trace_interception(Port, Frame, PC, Action) :-
     ontrace_enabled(M, OnTrace, ValidGoal, ValidFile),
-    ( trace_port(Port, Frame, PC, M:OnTrace, M:ValidGoal, M:ValidFile, Action)
-    ->true
-    ; Action = continue
-    ).
+    !,
+    trace_port(Port, Frame, PC, M:OnTrace, M:ValidGoal, M:ValidFile, Action).
+
+% disable this hook, to avoid problems with library(threadutil), since it
+% will try to trigger xterm --EMM
+user:message_hook(trace_mode(on), _, _) :-
+    ontrace_enabled(_, _, _, _),
+    !,
+    fail.
 
 %!  setup_trace(!State, :OnTrace, :OptL) is det.
 %
@@ -80,9 +82,10 @@ setup_trace(State, M:OnTrace, MOptL) :-
     meta_options(is_meta, MOptL, OptL),
     select_option(goal(ValidGoal), OptL,  OptL1, ontrace:true_1),
     select_option(file(ValidFile), OptL1, OptL2, ontrace:true_1),
-    %% redo port have weird bugs, ignoring it for now:
+    % redo port has weird bugs, ignoring it for now:
     select_option(ports(PortList), OptL2, _,
                   [call, exit, fail, unify, exception]),
+    % it is safer to use asserta here, in case this hook was already defined while debugging
     asserta(ontrace_enabled(M, OnTrace, ValidGoal, ValidFile), Ref),
     foldl(port_mask, PortList, 0, Mask),
     '$visible'(Visible, Mask),
@@ -113,10 +116,8 @@ user_defined_module(M) :-
 
 :- public trace_port/7.
 :- meta_predicate trace_port(+,+,+,5,1,1,-).
-trace_port(Port, Frame, PC, OnTrace, ValidGoal, ValidFile, Action) :-
-    do_trace_port(Port, Frame, PC, OnTrace, ValidGoal, ValidFile, Action).
 
-do_trace_port(Port, Frame, PC, OnTrace, ValidGoal, ValidFile, Action) :-
+trace_port(Port, Frame, PC, OnTrace, ValidGoal, ValidFile, Action) :-
     prolog_frame_attribute(Frame,  goal, M:H), % M:H to skip local predicates
     \+ \+ call(ValidGoal, M:H),
     ignore(( Port = (exit),
@@ -129,7 +130,7 @@ do_trace_port(Port, Frame, PC, OnTrace, ValidGoal, ValidFile, Action) :-
     check_and_call(Port, Frame, PC, OnTrace, ValidGoal, ValidFile, Action,
                    ParentL, RFrame, Cl, SubLoc),
     !.
-do_trace_port(_, _, _, _, _, _, continue).
+trace_port(_, _, _, _, _, _, continue).
 
 check_and_call(Port, Frame, PC, OnTrace, ValidGoal, ValidFile, Action,
                ParentL, RFrame, Cl, SubLoc) :-
