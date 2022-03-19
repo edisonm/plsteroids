@@ -61,6 +61,11 @@ true_1(_).
 is_meta(goal).
 is_meta(file).
 
+:- multifile
+        user:prolog_trace_interception/4.
+:- dynamic
+        user:prolog_trace_interception/4.
+
 :- thread_local
     ontrace_enabled/4.
 
