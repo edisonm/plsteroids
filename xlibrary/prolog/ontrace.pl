@@ -169,8 +169,8 @@ find_parents(Port, Frame, ParentL, RFrame, Cl, Loc) :-
 find_parent_with_pc(Frame, PC, List1, List) :-
     prolog_frame_attribute(Frame, parent, Parent),
     ( prolog_frame_attribute(Frame, pc, PC)
-    ->List = [Parent|List1 ]
-    ; find_parent_with_pc(Parent, PC, [Parent|List1 ], List)
+    ->List = [Parent|List1]
+    ; find_parent_with_pc(Parent, PC, [Parent|List1], List)
     ).
 
 :- multifile

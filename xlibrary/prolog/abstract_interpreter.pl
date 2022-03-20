@@ -476,7 +476,7 @@ abstract_interpreter_body(BinExpr, _, _) -->
                        A>=B,
                        A=<B])
     },
-    neck,
+    necki,
     !,
     ( { ground(A),
         ground(B)

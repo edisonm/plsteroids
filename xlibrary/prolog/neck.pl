@@ -126,6 +126,9 @@ assign_value(A, V) -->
 neck_prefix('__aux_neck_').
 
 term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
+    \+ ( nonvar(Head),
+         current_prolog_flag(xref, true)
+       ),
     '$current_source_module'(M),
     once(( current_seq_lit(Body1, Neck, Static, Right),
            memberchk(Neck, [neck, neck(X, X), necki, necki(X, X),
