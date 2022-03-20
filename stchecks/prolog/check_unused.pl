@@ -161,7 +161,7 @@ entry_caller(M, H) :-
     ).
 
 entry_point(Caller) :-
-    calls_to(Caller, _, _),
+    calls_to(Caller),
     is_entry_caller(Caller).
 
 mark(Concurrent) :-
@@ -185,7 +185,7 @@ is_marked(CRef) :-
 put_mark(CRef) :-
     ( \+ is_marked(CRef)
     ->record_marked(CRef),
-      forall(calls_to(CRef, CM, Callee),
+      forall(calls_to(CRef, w, CM, Callee),
              mark_rec(Callee, CM))
     ; true
     ).
@@ -530,11 +530,24 @@ record_calls_to(Type, Caller, Head, M, From) :-
     ; true
     ).
 
-calls_to('<initialization>',   M, Head) :- calls_to_initialization(   Head, M).
-calls_to('<assertion>'(AM:AH), M, Head) :- calls_to_assertion(AH, AM, Head, M).
-calls_to('<declaration>',      M, Head) :- calls_to_declaration(      Head, M).
-calls_to(clause(Ref),          M, Head) :- calls_to_clause(Ref,       Head, M).
-calls_to(CM:CH,                M, Head) :- calls_to_predid(CH, CM,    Head, M).
+calls_to('<initialization>'  ) :- once(calls_to_initialization(_, _)).
+calls_to('<assertion>'(AM:AH)) :- distinct(AH:AM, calls_to_assertion(AH, AM, _, _)).
+calls_to('<declaration>'     ) :- once(calls_to_declaration(_, _)).
+calls_to(clause(Ref)         ) :- distinct(Ref, calls_to_clause(Ref, _, _)).
+calls_to(CM:CH               ) :- distinct(CM:CH, calls_to_predid(CH, CM, _, _)).
+
+calls_to(CRef, M, Head) :- calls_to(CRef, c, M, Head).
+
+calls_to('<initialization>',   _, M, Head) :- calls_to_initialization(   Head, M).
+calls_to('<assertion>'(AM:AH), _, M, Head) :- calls_to_assertion(AH, AM, Head, M).
+calls_to('<declaration>',      _, M, Head) :- calls_to_declaration(      Head, M).
+calls_to(clause(Ref),          _, M, Head) :- calls_to_clause(Ref,       Head, M).
+calls_to(CM:CH,                W, M, Head) :- calls_to_predid(W, CH, CM, Head, M).
+
+calls_to_predid(c, CH, CM, Head, M) :- calls_to_predid(CH, CM,    Head, M).
+calls_to_predid(w, CH, CM, Head, M) :-
+    clause(check_unused:calls_to_predid(CH, CM,    _, _), _, Ref),
+    clause(check_unused:calls_to_predid( _,  _, Head, M), _, Ref).
 
 record_calls_to('<initialization>',   M, Head) :- assertz(calls_to_initialization(   Head, M)).
 record_calls_to('<assertion>'(AM:AH), M, Head) :- assertz(calls_to_assertion(AH, AM, Head, M)).
