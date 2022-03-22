@@ -88,7 +88,7 @@ hide_var_dynamic_hook(term_expansion(_, _), _).
 hide_var_dynamic_hook(term_expansion(_, _, _, _), _).
 hide_var_dynamic_hook(goal_expansion(_, _), _).
 hide_var_dynamic_hook(goal_expansion(_, _, _, _), _).
-
+hide_var_dynamic_hook(raw_load_loop(_, _), raw_loader).
 
 :- dynamic
     wrong_dynamic_db/4,
