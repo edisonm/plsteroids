@@ -2,9 +2,9 @@ andorra/tests/mqu.plt
 idfpml/tests/cdqd.plt
 idfpml/tests/cddd.plt
 mpfr/tests/mpfr.plt
+useless_cuts.stest
+useless_cuts.stest
 andorra/tests/money.plt
-useless_cuts.stest
-useless_cuts.stest
 assertions.stest
 assertions.stest
 stchecks/tests/stchecks_5.plt
@@ -21,6 +21,7 @@ rtchecks/tests/rtchecks.plt
 xtools/tests/assrt_meta.plt
 imports.stest
 imports.stest
+refactor/tests/refspeed.plt
 stchecks/tests/stchecks.plt
 wrong_dynamic.stest
 wrong_dynamic.stest
@@ -55,8 +56,8 @@ refactor/tests/refactor_29.plt
 refactor/tests/refactor_31.plt
 refactor/tests/refactor_40.plt
 refactor/tests/refactor_35.plt
-refactor/tests/refactor_45.plt
 refactor/tests/term_width.plt
+refactor/tests/refactor_45.plt
 refactor/tests/refactor_27.plt
 refactor/tests/refactor_19.plt
 refactor/tests/conj_width.plt
@@ -73,7 +74,6 @@ refactor/tests/refactor_59.plt
 refactor/tests/refactor_43.plt
 refactor/tests/refactor_14.plt
 refactor/tests/refactor_53.plt
-stchecks/tests/stchecks_2.plt
 refactor/tests/refactor_36.plt
 refactor/tests/refactor_37.plt
 refactor/tests/refactor_34.plt
@@ -81,6 +81,7 @@ refactor/tests/refactor_24.plt
 refactor/tests/refactor_06.plt
 refactor/tests/refactor_05.plt
 refactor/tests/refactor_12.plt
+stchecks/tests/stchecks_2.plt
 refactor/tests/refactor_39.plt
 refactor/tests/refactor_15.plt
 refactor/tests/refactor_11.plt
@@ -104,8 +105,8 @@ refactor/tests/refactor_57.plt
 refactor/tests/refactor_04.plt
 refactor/tests/refactor_25.plt
 refactor/tests/refactor_22.plt
-stchecks/tests/stchecks_1.plt
 refactor/tests/refactor_13.plt
+stchecks/tests/stchecks_1.plt
 stchecks/tests/stchecks_3.plt
 stchecks/tests/stchecks_6.plt
 stchecks/tests/stchecks_4.plt
