@@ -34,7 +34,8 @@
 
 :- module(conc_forall,
           [ conc_forall/2,
-            conc_forall/3
+            conc_forall/3,
+            cond_forall/4
           ]).
 
 :- use_module(countsols).
@@ -46,7 +47,8 @@
 :- meta_predicate
         handle_result(+, 0 ),
         conc_forall(0, 0 ),
-        conc_forall(0, 0, 0 ).
+        conc_forall(0, 0, 0 ),
+        cond_forall(+, 0, 0, 0 ).
 
 /* <module> Concurrent forall/2
 
@@ -181,3 +183,6 @@ concur(Wait, N1, N, Join, Vars, Done, Cleanup, Status, Exitted1, Exitted) :-
             Exitted = [Thread|Exitted1]
         )
     ).
+
+cond_forall(true,  A, B, C) :- conc_forall(A, B, C).
+cond_forall(false, A, B, C) :- forall(A, (B, ignore(C))).
