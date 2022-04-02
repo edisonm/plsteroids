@@ -2,9 +2,9 @@ andorra/tests/mqu.plt
 idfpml/tests/cdqd.plt
 idfpml/tests/cddd.plt
 mpfr/tests/mpfr.plt
-useless_cuts.stest
-useless_cuts.stest
 andorra/tests/money.plt
+useless_cuts.stest
+useless_cuts.stest
 assertions.stest
 assertions.stest
 stchecks/tests/stchecks_5.plt
@@ -23,9 +23,9 @@ imports.stest
 imports.stest
 refactor/tests/refspeed.plt
 stchecks/tests/stchecks.plt
-wrong_dynamic.stest
-wrong_dynamic.stest
 refactor/tests/refactor_33.plt
+wrong_dynamic.stest
+wrong_dynamic.stest
 andorra/tests/fib.plt
 module_loops.stest
 module_loops.stest
