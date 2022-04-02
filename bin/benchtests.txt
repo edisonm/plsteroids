@@ -81,8 +81,8 @@ refactor/tests/refactor_24.plt
 refactor/tests/refactor_06.plt
 refactor/tests/refactor_05.plt
 refactor/tests/refactor_12.plt
-stchecks/tests/stchecks_2.plt
 refactor/tests/refactor_39.plt
+stchecks/tests/stchecks_2.plt
 refactor/tests/refactor_15.plt
 refactor/tests/refactor_11.plt
 refactor/tests/refactor_18.plt
