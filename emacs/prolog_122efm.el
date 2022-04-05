@@ -807,7 +807,7 @@ Set by prolog-build-case-strings.")
 (defconst prolog-string-regexp
   "\\(\"\\([^\n\"]\\|\\\\\"\\)*\"\\)"
   "Regexp matching a string.")
-(defconst prolog-head-delimiter "\\(:-\\|\\+:\\|-:\\|\\+\\?\\|-\\?\\|-->\\)"
+(defconst prolog-head-delimiter "\\(:-\\|=>\\|\\+:\\|-:\\|\\+\\?\\|-\\?\\|-->\\)"
   "A regexp for matching on the end delimiter of a head (e.g. \":-\").")
 
 (defvar prolog-compilation-buffer "*prolog-compilation*"
@@ -840,6 +840,7 @@ Set by prolog-build-case-strings.")
            (modes . '(prolog-mode))
            (group . (1 2)))))
      '(("dcg" . "-->") ("rule" . ":-") ("simplification" . "<=>")
+       ("ssu" . "=>")
        ("propagation" . "==>")))))
 
 ;; SMIE support
@@ -885,6 +886,7 @@ Set by prolog-build-case-strings.")
   '(("." -999 -999)
     ("?-" nil -1200)
     (":-" -1200 -1200)
+    ("=>" -1200 -1200)
     ("-->" -1200 -1200)
     ("discontiguous" nil -1150)
     ("dynamic" nil -1150)
