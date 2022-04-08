@@ -44,50 +44,48 @@
            string_trim/2
            ]).
 
-:- use_module(library(lists)).
+:- use_module(library(pcre)).
 
-left_trim([], []).
-left_trim([Code|Codes], LTrim) :-
-    ( char_type(Code, space)
-    ->left_trim(Codes, LTrim)
-    ; LTrim = [Code|Codes]
-    ).
+left_trim(Type, Atomic, LeftTrim) :-
+    % Can get valid spaces using char_type(A, space), except special ones
+    re_replace("^[ \t\n\v\f\r]+", "", Atomic, LeftTrim, [capture_type(Type)]).
 
-right_trim(Codes, RTrim) :-
-    reverse(Codes, Reverse),
-    left_trim(Reverse, LTrim),
-    reverse(LTrim, RTrim).
+right_trim(Type, Atomic, RightTrim) :-
+    re_replace("[ \t\n\v\f\r]+$", "", Atomic, RightTrim, [capture_type(Type)]).
 
-trim(Codes, Trim) :-
-    left_trim(Codes, LTrim),
-    right_trim(LTrim, Trim).
+trim(Type, Atomic, Trim) :-
+    left_trim(Type, Atomic, LTrim),
+    right_trim(Type, LTrim, Trim).
 
-atom_left_trim(Atom, LTrim) :-
-    atom_codes(Atom, Codes),
-    left_trim(Codes, CTrim),
-    atom_codes(LTrim, CTrim).
+atom_left_trim(Atom, LeftTrim) :-
+    left_trim(atom, Atom, LeftTrim).
 
-atom_right_trim(Atom, RTrim) :-
-    atom_codes(Atom, Codes),
-    right_trim(Codes, CTrim),
-    atom_codes(RTrim, CTrim).
+atom_right_trim(Atom, RightTrim) :-
+    right_trim(atom, Atom, RightTrim).
 
 atom_trim(Atom, Trim) :-
-    atom_codes(Atom, Codes),
-    trim(Codes, CTrim),
-    atom_codes(Trim, CTrim).
+    trim(atom, Atom, Trim).
 
-string_left_trim(String, LTrim) :-
-    string_codes(String, Codes),
-    left_trim(Codes, CTrim),
-    string_codes(LTrim, CTrim).
+string_left_trim(String, LeftTrim) :-
+    left_trim(string, String, LeftTrim).
 
-string_right_trim(String, RTrim) :-
-    string_codes(String, Codes),
-    right_trim(Codes, CTrim),
-    string_codes(RTrim, CTrim).
+string_right_trim(String, RightTrim) :-
+    right_trim(string, String, RightTrim).
 
 string_trim(String, Trim) :-
+    trim(string, String, Trim).
+
+left_trim(Codes, LTrim) :-
     string_codes(String, Codes),
-    trim(Codes, CTrim),
-    string_codes(Trim, CTrim).
+    string_left_trim(String, STrim),
+    string_codes(STrim, LTrim).
+
+right_trim(Codes, RTrim) :-
+    string_codes(String, Codes),
+    string_right_trim(String, STrim),
+    string_codes(STrim, RTrim).
+
+trim(Codes, Trim) :-
+    string_codes(String, Codes),
+    string_trim(String, STrim),
+    string_codes(STrim, Trim).
