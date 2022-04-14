@@ -40,6 +40,7 @@
 
 :- use_module(library(abstract_interpreter)).
 :- use_module(library(terms_share)).
+:- use_module(library(pure)).
 
 :- meta_predicate
     abstract_slice(0,+,?),
@@ -152,7 +153,13 @@ slicer_abstraction(Spec, VarsR, Scope, MGoal, Body) -->
       )
     ; % check if the body trivially fails:
       ( Scope = body
-      ->once(match_head_body(M:Goal, _, Loc))
+      ->once(( match_head_body(M:Goal, Body1, Loc),
+               % if no side effects, increase precision executing the body:
+               ( is_pure_body(Body1)
+               ->call(Body1)
+               ; true
+               )
+             ))
       ; Loc = Loc1
       ),
       Body = M:true

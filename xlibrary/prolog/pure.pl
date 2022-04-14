@@ -1,12 +1,15 @@
 :- module(pure,
           [is_pure_pred/1,
-           is_pure_clause/1
+           is_pure_clause/1,
+           is_pure_body/1
           ]).
 
 :- use_module(library(lists)).
 :- use_module(library(resolve_calln)).
 
-:- meta_predicate is_pure_pred(0 ).
+:- meta_predicate
+        is_pure_pred(0 ),
+        is_pure_body(0 ).
 
 %!  is_pure_pred(:Pred) is semidet
 %
@@ -26,9 +29,9 @@ is_pure_pred(Head) :-
 is_pure_clause(Ref) :-
     is_pure_clause(Ref, []).
 
-is_pure_pred(Head, Stack1) :-
-    predicate_property(Head, interpreted),
-    findall(Ref, ( catch(clause(Head, _, Ref), _, fail),
+is_pure_pred(M:Head, Stack1) :-
+    predicate_property(M:Head, interpreted),
+    findall(Ref, ( catch(clause(M:Head, _, Ref), _, fail),
                    \+ memberchk(Ref, Stack1)
                  ), RefL),
     append(RefL, Stack1, Stack),
@@ -37,7 +40,10 @@ is_pure_pred(Head, Stack1) :-
 
 is_pure_clause(Ref, Stack) :-
     clause_property(Ref, module(CM)),
-    catch(clause(_, Body, Ref), _, fail),
+    catch(clause(M:Head, Body, Ref), _, fail),
+    % is not defined in init.pl:
+    M:Head \== CM:Body,
+    M:call(Head) \== CM:Body,
     is_pure_body(Body, CM, Stack).
 
 % Note: ->/2, \+/1, *->/2, !, are not consider pure prolog, you can prove that by
@@ -48,6 +54,8 @@ is_pure_clause(Ref, Stack) :-
 % In general, any predicate that check the instantiation status of a variable is
 % not pure-prolog
 
+is_pure_body(M:G) :- is_pure_body(G, M, []).
+
 is_pure_body(G, _, _) :-
     var(G),
     !,
@@ -55,6 +63,7 @@ is_pure_body(G, _, _) :-
 is_pure_body(true, _, _) :- !.
 is_pure_body(fail, _, _) :- !.
 is_pure_body(_=_,  _, _) :- !.
+is_pure_body(\+ _, _, _) :- !, fail.
 is_pure_body(@(G, CM), _, Stack) :-
     !,
     strip_module(CM:G, M, H),
