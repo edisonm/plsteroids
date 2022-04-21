@@ -97,7 +97,7 @@ check_unused(Options1, Pairs) :-
                  [Method1, Method]))
     ; Method = Method1
     ),
-    ignore(option(module(M), Options1)),
+    option(module(M), Options1, M),
     merge_options(Options2,
                   [source(false), % False, otherwise this will not work
                    method(Method),
@@ -367,34 +367,34 @@ checkable_unused(Ref) :-
          )).
 
 unmarked(FileD, Node, D, From) :-
-    Ref = M:H,
+    Head = M:H,
     MPI = M:F/A,
-    ( current_defined_predicate(Ref),
+    ( current_defined_predicate(Head),
       functor(H, F, A),
-      checkable_unused(Ref),
+      checkable_unused(Head),
       ( not_marked(H, M)
       ->Node = MPI,
-        property_from(Ref, D, From),
-        check_pred_file(Ref, FileD, From)
+        property_from(Head, D, From),
+        check_pred_file(Head, FileD, From)
       ; ( match_head_clause(M:H, CRef),
           clause_property(CRef, file(_)), % Static clauses only
           From = clause(CRef),
           not_marked(From),
-          check_pred_file(Ref, FileD, From),
+          check_pred_file(Head, FileD, From),
           nth_clause(M:H, I, CRef),
           D = clause(I)
         ; semantic_head(H, M, I, D, Mark, From),
           not_marked(Mark),
-          check_pred_file(Ref, FileD, From)
+          check_pred_file(Head, FileD, From)
         ),
         Node = M:F/A-I
       )
     ; semantic_head(H, M, I, D, Mark, From),
       not_marked(Mark),
       functor(H, F, A),
-      check_pred_file(Ref, FileD, From),
-      \+ current_predicate(_, Ref),
-      checkable_unused(Ref),
+      check_pred_file(Head, FileD, From),
+      \+ current_predicate(_, Head),
+      checkable_unused(Head),
       Node = M:F/A-I
     ).
 
