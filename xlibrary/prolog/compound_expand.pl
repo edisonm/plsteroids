@@ -81,15 +81,6 @@ collect_expansors(M, ExpansorName, ML) :-
             ), MD),
     remove_dups(MD, ML).
 
-:- thread_local
-    lock_expansion/1.
-
-call_lock(Goal, ID) :-
-    \+ lock_expansion(ID),
-    setup_call_cleanup(assertz(lock_expansion(ID), Ref),
-                       Goal,
-                       erase(Ref)).
-
 type_expansors(term, term_expansion, call_term_expansion).
 type_expansors(goal, goal_expansion, call_goal_expansion).
 
@@ -103,24 +94,23 @@ do_compound_expansion(Type, Term1, Pos1, Term, Pos) :-
     M \= user, % Compound expansions not supported in user module
     do_compound_expansion(M, Type, Term1, Pos1, Term, Pos).
 
-compound_expansion(Type, Term1, Pos1, Term, Pos) :-
-    call_lock(do_compound_expansion(Type, Term1, Pos1, Term, Pos), Type).
-
 system:goal_expansion(Goal1, Pos1, Goal, Pos) :-
     do_compound_expansion(goal, Goal1, Pos1, Goal, Pos).
 
-:- thread_local compounding/0.
+:- thread_local lock_compound/0.
+
+compound_term_expansion(Term1, Pos1, Term, Pos) :-
+    do_compound_expansion(term, Term1, Pos1, Term2, Pos2),
+    \+ (Term1 =@= Term2),
+    % continue with other expansions:
+    ( setup_call_cleanup(assertz(lock_compound),
+                         '$expand':expand_terms(call_term_expansion([system-[term_expansion/4]]), Term2, Pos2, Term, Pos),
+                         retractall(lock_compound))
+    ->true
+    ; Term = Term2,
+      Pos  = Pos2
+    ).
 
 system:term_expansion(Term1, Pos1, Term, Pos) :-
-    \+ compounding,
-    compound_expansion(term, Term1, Pos1, Term2, Pos2),
-    Term1 \== Term2,
-    [Term1] \== Term2,
-    % continue with other expansions:
-    setup_call_cleanup(assertz(compounding),
-                       ( system:term_expansion(Term2, Pos2, Term, Pos)
-                       ->true
-                       ; Term = Term2,
-                         Pos  = Pos2
-                       ),
-                       retractall(compounding)).
+    \+ lock_compound,
+    compound_term_expansion(Term1, Pos1, Term, Pos).
