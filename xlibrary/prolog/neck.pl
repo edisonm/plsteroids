@@ -125,7 +125,7 @@ assign_value(A, V) -->
 
 neck_prefix('__aux_neck_').
 
-term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
+term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
     \+ ( nonvar(Head),
          current_prolog_flag(xref, true)
        ),
@@ -166,7 +166,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
       format(atom(FNB), '~w~w:~w', [NeckPrefix, M, Hash]),
       SepHead =.. [FNB|ArgNB],
       conj(LRight, SepHead, NeckBody),
-      findall(t(Pattern, Head), call_checks(Expanded, HasCP), ClausePIL),
+      findall(t(Pattern, Head), call_checks(File, Line, Expanded, HasCP), ClausePIL),
       ( '$get_predicate_attribute'(M:SepHead, defined, 1),
         '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
       ->true
@@ -188,7 +188,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
                )
              ), ClauseL1)
     ; expand_goal(M:Right, M:NeckBody),
-      findall(t(Pattern, Head), call_checks(Expanded, HasCP), ClausePIL),
+      findall(t(Pattern, Head), call_checks(File, Line, Expanded, HasCP), ClausePIL),
       RTHead = Head,
       ClauseL1 = []
     ),
@@ -222,7 +222,7 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
       findall(T2, call_time(Sequence, T2), [T2]),
       InfOptimal = T2.inferences,
       InfOptimal >= InfCurrent
-    ->warning_nocp(M, Head, InfOptimal >= InfCurrent),
+    ->warning_nocp(File, Line, M, Head, InfOptimal >= InfCurrent),
       fail
     ; true
     ),
@@ -235,6 +235,10 @@ term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
                      ))
            ), ClauseL, ClauseL1).
 
+term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
+    source_location(File, Line),
+    term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL).
+
 st_body(Head, M, RTHead, ClausePIL, Clause) :-
     member(t(_, Head), ClausePIL),
     strip_module(M:RTHead, RTM, RTPred),
@@ -243,13 +247,17 @@ st_body(Head, M, RTHead, ClausePIL, Clause) :-
                     %(:- multifile RTM:RTF/RTA) % silent audit warnings
                    ]).
 
-warning_nocp(M, H, Term) :-
-    source_location(File, Line),
+warning_nocp(File, Line, M, H, Term) :-
     print_message(
         warning,
         at_location(
             file(File, Line, -1, _),
             format("Ignored neck on ~w, since it could cause performance degradation (~w)", [M:H, Term]))).
+
+in_module_file :-
+    '$current_source_module'(M),
+    module_property(M, file(File)),
+    prolog_load_context(source, File).
 
 term_expansion((Head :- Body), ClauseL) :-
     term_expansion_hb(Head, Body, NB, (Head :- NB), ClauseL).
@@ -261,6 +269,7 @@ term_expansion((Head --> Body), ClauseL) :-
 term_expansion((:- Body), ClauseL) :-
     term_expansion_hb('$decl', Body, NB, (:- NB), ClauseL).
 term_expansion(end_of_file, end_of_file) :-
+    in_module_file,
     forall(distinct([File, Line, Issues, PI, Loc],
                     ( retract(issue_found(File, Line, Issues, PI, Loc1)),
                       clause_pc_location(Loc1, Loc)
@@ -281,8 +290,7 @@ clause_pc_location(Loc, Loc).
 :- thread_local
     issue_found/5.
 
-call_checks(Call, HasCP) :-
-    source_location(File, Line),
+call_checks(File, Line, Call, HasCP) :-
     has_choicepoints(ontrace(Call, handle_port(File, Line), []), nb_setarg(1, HasCP, no)).
 
 handle_port(File, Line, call, Frame, _, _, Loc, continue) :-
