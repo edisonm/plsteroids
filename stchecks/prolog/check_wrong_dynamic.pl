@@ -98,6 +98,7 @@ hide_wrong_dynamic(prolog_trace_interception(_, _, _, _), user).
 hide_wrong_dynamic(Call, _) :-
     functor(Call, Name, _),
     member(Prefix, ['__wrap$',
+                    '__aux_neck_',
                     '$wrap$']),
     atom_concat(Prefix, _, Name).
 
