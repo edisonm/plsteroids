@@ -59,15 +59,19 @@
     hide_var_dynamic_hook/2.
 
 hide_var_dynamic(Call1, M) :-
-    ( \+ ( current_module(M:'$tabled'/1),
-           M:'$tabled'(Call1)
-         )
-    ->Call = Call1
-    ; Call1 =.. [F1|Args],
-      atom_concat(F, ' tabled', F1),
-      Call =.. [F|Args]
-    ),
-    hide_var_dynamic_hook(Call, M).
+    ( functor(Call1, F1, _),
+      atom_concat('__aux_neck_', _, F1)
+    ->true
+    ; ( \+ ( current_module(M:'$tabled'/1),
+             M:'$tabled'(Call1)
+           )
+      ->Call = Call1
+      ; Call1 =.. [F1|Args],
+        atom_concat(F, ' tabled', F1),
+        Call =.. [F|Args]
+      ),
+      hide_var_dynamic_hook(Call, M)
+    ).
 
 hide_var_dynamic_hook(match_clause(_, _, _, _, _, _, _), ontrace).
 hide_var_dynamic_hook(collect_non_mutually_exclusive(_, _, _, _), check_non_mutually_exclusive).
@@ -98,7 +102,6 @@ hide_wrong_dynamic(prolog_trace_interception(_, _, _, _), user).
 hide_wrong_dynamic(Call, _) :-
     functor(Call, Name, _),
     member(Prefix, ['__wrap$',
-                    '__aux_neck_',
                     '$wrap$']),
     atom_concat(Prefix, _, Name).
 
