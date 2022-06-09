@@ -241,8 +241,9 @@ infer_det(H, M, Det) :-
 add_cp.
 add_cp :- fail.
 
-cond_cp(A, B) :- A \= B.
-cond_cp(_, _) :- fail.
+
+cond_cp(CP1, CP2) :- CP1 \= CP2.
+cond_cp(CP1, CP2) :- CP1 == CP2.
 
 :- meta_predicate
     with_det_checking_pr(+, +, 0 ),
