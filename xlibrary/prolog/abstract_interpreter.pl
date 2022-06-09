@@ -568,9 +568,9 @@ abstract_interpreter_lit(H, M, CM, Abs) -->
     ->bottom
     ; {copy_term(IM:Goal, MCall)},
       put_state(state(Loc, EvalL, OnError, [MCall|CallL], Data, Cont, Result)),
-      ( { replace_body_hook(Goal, IM, Body)
-        ; copy_term(EvalL, EvalC), % avoid undesirable unifications
+      ( { copy_term(EvalL, EvalC), % avoid undesirable unifications
           memberchk((IM:Goal :- Body), EvalC)
+        ; replace_body_hook(Goal, IM, Body)
         }
       ->cut_to(abstract_interpreter_body(Body, M, Abs))
       ; { \+ predicate_property(M:Goal, defined) }
