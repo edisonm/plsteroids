@@ -528,7 +528,8 @@ abstract_interpreter_body(G, M, _) -->
         ),
         R = G
       ; replace_goal_hook(G, IM, R)
-      ; memberchk((IM:G as R), EvalL)
+      ; copy_term(EvalL, EvalC),
+        memberchk((IM:G as R), EvalC)
       )
     },
     !,
