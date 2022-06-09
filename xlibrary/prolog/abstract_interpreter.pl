@@ -190,6 +190,9 @@ mod_qual(M, G as R, I:H as B:C) :- !,
     predicate_property(N:H, implementation_module(I)),
     strip_module(M:R, A, C),
     predicate_property(A:C, implementation_module(B)).
+mod_qual(M, G :- B, I:H :- B) :-
+    strip_module(M:G, N, H),
+    predicate_property(N:H, implementation_module(I)).
 mod_qual(M, G, I:F/A) :-
     strip_module(M:G, N, F/A),
     functor(H, F, A),
