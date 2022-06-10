@@ -116,7 +116,8 @@ evaluable_body_hook(A =:= B, _, (ground(A),ground(B))).
 evaluable_body_hook(atom_codes(A, B), _, (ground(A);ground(B))).
 evaluable_body_hook(atom_chars(A, B), _, (ground(A);ground(B))).
 evaluable_body_hook(member(_, L), _, is_list(L)).
-evaluable_body_hook(current_predicate(_), _, true).
+evaluable_body_hook(current_predicate(P), _, ground(P)).
+evaluable_body_hook(current_module(M), _, ground(M)).
 evaluable_body_hook(select(_, L, _), _, is_list(L)).
 evaluable_body_hook(option(O, L), _, (is_list(L), nonvar(O))).
 evaluable_body_hook(nth0(I, L, _), _, (is_list(L);nonvar(I))).
