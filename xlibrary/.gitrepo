@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:edisonm/xlibrary.git
 	branch = master
-	commit = 2a3cde92f09d5205d86be45c9c0d5881c5d048c6
-	parent = 62b5e661adaa0a3b1dd5353c785e633a38cb4684
+	commit = e93818f925c35f5808ea3015172aba07a8915612
+	parent = 75a98cbe9580d21a1c5403c0d9402acf4ec7f253
 	cmdver = 0.4.2
 	method = merge
