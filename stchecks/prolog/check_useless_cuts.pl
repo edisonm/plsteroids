@@ -58,6 +58,7 @@
 :- dynamic
     cut_info/3,
     inferred_det_db/3,
+    shown_undefined/2,
     det_checking/1,
     det_checking/2,
     det_clause_db/2.
@@ -120,6 +121,7 @@ collect_issues(useless_cut(Loc, CI)-CutPos, MFileD) :-
 % are semidet
 
 blocked(_, globprops).
+blocked(_, opt_type(_, _, _)).
 
 current_det_check(MFileD) :-
     order_by([asc(M:F/A)],
@@ -213,6 +215,14 @@ collect_valid_glob_asr(Det, GL, H, M) :-
     valid_prop_asr(H, M, A),
     valid_glob_asr(GL, A).
 
+undefined_found(C, M) :-
+    ( \+ shown_undefined(C, M)
+    ->assertz(shown_undefined(C, M)),
+      functor(C, F, A),
+      existence_error(procedure, F/A)
+    ; true
+    ).
+
 %!  det_predef(-DetInfo, +Head, +Module) is multi.
 %
 %   Get Determinism information for a given predicate, that comes from
@@ -226,9 +236,14 @@ det_predef(nodet, H, M) :- blocked(H, M).
 det_predef(nodet, H, M) :- det_checking(H, M).
 det_predef(nodet, H, M) :- \+ clauses_accessible(M:H).
 det_predef(fails, H, M) :-
+    \+ predicate_property(M:H, defined),
+    undefined_found(H, M).
+det_predef(fails, H, M) :-
     \+ predicate_property(M:H, dynamic),
     \+ predicate_property(M:H, multifile),
     predicate_property(M:H, number_of_clauses(0 )).
+det_predef(nodet, current_predicate(P), _) :- var(P).
+det_predef(nodet, current_module(M), _) :- var(M).
 
 infer_det(H, M, Det) :-
     member(Det1, [multi, isdet, fails]),
@@ -422,11 +437,6 @@ walk_body((A, B), M, LitPos, From, CA, CP1, CP2, CP) :-
     add_pos(LitPos, 2, LitPosB),
     walk_body(A, M, LitPosA, From, CA, CP1, CP2, CP3),
     walk_body(B, M, LitPosB, From, CA, CP1, CP3, CP).
-% walk_body((A; B), M, _, From, _, _, CP, CP) :-
-%     nonvar(A),
-%     A = (I->T),
-%     !,
-%     walk_lit('$ite'(I, T, B), check_useless_cuts, M, From, CP).
 walk_body((A; B), M, LitPos, From, CA, CP1, CP2, CP) :-
     !,
     ( disj_list((A; B), L),
@@ -519,6 +529,20 @@ walk_body(A\=B, _, _, _, _, _, CP, CP) :-
     ->cut_to(CP),
       fail
     ).
+walk_body(atom_concat(_, B, _), _, _, _, _, _, CP, CP) :-
+    atomic(B),
+    !.
+walk_body(atom_concat(A, B, C), _, _, _, _, _, CP, CP) :-
+    atomic(C),
+    !,
+    atom_concat(A, B, C).
+walk_body(atom_length(A, B), _, _, _, _, _, CP, CP) :-
+    atomic(A),
+    !,
+    atom_length(A, B).
+walk_body(atom_length(_, _), _, _, _, _, _, CP, CP) :- !.
+walk_body(nb_getval(A, B), _, _, _, _, _, CP, CP) :-
+    ignore((nonvar(A), nb_current(A, B))).
 walk_body(A, M, LitPos, From, CA, CP1, CP2, CP) :-
     predicate_property(M:A, implementation_module(I)),
     abstract_interpreter:replace_body_hook(A, I, B),
@@ -538,20 +562,6 @@ walk_body(A, M, _, From, _, _, CP, CP) :-
     ; cut_to(CP),
       fail
     ).
-walk_body(atom_concat(_, B, _), _, _, _, _, _, CP, CP) :-
-    atomic(B),
-    !.
-walk_body(atom_concat(A, B, C), _, _, _, _, _, CP, CP) :-
-    atomic(C),
-    !,
-    atom_concat(A, B, C).
-walk_body(atom_length(A, B), _, _, _, _, _, CP, CP) :-
-    atomic(A),
-    !,
-    atom_length(A, B).
-walk_body(atom_length(_, _), _, _, _, _, _, CP, CP) :- !.
-walk_body(nb_getval(A, B), _, _, _, _, _, CP, CP) :-
-    ignore((nonvar(A), nb_current(A, B))).
 walk_body(@(M:H, C), _, _, From, _, _, CP, CP) :-
     walk_lit(H, M, C, From, CP).
 walk_body(H, M, _, From, _, _, CP, CP) :-
@@ -622,29 +632,25 @@ walk_lit(H, M, CM, From, CP) :-
     ->qualify_meta_goal(CM:H, Meta, C)
     ; C = H
     ),
-    ( \+ predicate_property(M:C, defined)
-    ->print_message(
-          error,
-          at_location(From,
-          format("Undefined predicate found: ~q", [M:C]))),
-      fail
-    ; true
-    ),
-    ( inferred_det(C, M, nodet)
+    catch(inferred_det(C, M, Det),
+          Error,
+          ( print_message(error, at_location(From, Error)),
+            Det = fails
+          )),
+    ( Det = nodet
       % We have to check for nodet, instead of multi, since all predicates that
       % don't have det properties inferred yet are marked as multi.
     ->add_cp
-    ; % We can check multi only if all arguments of C are independent
-      % variables, meaning that we can reuse the result of the determinism
-      % analysis:
+    ; % We can check multi only if all arguments of C are independent variables,
+      % meaning that we can reuse the result of the determinism analysis:
       functor(C, F, A),
       functor(P, F, A),
       C =@= P,
-      inferred_det(C, M, multi)
+      Det = multi
     ->add_cp
-    ; inferred_det(C, M, isdet)
+    ; Det = isdet
     ->true
-    ; inferred_det(C, M, fails)
+    ; Det = fails
     ->cut_to(CP),
       fail
     ; catch(findall(-, current_clause(M:C, _, _), ClauseL),
