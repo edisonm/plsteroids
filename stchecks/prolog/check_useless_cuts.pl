@@ -42,6 +42,7 @@
 :- use_module(library(neck)).
 :- use_module(library(abstract_interpreter)).
 :- use_module(library(gcu)).
+:- use_module(library(countsols)).
 :- use_module(library(location_utils)).
 :- use_module(library(option_utils)).
 :- use_module(library(qualify_meta_goal)).
@@ -232,6 +233,23 @@ undefined_found(C, M) :-
 %   solution makes sense.
 
 det_predef(Det,   H, M) :- det_predef_asr(Det, H, M).
+% TBD: put these hard-wired clauses in assertions:
+det_predef(nodet, cd_invert(_, _, _, _, _), clpcd_inv).
+det_predef(isdet, compare_d(_, _, _, _), clpcd_domain_ops).
+det_predef(nodet, ineq(_, _, _, _, _), clpcd_ineq).
+det_predef(isdet, ineq_one(_, _, _, _, _), clpcd_ineq).
+det_predef(isdet, ineq_one_n_n_0(_, _), clpcd_ineq).
+det_predef(isdet, ineq_one_n_p_0(_, _), clpcd_ineq).
+det_predef(isdet, ineq_one_s_n_0(_, _), clpcd_ineq).
+det_predef(isdet, ineq_one_s_p_0(_, _), clpcd_ineq).
+det_predef(nodet, solve(_, _), clpcd_solve).
+det_predef(isdet, reconsider(_, _), clpcd_solve).
+det_predef(isdet, unconstrained(_, _, _, _, _), clpcd_solve).
+det_predef(isdet, i18n_to_translate(_, _), i18n_support).
+det_predef(isdet, add_linear_11(_, _, _, _), clpcd_store).
+det_predef(isdet, add_linear_f1(_, _, _, _, _), clpcd_store).
+det_predef(isdet, add_linear_ff(_, _, _, _, _, _), clpcd_store).
+det_predef(nodet, solve_2nd_eq(_, _, _, _, _, _), clpcd_nf).
 det_predef(nodet, H, M) :- blocked(H, M).
 det_predef(nodet, H, M) :- det_checking(H, M).
 det_predef(nodet, H, M) :- \+ clauses_accessible(M:H).
@@ -444,17 +462,23 @@ walk_body((A; B), M, LitPos, From, CA, CP1, CP2, CP) :-
     ->prolog_current_choice(CP3),
              %s(FlagL, L, IsDet, MutEx
       SData = s([], L, fails, mutex),
-      forall(( nth1(Pos, L, E-MX),
-               call_cleanup(
-                   ( add_pos(LitPos, Pos, LitPosL),
-                     walk_body_if_branch(E, M, LitPosL, From, noop, SData, CP1, CP3)
-                   ),
-                   nb_setarg(4, SData, MX))),
-             ( arg(2, SData, L1),
-               greatest_common_unifier(L, L1, L2),
-               nb_setarg(2, SData, L2)
-             )),
-      SData = s(FlagL, L, IsDet, _),
+      catch(
+          ( forall(( nth1(Pos, L, E-MX),
+                     call_cleanup(
+                         ( add_pos(LitPos, Pos, LitPosL),
+                           walk_body_if_branch(E, M, LitPosL, From, noop, SData, CP1, CP3)
+                         ),
+                         nb_setarg(4, SData, MX))),
+                   ( arg(2, SData, L1),
+                     greatest_common_unifier(L, L1, L2),
+                     nb_setarg(2, SData, L2)
+                 )),
+            SData = s(FlagL, L, IsDet, _)
+          ),
+          top_reached,
+          ( FlagL = [retain_cp],
+            IsDet = multi
+          )),
       ( member(retain_cp, FlagL) % CP1 should not be cutted
       ->CP = CP2
       ; cut_to(CP1),
@@ -581,13 +605,19 @@ walk_body_if_branch(C, M, LitPos, From, CA, SData, CP1, CP2) :-
 
 walk_body_if_branch_2(C, M, LitPos, From, CA, SData, CP3) :-
     prolog_current_choice(CP4),
-    walk_body(C, M, LitPos, From, CA, CP3, CP4, _),
+    countsols(N, walk_body(C, M, LitPos, From, CA, CP3, CP4, _)),
     prolog_current_choice(CP5),
     arg(3, SData, OldDet),
     arg(4, SData, MX),
     ( CP4 == CP5
     ->IsDet = isdet
     ; IsDet = multi
+    ),
+    ( N >= 10
+      % prevent performance issues by limiting the solutions of a goal to 10
+    ->print_message(warning, format("In ~w, solutions (~w) >= 10.", M:C, N)),
+      throw(top_reached)
+    ; true
     ),
     once(mutex_prev(MX, OldDet, IsDet, NewDet)),
     nb_setarg(3, SData, NewDet).
