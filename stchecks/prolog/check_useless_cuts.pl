@@ -122,7 +122,7 @@ collect_issues(useless_cut(Loc, CI)-CutPos, MFileD) :-
 % are semidet
 
 blocked(_, globprops).
-blocked(_, opt_type(_, _, _)).
+blocked(opt_type(_, _, _), _).
 
 current_det_check(MFileD) :-
     order_by([asc(M:F/A)],
@@ -220,7 +220,7 @@ undefined_found(C, M) :-
     ( \+ shown_undefined(C, M)
     ->assertz(shown_undefined(C, M)),
       functor(C, F, A),
-      existence_error(procedure, F/A)
+      existence_error(predicate, M:F/A)
     ; true
     ).
 
