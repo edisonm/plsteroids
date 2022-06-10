@@ -615,7 +615,9 @@ walk_body_if_branch_2(C, M, LitPos, From, CA, SData, CP3) :-
     ),
     ( N >= 10
       % prevent performance issues by limiting the solutions of a goal to 10
-    ->print_message(warning, format("In ~w, solutions (~w) >= 10.", M:C, N)),
+    ->print_message(warning,
+                    at_location(From,
+                                format("In ~w, solutions (~w) >= 10.", [M:C, N]))),
       throw(top_reached)
     ; true
     ),
