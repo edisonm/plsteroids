@@ -162,7 +162,7 @@ do_check_det(H, M, Det) :-
     ( det_predef(Det, H, M)
     ->true
     ; with_det_checking_pr(
-          H, M, catch(forall(walk_call(H, M, info), true),
+          H, M, catch(forall(walk_body(H, M), true),
                       Error,
                       print_message(
                           error,
@@ -344,8 +344,15 @@ current_clause(MH, Body, From, CP1, CP2) :-
 call_with_location(Call, From) :-
     catch(Call, Error, throw(at_location(From, Error))).
 
+walk_body(H, M) :-
+    prolog_current_choice(CP),
+    walk_body(M:H, [], info, CP, CP).
+
 walk_call(H, M, CA) :-
     current_clause(M:H, Body, From, CP1, CP2),
+    walk_body(Body, From, CA, CP1, CP2).
+
+walk_body(Body, From, CA, CP1, CP2) :-
     ( From = []
     ->add_det_clause(CA, From, CP1, CP2)
     ; Body = _:true
