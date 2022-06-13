@@ -259,7 +259,7 @@ det_predef(fails, H, M) :-
 det_predef(fails, H, M) :-
     \+ predicate_property(M:H, dynamic),
     \+ predicate_property(M:H, multifile),
-    predicate_property(M:H, number_of_clauses(0 )).
+    \+ predicate_property(M:H, number_of_clauses(_)).
 det_predef(nodet, current_predicate(P), _) :- var(P).
 det_predef(nodet, current_module(M), _) :- var(M).
 
@@ -574,11 +574,6 @@ walk_body(atom_length(A, B), _, _, _, _, _, CP, CP) :-
 walk_body(atom_length(_, _), _, _, _, _, _, CP, CP) :- !.
 walk_body(nb_getval(A, B), _, _, _, _, _, CP, CP) :-
     ignore((nonvar(A), nb_current(A, B))).
-walk_body(A, M, LitPos, From, CA, CP1, CP2, CP) :-
-    predicate_property(M:A, implementation_module(I)),
-    abstract_interpreter:replace_body_hook(A, I, B),
-    !,
-    walk_body(B, M, LitPos, From, CA, CP1, CP2, CP).
 walk_body(C, M, LitPos, From, CA, CP1, CP2, CP3) :-
     predicate_property(M:C, implementation_module(I)),
     has_body_hook(C, I),

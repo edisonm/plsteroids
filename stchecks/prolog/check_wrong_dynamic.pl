@@ -148,9 +148,8 @@ current_modified_nondynamic(Type, DType, Loc, PI, MFrom, MPI) :-
     Ref = M:H,
     \+ predicate_property(Ref, dynamic),
     \+ predicate_property(Ref, volatile),
-    ( predicate_property(Ref, number_of_clauses(N)),
-      N > 0 ->
-      Type = error,
+    ( predicate_property(Ref, number_of_clauses(_))
+    ->Type = error,
       DType = static,
       predicate_location(Ref, Loc)
     ; Type = warning,
