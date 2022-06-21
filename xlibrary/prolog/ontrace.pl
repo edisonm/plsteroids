@@ -116,8 +116,8 @@ port_mask(Port, Mask1, Mask) :- '$syspreds':port_name(Port, Bit),
     Mask is Mask1\/Bit.
 
 user_defined_module(M) :-
-    M \= ontrace,
-    module_property(M, class(user)).
+    module_property(M, class(user)),
+    M \= ontrace.
 
 :- public trace_port/7.
 :- meta_predicate trace_port(+,+,+,5,1,1,-).

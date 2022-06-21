@@ -40,6 +40,9 @@
             with_output_to_file/2
           ]).
 
+:- use_module(library(apply)).
+:- use_module(library(listing)).
+
 is_newer(File1, File2) :-
     exists_file(File1),
     exists_file(File2),

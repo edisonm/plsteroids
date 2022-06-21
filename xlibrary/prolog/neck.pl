@@ -51,6 +51,8 @@
 :- use_module(library(compound_expand)).
 :- use_module(library(ontrace)).
 
+:- multifile file_clause:head_calls_hook/5.
+
 %!  neck        is det.
 %!  necki       is det.
 %!  necks       is det.
@@ -97,6 +99,10 @@ necks --> [].
 neckis.
 
 neckis --> [].
+
+:- thread_local
+    issue_found/5,
+    head_calls_hook_db/5.
 
 current_seq_lit(Seq, Lit, Left, Right) :-
     current_seq_lit(Seq, Lit, true, Left, true, Right).
@@ -150,7 +156,7 @@ term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
     sort(ExVarU, ExVarL),
     ord_intersection(ExVarL, HNVarL, AssignedL),
     ( memberchk(Neck, [neck, neck(_, _), necks, necks(_, _)]),
-      Head \== '$decl',
+      Head \== '<declaration>',
       nonvar(SepBody),
       member(SepBody, [(_, _), (_;_), (_->_), \+ _]),
       expand_goal(M:SepBody, M:ExpBody),
@@ -166,6 +172,8 @@ term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
       format(atom(FNB), '~w~w:~w', [NeckPrefix, M, Hash]),
       SepHead =.. [FNB|ArgNB],
       conj(LRight, SepHead, NeckBody),
+      strip_module(M:Head, MH, Pred),
+      freeze(Pred, assertz(head_calls_hook_db(Pred, MH, Expanded, File, Line), Ref)),
       findall(t(Pattern, Head), call_checks(File, Line, Expanded, HasCP), ClausePIL),
       ( '$get_predicate_attribute'(M:SepHead, defined, 1),
         '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
@@ -176,7 +184,7 @@ term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
       phrase(( findall((:- discontiguous IM:F/A),
                        distinct(IM:F/A,
                                 ( member(t(_, H), ClausePIL),
-                                  H \== '$decl',
+                                  H \== '<declaration>',
                                   strip_module(M:H, IM, P),
                                   functor(P, F, A)
                                 ))),
@@ -188,11 +196,13 @@ term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
                )
              ), ClauseL1)
     ; expand_goal(M:Right, M:NeckBody),
+      strip_module(M:Head, MH, Pred),
+      freeze(Pred, assertz(head_calls_hook_db(Pred, MH, Expanded, File, Line), Ref)),
       findall(t(Pattern, Head), call_checks(File, Line, Expanded, HasCP), ClausePIL),
       RTHead = Head,
       ClauseL1 = []
     ),
-    ( Head == '$decl'
+    ( Head == '<declaration>'
     ->true
     ; HasCP = hascp(yes)
     ->true
@@ -223,13 +233,14 @@ term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
       InfOptimal = T2.inferences,
       InfOptimal >= InfCurrent
     ->warning_nocp(File, Line, M, Head, InfOptimal >= InfCurrent),
+      erase(Ref),
       fail
     ; true
     ),
     phrase(( findall(Clause, member(t(Clause, _), ClausePIL)),
              findall(Clause,
                      ( \+ memberchk(Neck, [necks, necks(_, _), neckis, neckis(_, _)]),
-                       Head \== '$decl',
+                       Head \== '<declaration>',
                        SepBody \= true,
                        distinct(Clause, st_body(Head, M, RTHead, ClausePIL, Clause))
                      ))
@@ -267,8 +278,8 @@ term_expansion((Head --> Body), ClauseL) :-
     dcg_translate_rule((Head --> Body), _, (H :- B), _),
     term_expansion_hb(H, B, NB, (H :- NB), ClauseL).
 term_expansion((:- Body), ClauseL) :-
-    term_expansion_hb('$decl', Body, NB, (:- NB), ClauseL).
-term_expansion(end_of_file, end_of_file) :-
+    term_expansion_hb('<declaration>', Body, NB, (:- NB), ClauseL).
+term_expansion(end_of_file, ClauseL) :-
     in_module_file,
     forall(distinct([File, Line, Issues, PI, Loc],
                     ( retract(issue_found(File, Line, Issues, PI, Loc1)),
@@ -280,18 +291,21 @@ term_expansion(end_of_file, end_of_file) :-
                    file(File, Line, -1, _),
                    at_location(
                        Loc,
-                       format("~w ~w called at compile time", [Issues, PI]))))).
+                       format("~w ~w called at compile time", [Issues, PI]))))),
+    findall(file_clause:head_calls_hook(Head, M, Body, File, Line),
+            retract(head_calls_hook_db(Head, M, Body, File, Line)),
+           ClauseL, [end_of_file]).
 
 clause_pc_location(clause_pc(Clause, PC), Loc) :-
     clause_pc_location(Clause, PC, Loc),
     !.
 clause_pc_location(Loc, Loc).
 
-:- thread_local
-    issue_found/5.
-
 call_checks(File, Line, Call, HasCP) :-
     has_choicepoints(ontrace(Call, handle_port(File, Line), []), nb_setarg(1, HasCP, no)).
+
+% Note: this is not called by make/0, since it is wrapped by notrace/1, you
+% should use make:make_no_trace/0 instead --EMM
 
 handle_port(File, Line, call, Frame, _, _, Loc, continue) :-
     prolog_frame_attribute(Frame, goal, Goal),
@@ -300,10 +314,9 @@ handle_port(File, Line, call, Frame, _, _, Loc, continue) :-
                 predicate_property(Goal, Issue)
               ), IssueL),
       IssueL \= [],
-      atomic_list_concat(IssueL, ',', Issues),
-      prolog_frame_attribute(Frame, predicate_indicator, PI)
-    ; strip_module(Goal, _, C),
-      functor(C, F, _),
+      atomic_list_concat(IssueL, ',', Issues)
+    ; strip_module(Goal, _, Call),
+      functor(Call, F, _),
       neck_prefix(NeckPrefix),
       atom_concat(NeckPrefix, _, F),
       Issues = 'already necked',
