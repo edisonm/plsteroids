@@ -38,9 +38,8 @@
 :- use_module(library(neck)).
 :- use_module(library(libcomplexn)).
 :- use_module(library(compare_eq)).
-:- use_module(library(compilation_module)).
-:- compilation_module(library(list_sequence)).
-:- compilation_module(library(complexn_desc)).
+:- use_module(library(list_sequence)).
+:- use_module(library(complexn_desc)).
 :- include(library(floatn_reserve_eps)).
 
 cd_prefix(complexn(R, I), complexn, [R, I]).

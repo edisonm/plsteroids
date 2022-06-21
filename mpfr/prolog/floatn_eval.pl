@@ -38,9 +38,8 @@
 :- use_module(library(neck)).
 :- use_module(library(libfloatn)).
 :- use_module(library(compare_eq)).
-:- use_module(library(compilation_module)).
-:- compilation_module(library(list_sequence)).
-:- compilation_module(library(floatn_desc)).
+:- use_module(library(list_sequence)).
+:- use_module(library(floatn_desc)).
 :- include(library(floatn_reserve_eps)).
 
 :- pred [ [ e/2, epsilon/2, cputime/2 ] :: (int * -floatn_t),

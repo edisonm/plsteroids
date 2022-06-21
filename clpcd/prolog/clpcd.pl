@@ -46,8 +46,8 @@
             set_clpcd/1
           ]).
 
+:- use_module(library(lists)).
 :- use_module(library(neck)).
-:- use_module(library(compilation_module)).
 :- use_module(library(clpcd/bb)).
 :- use_module(library(clpcd/nf)).
 :- use_module(library(clpcd/bv)).
@@ -57,7 +57,6 @@
 :- reexport(library(clpcd/ordering),   [clp_type/2]).
 :- reexport(library(clpcd/ordering),   [ordering/1]).
 :- reexport(library(clpcd/domain_ops), [set_clpcd/1]).
-:- compilation_module(library(lists)).
 
 inf(Expression, Inf) :-
     active_clpcd(D),

@@ -41,8 +41,7 @@
 
 :- license(gpl_swipl, 'CLP(CDQ)').
 :- use_module(library(neck)).
-:- use_module(library(compilation_module)).
-:- compilation_module(library(near_utils)).
+:- use_module(library(near_utils)).
 :- use_module(library(cdqr), []).
 :- reexport(library(clpcd)).
 

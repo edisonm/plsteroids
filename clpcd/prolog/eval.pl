@@ -40,11 +40,7 @@
 :- export(compare/4).
 :- export(near_compare/4).
 
-:- compilation_module(library(solution_sequences)).
-
-:- compilation_predicate op_pred/2.
-:- compilation_predicate cd_prefix/3.
-:- compilation_predicate expr_pred/2.
+:- use_module(library(solution_sequences)).
 
 :- public eval_1/4.
 

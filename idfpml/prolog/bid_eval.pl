@@ -37,11 +37,9 @@
 :- use_module(library(lists)).
 :- use_module(library(libbid)).
 :- use_module(library(compare_eq)).
-:- use_module(library(compilation_module)).
 :- use_module(library(neck)).
-:- compilation_module(library(list_sequence)).
-:- compilation_module(library(bid_desc)).
-:- compilation_predicate cd_type/1.
+:- use_module(library(list_sequence)).
+:- use_module(library(bid_desc)).
 
 cd_type(bid64).
 cd_type(bid128).
