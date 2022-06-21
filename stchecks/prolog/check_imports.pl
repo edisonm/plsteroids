@@ -86,6 +86,7 @@ check_imports(Options, Pairs) :-
     cleanup_imports.
 
 :- public collect_imports_wc/3.
+
 collect_imports_wc(M:Goal, Caller, From) :-
     record_location_meta(M:Goal, _, From, all_call_refs, mark_import),
     ( nonvar(Caller),
