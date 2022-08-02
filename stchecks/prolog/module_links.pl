@@ -32,50 +32,84 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(deref_modules,
-          [ update_depends_of/0,
-            module_links/6
+:- module(module_links,
+          [ depends_of/4,
+            update_depends_of/2,
+            module_links/6,
+            unlink_loop/4
           ]).
 
 :- use_module(library(calls_to)).
 :- use_module(library(module_uses)).
 
 ref_head('<assertion>'(M:H), M, H).
-ref_head(clause(Ref), M, H) :- freeze(Ref, nth_clause(M:H, _, Ref)).
 ref_head(M:H, M, H).
+ref_head(clause(Ref), M, H) :-
+    freeze(Ref,
+           ( clause(M:P, _, Ref),
+             ( P = dialog(H)
+             ->true
+             ; P = H
+             )
+           )).
 
 pred_calls_to(AH, AM, H, M) :-
     ref_head(Ref, AM, AH),
     calls_to(Ref, M, H).
 
 :- dynamic
-    depends_of/6.
+    depends_of_db/4.
 
-update_depends_of :-
+update_depends_of(CM, TM) :-
     forall(( pred_calls_to(CH, CM, TH, TM),
-             functor(CH, CF, CA),
-             functor(TH, TF, TA),
-             \+ depends_of(CF, CA, CM, TF, TA, TM)
+             \+ depends_of_db(CH, CM, TH, TM)
            ),
-           assertz(depends_of(CF, CA, CM, TF, TA, TM))),
-    ( predicate_property(depends_of(_, _, _, _, _, _), number_of_clauses(N))
-    ->update_depends_of_rec(N)
-    ; true
+           ( functor(CH, CF, CA), functor(CP, CF, CA),
+             functor(TH, TF, TA), functor(TP, TF, TA),
+             assertz(depends_of_db(CP, CM, TP, TM))
+           )).
+
+depends_of(CH, CM, TH, TM) :-
+    depends_of_db(CH, CM, IH, IM),
+    ( TM:TH = IM:IH
+    ; depends_of_rec(IH, IM, TH, TM)
     ).
 
-update_depends_of_rec(N1) :-
-    forall(( depends_of(CF, CA, CM, IF, IA, IM),
-             depends_of(IF, IA, IM, TF, TA, TM),
-             \+ depends_of(CF, CA, CM, TF, TA, TM)
-           ),
-           assertz(depends_of(CF, CA, CM, TF, TA, TM))),
-    predicate_property(depends_of(_, _, _, _, _, _), number_of_clauses(N2)),
-    ( N1 \= N2
-    ->update_depends_of_rec(N2)
-    ; true
+depends_of_rec(CH, CM, TH, TM) :-
+    depends_of(CH, CM, TH, TM),
+    TM:TH \= CM:CH.
+
+:- meta_predicate depends_of_cm(1,+,+,?,?).
+
+depends_of_cm(Constraint, CH, CM, TH, TM) :-
+    depends_of_db(CH, CM, IH, IM),
+    call(Constraint, IM),
+    ( TM:TH = IM:IH
+    ; IM:IH \= CM:CH,
+      depends_of_cm_rec(Constraint, IH, IM, TH, TM)
     ).
 
-%!  module_links(+Module1, +Module2, +Module3, -UPIL, -PIL23, -PIL21) is det.
+depends_of_cm_rec(Constraint, CH, CM, TH, TM) :-
+    depends_of_cm(Constraint, CH, CM, TH, TM),
+    TM:TH \= CM:CH.
+
+member_of(List, Elem) :- memberchk(Elem, List).
+
+:- meta_predicate dependent_cm(1,+,+,?,?).
+
+dependent_cm(Constraint, TH, TM, CH, CM) :-
+    depends_of_db(IH, IM, TH, TM),
+    call(Constraint, IM),
+    ( CM:CH = IM:IH
+    ; IM:IH \= TM:TH,
+      dependent_cm_rec(Constraint, IH, IM, CH, CM)
+    ).
+
+dependent_cm_rec(Constraint, TH, TM, CH, CM) :-
+    dependent_cm(Constraint, TH, TM, CH, CM),
+    TM:TH \= CM:CH.
+
+%!  module_links(+Module1, +Module2, +Module3, -UPIL, -PIL21, -PIL23) is det.
 %
 %   Used to help to break the link between Module1, Module2 and Module3 by
 %   suggesting how to reorganize the predicates in Module2.  UPIL is a list of
@@ -86,19 +120,34 @@ update_depends_of_rec(N1) :-
 %   between modules can be broken either by moving the predicates in PIL21 to
 %   Module1 or the predicates in PIL23 to Module3.
 
-module_links(Module1, Module2, Module3, UPIL, PIL23, PIL21) :-
+module_links(Module1, Module2, Module3, UPIL, PIL21, PIL23) :-
     module_uses(Module1, Module2, PIL2),
     module_uses(Module2, Module3, PIL3),
     findall(F2/A2,
             ( member(F2/A2, PIL2),
-              member(F3/A3, PIL3),
-              depends_of(F2, A2, Module2, F3, A3, Module3)
+              once(( member(F3/A3, PIL3),
+                     functor(H2, F2, A2),
+                     depends_of_cm(member_of([Module2, Module3]), H2, Module2, H3, Module3)
+                   ))
             ), UPIL),
     findall(F2/A2,
             ( member(F3/A3, PIL3),
-              depends_of(F2, A2, Module2, F3, A3, Module3)
-            ), PIL23),
+              functor(H3, F3, A3),
+              dependent_cm(=(Module2), H3, Module3, H2, Module2),
+              functor(H2, F2, A2)
+            ), PIU23),
+    sort(PIU23, PIL23),
     findall(F22/A22,
             ( member(F2/A2, PIL2),
-              depends_of(F2, A2, Module2, F22, A22, Module2)
-            ), PIL21, PIL2).
+              functor(H2, F2, A2),
+              depends_of_cm(=(Module2), H2, Module2, H22, Module2),
+              functor(H22, F22, A22)
+            ), PIU21, PIL2),
+    sort(PIU21, PIL21).
+
+unlink_loop(ModuleL1, Module2, PIL21->Module1, PIL23->Module3) :-
+    last(ModuleL1, Last),
+    ModuleL1 = [First|_],
+    append([Last|ModuleL1], [First], ModuleL),
+    append(_, [Module1, Module2, Module3|_], ModuleL),
+    module_links(Module1, Module2, Module3, [], PIL21, PIL23).
