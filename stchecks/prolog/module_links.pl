@@ -33,8 +33,7 @@
 */
 
 :- module(module_links,
-          [ depends_of/4,
-            update_depends_of/2,
+          [ update_depends_of/2,
             module_links/6,
             unlink_loop/4
           ]).
@@ -69,45 +68,21 @@ update_depends_of(CM, TM) :-
              assertz(depends_of_db(CP, CM, TP, TM))
            )).
 
-depends_of(CH, CM, TH, TM) :-
-    depends_of_db(CH, CM, IH, IM),
-    ( TM:TH = IM:IH
-    ; depends_of_rec(IH, IM, TH, TM)
+% resolve recursion explicitly for those dependencies inside the same module:
+update_depends_of_cm(Module) :-
+    (   depends_of_db(CH, Module, IH, Module),
+        depends_of_db(IH, Module, TH, Module),
+        \+ depends_of_db(CH, Module, TH, Module)
+    ->  assertz(depends_of_db(CH, Module, TH, Module)),
+        update_depends_of_cm(Module)
+    ;   true
     ).
 
-depends_of_rec(CH, CM, TH, TM) :-
-    depends_of(CH, CM, TH, TM),
-    TM:TH \= CM:CH.
-
-:- meta_predicate depends_of_cm(1,+,+,?,?).
-
-depends_of_cm(Constraint, CH, CM, TH, TM) :-
-    depends_of_db(CH, CM, IH, IM),
-    call(Constraint, IM),
-    ( TM:TH = IM:IH
-    ; IM:IH \= CM:CH,
-      depends_of_cm_rec(Constraint, IH, IM, TH, TM)
-    ).
-
-depends_of_cm_rec(Constraint, CH, CM, TH, TM) :-
-    depends_of_cm(Constraint, CH, CM, TH, TM),
-    TM:TH \= CM:CH.
-
-member_of(List, Elem) :- memberchk(Elem, List).
-
-:- meta_predicate dependent_cm(1,+,+,?,?).
-
-dependent_cm(Constraint, TH, TM, CH, CM) :-
-    depends_of_db(IH, IM, TH, TM),
-    call(Constraint, IM),
-    ( CM:CH = IM:IH
-    ; IM:IH \= TM:TH,
-      dependent_cm_rec(Constraint, IH, IM, CH, CM)
-    ).
-
-dependent_cm_rec(Constraint, TH, TM, CH, CM) :-
-    dependent_cm(Constraint, TH, TM, CH, CM),
-    TM:TH \= CM:CH.
+depends_of_cm(CH, CM, TH, TM) :-
+    depends_of_db(CH, CM, TH, TM).
+depends_of_cm(CH, CM, TH, TM) :-
+    depends_of_db(CH, CM, IH, CM),
+    depends_of_db(IH, CM, TH, TM).
 
 %!  module_links(+Module1, +Module2, +Module3, -UPIL, -PIL21, -PIL23) is det.
 %
@@ -121,28 +96,37 @@ dependent_cm_rec(Constraint, TH, TM, CH, CM) :-
 %   Module1 or the predicates in PIL23 to Module3.
 
 module_links(Module1, Module2, Module3, UPIL, PIL21, PIL23) :-
-    module_uses(Module1, Module2, PIL2),
+    module_uses(Module1, Module2, PIL1),
     module_uses(Module2, Module3, PIL3),
+    update_depends_of_cm(Module2),
     findall(F2/A2,
-            ( member(F2/A2, PIL2),
+            ( member(F2/A2, PIL1),
+              functor(H2, F2, A2),
               once(( member(F3/A3, PIL3),
-                     functor(H2, F2, A2),
-                     depends_of_cm(member_of([Module2, Module3]), H2, Module2, H3, Module3)
+                     functor(H3, F3, A3),
+                     depends_of_cm(H2, Module2, H3, Module3)
                    ))
             ), UPIL),
+    collect_dependents(PIL1, Module2, PIL21),
     findall(F2/A2,
-            ( member(F3/A3, PIL3),
-              functor(H3, F3, A3),
-              dependent_cm(=(Module2), H3, Module3, H2, Module2),
-              functor(H2, F2, A2)
-            ), PIU23),
-    sort(PIU23, PIL23),
-    findall(F22/A22,
-            ( member(F2/A2, PIL2),
+            ( module_property(Module2, exports(ExL)),
+              member(F2/A2, ExL),
               functor(H2, F2, A2),
-              depends_of_cm(=(Module2), H2, Module2, H22, Module2),
-              functor(H22, F22, A22)
-            ), PIU21, PIL2),
+              once(( member(F3/A3, PIL3),
+                     functor(H3, F3, A3),
+                     depends_of_cm(H2, Module2, H3, Module3)
+                   ))
+            ), PIU2),
+    sort(PIU2, PIL2),
+    collect_dependents(PIL2, Module2, PIL23).
+
+collect_dependents(PIL1, Module2, PIL21) :-
+    findall(F21/A21,
+            ( member(F2/A2, PIL1),
+              functor(H2, F2, A2),
+              depends_of_cm(H2, Module2, H21, Module2),
+              functor(H21, F21, A21)
+            ), PIU21, PIL1),
     sort(PIU21, PIL21).
 
 unlink_loop(ModuleL1, Module2, PIL21->Module1, PIL23->Module3) :-
