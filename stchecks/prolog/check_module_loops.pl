@@ -36,8 +36,11 @@
 
 :- use_module(library(lists)).
 :- use_module(library(solution_sequences)).
+:- use_module(library(calls_to)).
 :- use_module(library(checker)).
 :- use_module(library(module_loops)).
+:- use_module(library(module_links)).
+:- use_module(library(module_uses)).
 :- use_module(library(extra_location)).
 :- use_module(library(location_utils)).
 
@@ -49,15 +52,29 @@ prolog:message(acheck(module_loops)) -->
      '------------', nl,
      'Module loops could potentially lead to Demeter\'s law violations', nl, nl].
 
-prolog:message(acheck(module_loops, Loc/Loop)) -->
+prolog:message(acheck(module_loops, Issue)) -->
+    module_loops_message_type(Issue).
+
+module_loops_message_type(loop(Loc/Loop)-[UnlinkL]) -->
     Loc,
-    ['Module loop found ~w'-[Loop], nl].
+    ['Module loop found ~w, but can be broken at ~w'-[Loop, UnlinkL], nl].
+module_loops_message_type(unlink(Loc/M)-IssueL) -->
+    Loc,
+    ['Module ~w can be splitted to decouple indirectly linked modules'-[M], nl],
+    foldl(module_loops_unlink_message(M), IssueL).
+
+module_loops_unlink_message(M, [LocL/M1:L1, LocR/M3:L3]) -->
+    ['\t'|LocL], ['From ~w used by ~w: ~w'-[M, M1, L1], nl],
+    ['\t'|LocR], ['From ~w uses ~w: ~w'-[M, M3, L3], nl].
 
 checker:check(module_loops, Pairs, Options) :-
+    collect_calls_to(Options, _),
+    update_depends_of(_, _),
+    collect_module_uses(_, _),
     module_loops(Loops, Options),
     maplist(normalize_loop, Loops, Norms),
     sort(Norms, Sorted),
-    maplist(loops_pairs, Sorted, Pairs).
+    findall(Pair, loops_pairs(Sorted, Pair), Pairs).
 
 normalize_loop(Loop, Norm) :-
     once(order_by([asc(Norm)],
@@ -65,7 +82,20 @@ normalize_loop(Loop, Norm) :-
                     append(Right, Left, Norm)
                   ))).
 
-loops_pairs(Loop, warning-Loc/Loop) :-
+loops_pairs(Loops, warning-Issue) :-
+    member(Loop, Loops),
+    ( findall(Module, unlink_loop(Loop, Module), UnlinkL),
+      Issue = loop(Loc/Loop)-UnlinkL,
+      guess_loop_location(Loop, Loc)
+    ; unlink_loop(Loop, Module, Left->M1, Right->M3),
+      Issue = unlink(Loc/Module)-[LocL/M1:Left, LocR/M3:Right],
+      guess_loop_location([M1, Module], LocL),
+      guess_loop_location([Module, M3], LocR),
+      module_property(Module, file(File)),
+      from_location(file(File, 1, _, _), Loc)
+    ).
+
+guess_loop_location(Loop, Loc) :-
     Loop = [LoadedIn|List],
     ( ( loc_declaration(           Alias,     LoadedIn, use_module,   From)
       ; loc_declaration(use_module(Alias, _), LoadedIn, use_module_2, From)
