@@ -43,7 +43,8 @@
 
 ref_head('<assertion>'(M:H), M, H).
 ref_head(M:H, M, H).
-ref_head(clause(Ref), M, H) :- clause(M:H, _, Ref).
+ref_head(clause(Ref), M, H) :-
+    freeze(Ref, clause(M:H, _, Ref)).
 
 pred_calls_to(AH, AM, H, M) :-
     ref_head(Ref, AM, AH),
@@ -102,10 +103,9 @@ module_links(Module1, Module2, Module3, UPIL, PIL21, PIL23) :-
             ), UPIL),
     collect_dependents(PIL1, Module2, PIL21),
     findall(F2/A2,
-            ( once(( member(F3/A3, PIL3),
-                     functor(H3, F3, A3),
-                     depends_of_cm(H2, Module2, H3, Module3)
-                   )),
+            ( member(F3/A3, PIL3),
+              functor(H3, F3, A3),
+              depends_of_cm(H2, Module2, H3, Module3),
               functor(H2, F2, A2)
             ), PIU2),
     sort(PIU2, PIL2),
