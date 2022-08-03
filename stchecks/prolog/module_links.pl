@@ -43,14 +43,7 @@
 
 ref_head('<assertion>'(M:H), M, H).
 ref_head(M:H, M, H).
-ref_head(clause(Ref), M, H) :-
-    freeze(Ref,
-           ( clause(M:P, _, Ref),
-             ( P = dialog(H)
-             ->true
-             ; P = H
-             )
-           )).
+ref_head(clause(Ref), M, H) :- clause(M:H, _, Ref).
 
 pred_calls_to(AH, AM, H, M) :-
     ref_head(Ref, AM, AH),
@@ -109,13 +102,11 @@ module_links(Module1, Module2, Module3, UPIL, PIL21, PIL23) :-
             ), UPIL),
     collect_dependents(PIL1, Module2, PIL21),
     findall(F2/A2,
-            ( module_property(Module2, exports(ExL)),
-              member(F2/A2, ExL),
-              functor(H2, F2, A2),
-              once(( member(F3/A3, PIL3),
+            ( once(( member(F3/A3, PIL3),
                      functor(H3, F3, A3),
                      depends_of_cm(H2, Module2, H3, Module3)
-                   ))
+                   )),
+              functor(H2, F2, A2)
             ), PIU2),
     sort(PIU2, PIL2),
     collect_dependents(PIL2, Module2, PIL23).
@@ -124,7 +115,7 @@ collect_dependents(PIL1, Module2, PIL21) :-
     findall(F21/A21,
             ( member(F2/A2, PIL1),
               functor(H2, F2, A2),
-              depends_of_cm(H2, Module2, H21, Module2),
+              depends_of_db(H2, Module2, H21, Module2),
               functor(H21, F21, A21)
             ), PIU21, PIL1),
     sort(PIU21, PIL21).
