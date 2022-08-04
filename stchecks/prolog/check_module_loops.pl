@@ -50,7 +50,11 @@
 prolog:message(acheck(module_loops)) -->
     ['Module loops', nl,
      '------------', nl,
-     'Module loops could potentially lead to Demeter\'s law violations', nl, nl].
+     'Module loops could potentially lead to Demeter\'s law violations.', nl,
+     'To help mitigate the problem, this analysis reports the predicates', nl,
+     'that can be reorganized in order to break the loop. If that is not', nl,
+     'possible, it is reported as a strong module loop and will require', nl,
+     'further refactoring or module merge to decouple the involved code.', nl, nl].
 
 prolog:message(acheck(module_loops, Issue)) -->
     module_loops_message_type(Issue).
@@ -58,6 +62,9 @@ prolog:message(acheck(module_loops, Issue)) -->
 module_loops_message_type(l(Loc/Loop)-UnlinkL) -->
     Loc,
     ['Module loop found ~w, but can be broken at ~w'-[Loop, UnlinkL], nl].
+module_loops_message_type(s(Loc/Loop)-_) -->
+    Loc,
+    ['Strong module loop found ~w'-[Loop], nl].
 module_loops_message_type(u(Loc/M)-IssueL) -->
     Loc,
     ['Module ~w can be splitted to decouple indirectly linked modules'-[M], nl],
@@ -87,18 +94,20 @@ normalize_loop(Loop, Norm) :-
 
 loops_pairs(Loops, warning-Issue) :-
     member(Loop, Loops),
-    unlink_loop(Loop, Module, Left->M1, Right->M3),
-    ( Issue = l(Loc/Loop)-Module,
-      guess_loop_location(Loop, Loc)
-    ; module_property(Module, file(File)),
-      from_location(file(File, 1, _, _), Loc),
-      Issue = u(Loc/Module)-LocEx/Data,
-      ( Data = M1:Left/l,
-        Rel = [M1, Module]
-      ; Data = M3:Right/r,
-        Rel = [Module, M3]
-      ),
-      guess_loop_location(Rel, LocEx)
+    guess_loop_location(Loop, LoopLoc),
+    (   unlink_loop(Loop, Module, Left->M1, Right->M3)
+    *-> ( Issue = l(LoopLoc/Loop)-Module
+        ; module_property(Module, file(File)),
+          from_location(file(File, 1, _, _), LinkLoc),
+          Issue = u(LinkLoc/Module)-ExLoc/Data,
+          ( Data = M1:Left/l,
+            Rel = [M1, Module]
+          ; Data = M3:Right/r,
+            Rel = [Module, M3]
+          ),
+          guess_loop_location(Rel, ExLoc)
+        )
+    ;   Issue = s(LoopLoc/Loop)-[]
     ).
 
 guess_loop_location(Loop, Loc) :-
