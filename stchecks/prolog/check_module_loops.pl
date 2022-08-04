@@ -55,17 +55,20 @@ prolog:message(acheck(module_loops)) -->
 prolog:message(acheck(module_loops, Issue)) -->
     module_loops_message_type(Issue).
 
-module_loops_message_type(loop(Loc/Loop)-[UnlinkL]) -->
+module_loops_message_type(l(Loc/Loop)-UnlinkL) -->
     Loc,
     ['Module loop found ~w, but can be broken at ~w'-[Loop, UnlinkL], nl].
-module_loops_message_type(unlink(Loc/M)-IssueL) -->
+module_loops_message_type(u(Loc/M)-IssueL) -->
     Loc,
     ['Module ~w can be splitted to decouple indirectly linked modules'-[M], nl],
     foldl(module_loops_unlink_message(M), IssueL).
 
-module_loops_unlink_message(M, [LocL/M1:L1, LocR/M3:L3]) -->
-    ['\t'|LocL], ['From ~w used by ~w: ~w'-[M, M1, L1], nl],
-    ['\t'|LocR], ['From ~w uses ~w: ~w'-[M, M3, L3], nl].
+type_label(l, 'used by').
+type_label(r, 'uses').
+
+module_loops_unlink_message(M, LocL/(M1:L1/Type)) -->
+    {type_label(Type, Label)},
+    ['\t'|LocL], ['From ~w ~w ~w: ~w'-[M, Label, M1, L1], nl].
 
 checker:check(module_loops, Pairs, Options) :-
     collect_calls_to(Options, _),
@@ -84,15 +87,18 @@ normalize_loop(Loop, Norm) :-
 
 loops_pairs(Loops, warning-Issue) :-
     member(Loop, Loops),
-    ( findall(Module, unlink_loop(Loop, Module), UnlinkL),
-      Issue = loop(Loc/Loop)-UnlinkL,
+    unlink_loop(Loop, Module, Left->M1, Right->M3),
+    ( Issue = l(Loc/Loop)-Module,
       guess_loop_location(Loop, Loc)
-    ; unlink_loop(Loop, Module, Left->M1, Right->M3),
-      Issue = unlink(Loc/Module)-[LocL/M1:Left, LocR/M3:Right],
-      guess_loop_location([M1, Module], LocL),
-      guess_loop_location([Module, M3], LocR),
-      module_property(Module, file(File)),
-      from_location(file(File, 1, _, _), Loc)
+    ; module_property(Module, file(File)),
+      from_location(file(File, 1, _, _), Loc),
+      Issue = u(Loc/Module)-LocEx/Data,
+      ( Data = M1:Left/l,
+        Rel = [M1, Module]
+      ; Data = M3:Right/r,
+        Rel = [Module, M3]
+      ),
+      guess_loop_location(Rel, LocEx)
     ).
 
 guess_loop_location(Loop, Loc) :-

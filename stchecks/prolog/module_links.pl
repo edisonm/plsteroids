@@ -36,7 +36,6 @@
           [ update_depends_of/2,
             module_links/6,
             module_links/4,
-            unlink_loop/2,
             unlink_loop/4
           ]).
 
@@ -65,6 +64,9 @@ update_depends_of(CM, TM) :-
            )).
 
 % resolve recursion explicitly for those dependencies inside the same module:
+
+:- table update_depends_of_cm/1.
+
 update_depends_of_cm(Module) :-
     (   depends_of_db(CH, Module, IH, Module),
         depends_of_db(IH, Module, TH, Module),
@@ -79,6 +81,20 @@ depends_of_cm(CH, CM, TH, TM) :-
 depends_of_cm(CH, CM, TH, TM) :-
     depends_of_db(CH, CM, IH, CM),
     depends_of_db(IH, CM, TH, TM).
+
+:- meta_predicate collect_dependents(2, +, -).
+
+collect_dependents(GetPI2, Module2, PIL21) :-
+    findall(F21/A21,
+            ( call(GetPI2, F2, A2),
+              ( F21 = F2,
+                A21 = A2
+              ; functor(H2, F2, A2),
+                depends_of_db(H2, Module2, H21, Module2),
+                functor(H21, F21, A21)
+              )
+            ), PIU21),
+    sort(PIU21, PIL21).
 
 %!  module_links(+Module1, +Module2, +Module3, -UPIL, -PIL21, -PIL23) is det.
 %
@@ -99,13 +115,16 @@ module_links(Module1, Module2, Module3, UPIL, PIL21, PIL23) :-
 module_links(Module1, Module2, Module3, UPIL) :-
     update_depends_of_cm(Module2),
     findall(F2/A2,
-            ( module_uses(Module1, Module2, F2, A2),
-              functor(H2, F2, A2),
-              once(( module_uses(Module2, Module3, F3, A3),
-                     functor(H3, F3, A3),
-                     depends_of_cm(H2, Module2, H3, Module3)
-                   ))
-            ), UPIL).
+            current_module_link(Module1, Module2, Module3, F2, A2),
+            UPIL).
+
+current_module_link(Module1, Module2, Module3, F2, A2) :-
+    module_uses(Module1, Module2, F2, A2),
+    functor(H2, F2, A2),
+    once(( module_uses(Module2, Module3, F3, A3),
+           functor(H3, F3, A3),
+           depends_of_cm(H2, Module2, H3, Module3)
+         )).
 
 uses_module(Module2, Module3, F2, A2) :-
     module_uses(Module2, Module3, F3, A3),
@@ -113,28 +132,15 @@ uses_module(Module2, Module3, F2, A2) :-
     depends_of_cm(H2, Module2, H3, Module3),
     functor(H2, F2, A2).
 
-collect_dependents(GetPI2, Module2, PIL21) :-
-    findall(F21/A21,
-            ( call(GetPI2, F2, A2),
-              ( F21 = F2,
-                A21 = A2
-              ; functor(H2, F2, A2),
-                depends_of_db(H2, Module2, H21, Module2),
-                functor(H21, F21, A21)
-              )
-            ), PIU21),
-    sort(PIU21, PIL21).
-
-unlink_loop(ModuleL1, Module2) :-
+unlinkable_chain(ModuleL1, Module1, Module2, Module3) :-
     last(ModuleL1, Last),
     ModuleL1 = [First|_],
     append([Last|ModuleL1], [First], ModuleL),
     append(_, [Module1, Module2, Module3|_], ModuleL),
-    module_links(Module1, Module2, Module3, []).
+    update_depends_of_cm(Module2),
+    \+ current_module_link(Module1, Module2, Module3, _, _).
 
-unlink_loop(ModuleL1, Module2, PIL21->Module1, PIL23->Module3) :-
-    last(ModuleL1, Last),
-    ModuleL1 = [First|_],
-    append([Last|ModuleL1], [First], ModuleL),
-    append(_, [Module1, Module2, Module3|_], ModuleL),
-    module_links(Module1, Module2, Module3, [], PIL21, PIL23).
+unlink_loop(ModuleL, Module2, PIL21->Module1, PIL23->Module3) :-
+    unlinkable_chain(ModuleL, Module1, Module2, Module3),
+    collect_dependents(module_uses(Module1, Module2), Module2, PIL21),
+    collect_dependents(uses_module(Module2, Module3), Module2, PIL23).
