@@ -124,7 +124,7 @@ cu_caller_hook(Caller, Head, CM, Type, Goal, _, From) :-
       )
     ; true
     ),
-    record_calls_to(Type, Caller, Head, M, From),
+    record_calls_to(Type, Caller, Head, CM, From),
     ( M \= CM
     ->record_calls_to('<exported>', M, Head)
     ; true

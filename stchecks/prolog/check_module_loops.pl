@@ -40,7 +40,6 @@
 :- use_module(library(checker)).
 :- use_module(library(module_loops)).
 :- use_module(library(module_links)).
-:- use_module(library(module_uses)).
 :- use_module(library(extra_location)).
 :- use_module(library(location_utils)).
 
@@ -54,7 +53,9 @@ prolog:message(acheck(module_loops)) -->
      'To help mitigate the problem, this analysis reports the predicates', nl,
      'that can be reorganized in order to break the loop. If that is not', nl,
      'possible, it is reported as a strong module loop and will require', nl,
-     'further refactoring or module merge to decouple the involved code.', nl, nl].
+     'further refactoring or module merge to decouple the involved code.', nl,
+     'If the list of the strongly connected predicate is empty, it means', nl,
+     'that is possible to resolve the loop involving more than 2 modules', nl, nl].
 
 prolog:message(acheck(module_loops, Issue)) -->
     module_loops_message_type(Issue).
@@ -62,9 +63,9 @@ prolog:message(acheck(module_loops, Issue)) -->
 module_loops_message_type(l(Loc/Loop)-UnlinkL) -->
     Loc,
     ['Module loop found ~w, but can be broken at ~w'-[Loop, UnlinkL], nl].
-module_loops_message_type(s(Loc/Loop)-_) -->
+module_loops_message_type(s(Loc/Loop)-[SCL]) -->
     Loc,
-    ['Strong module loop found ~w'-[Loop], nl].
+    ['Strong module loop found ~w, involved predicates are ~w'-[Loop, SCL], nl].
 module_loops_message_type(u(Loc/M)-IssueL) -->
     Loc,
     ['Module ~w can be splitted to decouple indirectly linked modules'-[M], nl],
@@ -79,8 +80,7 @@ module_loops_unlink_message(M, LocL/(M1:L1/Type)) -->
 
 checker:check(module_loops, Pairs, Options) :-
     collect_calls_to(Options, _),
-    update_depends_of(_, _),
-    collect_module_uses(_, _),
+    update_depends_of,
     module_loops(Loops, Options),
     maplist(normalize_loop, Loops, Norms),
     sort(Norms, Sorted),
@@ -107,7 +107,8 @@ loops_pairs(Loops, warning-Issue) :-
           ),
           guess_loop_location(Rel, ExLoc)
         )
-    ;   Issue = s(LoopLoc/Loop)-[]
+    ;   Issue = s(LoopLoc/Loop)-PredL,
+        module_pred_links(Loop, PredL)
     ).
 
 guess_loop_location(Loop, Loc) :-

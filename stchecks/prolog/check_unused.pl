@@ -151,8 +151,10 @@ is_marked(CRef) :-
 put_mark(CRef) :-
     ( \+ is_marked(CRef)
     ->record_marked(CRef),
-      forall(calls_to(CRef, w, CM, Callee),
-             mark_rec(Callee, CM))
+      forall(( calls_to(CRef, w, CM, Callee),
+               predicate_property(CM:Callee, implementation_module(M))
+             ),
+             mark_rec(Callee, M))
     ; true
     ).
 
@@ -223,7 +225,8 @@ current_edge(X, Y) :-
         CRef = M:H
       )
     ),
-    calls_to(CRef, M2, H2),
+    calls_to(CRef, CM2, H2),
+    predicate_property(CM2:H2, implementation_module(M2)),
     functor(H2, F2, A2),
     PI2 = M2:F2/A2,
     ( Y = PI2
