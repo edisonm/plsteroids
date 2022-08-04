@@ -62,10 +62,13 @@ prolog:message(acheck(module_loops, Issue)) -->
 
 module_loops_message_type(l(Loc/Loop)-UnlinkL) -->
     Loc,
-    ['Module loop found ~w, but can be broken at ~w'-[Loop, UnlinkL], nl].
-module_loops_message_type(s(Loc/Loop)-[SCL]) -->
+    ['Module loop found ~w, it can be broken at ~w'-[Loop, UnlinkL], nl].
+module_loops_message_type(m(Loc/Loop)-[PredL]) -->
     Loc,
-    ['Strong module loop found ~w, involved predicates are ~w'-[Loop, SCL], nl].
+    ['Complex module loop found ~w, involved predicates are ~w'-[Loop, PredL], nl].
+module_loops_message_type(s(Loc/Loop)-[StrongL]) -->
+    Loc,
+    ['Strong module loop found ~w, involved predicates are ~w'-[Loop, StrongL], nl].
 module_loops_message_type(u(Loc/M)-IssueL) -->
     Loc,
     ['Module ~w can be splitted to decouple indirectly linked modules'-[M], nl],
@@ -107,8 +110,11 @@ loops_pairs(Loops, warning-Issue) :-
           ),
           guess_loop_location(Rel, ExLoc)
         )
-    ;   Issue = s(LoopLoc/Loop)-PredL,
-        module_pred_links(Loop, PredL)
+    ;   module_pred_links(Loop, PredL, StrongL),
+        ( maplist(=[], StrongL)
+        ->Issue = s(LoopLoc/Loop)-PredL
+        ; Issue = m(LoopLoc/Loop)-PredL
+        )
     ).
 
 guess_loop_location(Loop, Loc) :-

@@ -37,6 +37,7 @@
             module_links/6,
             module_links/4,
             module_pred_links/2,
+            module_pred_links/3,
             unlink_loop/4
           ]).
 
@@ -137,11 +138,14 @@ current_module_link(Module1, Module2, Module3, M2:F2/A2) :-
     functor(H2, F2, A2).
 
 module_pred_links(ModuleL1, PILL) :-
+    module_pred_links(ModuleL1, _, PILL).
+
+module_pred_links(ModuleL1, PIL1, PILL) :-
     last(ModuleL1, Last),
     ModuleL1 = [First|ModuleT1],
     append(ModuleT1, [First], ModuleL2),
     module_pred_link(Last, First, PILast),
-    foldl(module_pred_link, ModuleL1, ModuleL2, PILast, PIFirst),
+    foldl(module_pred_link, ModuleL1, ModuleL2, PIL1, PILast, PIFirst),
     foldl(module_pred_link, ModuleL1, ModuleL2, PILL, PIFirst, _).
 
 module_pred_link(Module1, Module2, PIL) :-
