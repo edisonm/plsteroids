@@ -42,6 +42,7 @@
           ]).
 
 :- use_module(library(calls_to)).
+:- use_module(library(pairs)).
 
 ref_head('<assertion>'(M:H), M, H).
 ref_head(M:H, M, H).
@@ -91,27 +92,30 @@ update_depends_of_cm_rec(CM, N1) :-
     ; true
     ).
 
-depends_of_cm(AH, AM, TH, TM, CM) :-
-    depends_of_db(AH, AM, TH, TM, CM, _).
-depends_of_cm(AH, AM, TH, TM, CM) :-
-    depends_of_db(AH, AM, IH, AM, CM, _),
-    depends_of_db(IH, AM, TH, TM, CM, _).
-
 :- meta_predicate collect_dependents(1, +, -).
 
-collect_dependents(GetPI2, Module2, PIL21) :-
-    findall(PI21,
-            ( call(GetPI2, M2:H2),
-              ( functor(H2, F21, A21)
-              ; depends_of_db(H2, M2, H21, Module2, Module2, _),
-                functor(H21, F21, A21)
-              ),
+collect_dependents(GetPI2, Module2, PIG21) :-
+    findall(T-PI21,
+            ( call(GetPI2, T-(M2:H2)),
+              functor(H2, F21, A21),
               ( M2 = Module2
               ->PI21 = F21/A21
               ; PI21 = M2:F21/A21
               )
             ), PIU21),
-    sort(PIU21, PIL21).
+    sort(PIU21, PIA21),
+    findall(T-PI,
+            ( member(T-PI, PIA21),
+              ( T = e
+              ->true
+              ; \+ memberchk(e-PI, PIA21),
+                ( T = c
+                ->true
+                ; \+ memberchk(c-PI, PIA21)
+                )
+              )
+            ), PIL21),
+    group_pairs_by_key(PIL21, PIG21).
 
 %!  module_links(+Module1, +Module2, +Module3, -UPIL, -PIL21, -PIL23) is det.
 %
@@ -126,15 +130,15 @@ collect_dependents(GetPI2, Module2, PIL21) :-
 
 module_links(Module1, Module2, Module3, UPIL, PIL21, PIL23) :-
     module_links(Module1, Module2, Module3, UPIL),
-    collect_dependents(module_uses(Module1, Module2), Module2, PIL21),
-    collect_dependents(uses_module(Module2, Module3), Module2, PIL23).
+    collect_dependents(mod_used_by(Module2, Module1), Module2, PIL21),
+    collect_dependents(module_uses(Module2, Module3), Module2, PIL23).
 
 module_links(Module1, Module2, Module3, UPIL) :-
     findall(PI, current_module_link(Module1, Module2, Module3, PI), UPIL).
 
 current_module_link(Module1, Module2, Module3, M2:F2/A2) :-
-    depends_of_db(_, _, H2, Module2, Module1, _),
-    once(depends_of_cm(H2, M2, _, Module3, Module2)),
+    depends_of_db(_, _, H2, Module2, Module1, 1),
+    once(depends_of_db(H2, M2, _, Module3, Module2, _)),
     functor(H2, F2, A2).
 
 module_pred_links(ModuleL1, PILL) :-
@@ -150,7 +154,7 @@ module_pred_links(ModuleL1, PIL1, PILL) :-
 
 module_pred_link(Module1, Module2, PIL) :-
     findall(Module2:F2/A2,
-            ( depends_of_db(_, _, H2, Module2, Module1, _),
+            ( depends_of_db(_, _, H2, Module2, Module1, 1),
               functor(H2, F2, A2)
             ), PIU),
     sort(PIU, PIL).
@@ -159,7 +163,7 @@ module_pred_link(Module1, Module2, PIL1, PIL2) :-
     findall(Module2:F2/A2,
             ( member(M1:F1/A1, PIL1),
               functor(H1, F1, A1),
-              depends_of_cm(H1, M1, H2, Module2, Module1),
+              depends_of_db(H1, M1, H2, Module2, Module1, _),
               functor(H2, F2, A2)
             ), PIU2),
     sort(PIU2, PIL2).
@@ -167,11 +171,28 @@ module_pred_link(Module1, Module2, PIL1, PIL2) :-
 module_pred_link(Module1, Module2, PIL1, PIL1, PIL2) :-
     module_pred_link(Module1, Module2, PIL1, PIL2).
 
-module_uses(Module1, Module2, Module2:H2) :-
-    depends_of_db(_, _, H2, Module2, Module1, _).
-    
-uses_module(Module2, Module3, M2:H2) :-
-    depends_of_cm(H2, M2, _, Module3, Module2).
+mod_used_by(Module2, Module1, T-(M:H)) :-
+    depends_of_db(H1, M1, H2, Module2, Module1, 1),
+    ( T = c,
+      M:H = M1:H1
+    ; T = e,
+      M:H = Module2:H2
+    ; T = r,
+      M = Module2,
+      depends_of_db(H2, M, H, M, M, _)
+    ).
+
+module_uses(Module2, Module3, T-(M:H)) :-
+    depends_of_db(H2, M2, H3, Module3, Module2, 1),
+    ( T = e,
+      M:H = Module3:H3
+    ; ( T = c,
+        M:H = M2:H2
+      ; T = r,
+        M = Module2,
+        depends_of_db(H2, M2, H, M, M, _)
+      )
+    ).
 
 unlinkable_chain(ModuleL1, Module1, Module2, Module3) :-
     last(ModuleL1, Last),
@@ -182,5 +203,5 @@ unlinkable_chain(ModuleL1, Module1, Module2, Module3) :-
 
 unlink_loop(ModuleL, Module2, PIL21->Module1, PIL23->Module3) :-
     unlinkable_chain(ModuleL, Module1, Module2, Module3),
-    collect_dependents(module_uses(Module1, Module2), Module2, PIL21),
-    collect_dependents(uses_module(Module2, Module3), Module2, PIL23).
+    collect_dependents(mod_used_by(Module2, Module1), Module2, PIL21),
+    collect_dependents(module_uses(Module2, Module3), Module2, PIL23).

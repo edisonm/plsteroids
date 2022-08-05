@@ -55,7 +55,8 @@ prolog:message(acheck(module_loops)) -->
      'possible, it is reported as a strong module loop and will require', nl,
      'further refactoring or module merge to decouple the involved code.', nl,
      'If the list of the strongly connected predicate is empty, it means', nl,
-     'that is possible to resolve the loop involving more than 2 modules', nl, nl].
+     'that is possible to resolve the loop involving more than 2 modules',
+     'and it will reported as a complex module loop.', nl, nl].
 
 prolog:message(acheck(module_loops, Issue)) -->
     module_loops_message_type(Issue).
