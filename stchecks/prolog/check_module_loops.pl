@@ -35,7 +35,6 @@
 :- module(check_module_loops, []).
 
 :- use_module(library(lists)).
-:- use_module(library(solution_sequences)).
 :- use_module(library(calls_to)).
 :- use_module(library(checker)).
 :- use_module(library(module_loops)).
@@ -61,7 +60,7 @@ prolog:message(acheck(module_loops)) -->
 prolog:message(acheck(module_loops, Issue)) -->
     module_loops_message_type(Issue).
 
-module_loops_message_type(l(Loc/Loop)-UnlinkL) -->
+module_loops_message_type(l(Loc/Loop)-[UnlinkL]) -->
     Loc,
     ['Module loop found ~w, it can be broken at ~w'-[Loop, UnlinkL], nl].
 module_loops_message_type(m(Loc/Loop)-[PredL]) -->
@@ -86,36 +85,30 @@ checker:check(module_loops, Pairs, Options) :-
     collect_calls_to(Options, _),
     update_depends_of,
     module_loops(Loops, Options),
-    maplist(normalize_loop, Loops, Norms),
-    sort(Norms, Sorted),
-    findall(Pair, loops_pairs(Sorted, Pair), Pairs).
-
-normalize_loop(Loop, Norm) :-
-    once(order_by([asc(Norm)],
-                  ( append(Left, Right, Loop),
-                    append(Right, Left, Norm)
-                  ))).
+    findall(Pair, loops_pairs(Loops, Pair), Pairs).
 
 loops_pairs(Loops, warning-Issue) :-
     member(Loop, Loops),
     guess_loop_location(Loop, LoopLoc),
-    (   unlink_loop(Loop, Module, Left->M1, Right->M3)
-    *-> ( Issue = l(LoopLoc/Loop)-Module
-        ; module_property(Module, file(File)),
-          from_location(file(File, 1, _, _), LinkLoc),
-          Issue = u(LinkLoc/Module)-ExLoc/Data,
-          ( Data = M1:Left/l,
-            Rel = [M1, Module]
-          ; Data = M3:Right/r,
-            Rel = [Module, M3]
-          ),
-          guess_loop_location(Rel, ExLoc)
-        )
-    ;   module_pred_links(Loop, PredL, StrongL),
-        ( maplist(=[], StrongL)
-        ->Issue = s(LoopLoc/Loop)-PredL
-        ; Issue = m(LoopLoc/Loop)-PredL
-        )
+    findall(Module, unlinkable_chain(Loop, Module, _, _), UnlinkL),
+    ( UnlinkL \= []
+    ->( Issue = l(LoopLoc/Loop)-UnlinkL
+      ; Issue = u(LinkLoc/Module)-ExLoc/Data,
+        unlink_loop(Loop, Module, Left->M1, Right->M3),
+        module_property(Module, file(File)),
+        from_location(file(File, 1, _, _), LinkLoc),
+        ( Data = M1:Left/l,
+          Rel = [M1, Module]
+        ; Data = M3:Right/r,
+          Rel = [Module, M3]
+        ),
+        guess_loop_location(Rel, ExLoc)
+      )
+    ; module_pred_links(Loop, PredL, StrongL),
+      ( maplist(=[], StrongL)
+      ->Issue = s(LoopLoc/Loop)-PredL
+      ; Issue = m(LoopLoc/Loop)-PredL
+      )
     ).
 
 guess_loop_location(Loop, Loc) :-

@@ -38,7 +38,8 @@
             module_links/4,
             module_pred_links/2,
             module_pred_links/3,
-            unlink_loop/4
+            unlink_loop/4,
+            unlinkable_chain/4
           ]).
 
 :- use_module(library(calls_to)).
