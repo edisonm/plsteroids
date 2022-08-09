@@ -90,7 +90,7 @@ checker:check(module_loops, Pairs, Options) :-
 loops_pairs(Loops, warning-Issue) :-
     member(Loop, Loops),
     guess_loop_location(Loop, LoopLoc),
-    findall(Module, unlinkable_chain(Loop, Module, _, _), UnlinkL),
+    findall(Module, unlinkable_chain(Loop, _, Module, _), UnlinkL),
     ( UnlinkL \= []
     ->( Issue = l(LoopLoc/Loop)-UnlinkL
       ; Issue = u(LinkLoc/Module)-ExLoc/Data,
