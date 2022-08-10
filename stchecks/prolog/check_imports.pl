@@ -80,20 +80,33 @@ check_imports(Options, Pairs) :-
     option_module_files(Options, MFileD),
     walk_code([source(false),
                module_files(MFileD),
+               on_head(collect_multifile),
                on_trace(collect_imports_wc)|Options]),
     collect_imports(MFileD, Pairs, Tail),
     collect_usemods(MFileD, Tail, []),
     cleanup_imports.
+
+:- public collect_multifile/2.
+
+collect_multifile(Head, From) :-
+    caller_module(Head, From, M),
+    from_to_file(From, File),
+    module_property(CM, file(File)),
+    ( M \= CM,
+      \+ used_usemod(CM, M)
+    ->assertz(used_usemod(CM, M))
+    ; true
+    ).
 
 :- public collect_imports_wc/3.
 
 collect_imports_wc(M:Goal, Caller, From) :-
     record_location_meta(M:Goal, _, From, all_call_refs, mark_import),
     ( nonvar(Caller),
-      caller_module(Caller, From, MC),
-      M \= MC,
-      \+ used_usemod(M, MC)
-    ->assertz(used_usemod(M, MC))
+      caller_module(Caller, From, CM),
+      M \= CM,
+      \+ used_usemod(CM, M)
+    ->assertz(used_usemod(CM, M))
     ; true
     ).
 
@@ -179,14 +192,11 @@ current_used_use_module(MFileD, UE, M, From) :-
     \+ ( module_property(UM, exported_operators(OL)),
          OL \= []
        ),
-    \+ ( member(F/A, PIL),
-         functor(Head, F, A),
-         MHead = UM:Head,
-         predicate_property(MHead, implementation_module(IM)),
-         ( used_usemod(M, IM)                        % is used
-         ; predicate_property(MHead, multifile),   % is extended
-           clause(MHead, _, Ref),
-           clause_property(Ref, file(File))
+    \+ ( MHead = UM:Head,
+         ( member(F/A, PIL),
+           functor(Head, F, A),
+           predicate_property(MHead, implementation_module(IM)),
+           used_usemod(M, IM)                        % is used
          )
        ).
 
