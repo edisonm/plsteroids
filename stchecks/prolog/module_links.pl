@@ -42,8 +42,8 @@
             unlinkable_chain/4
           ]).
 
-:- use_module(library(calls_to)).
 :- use_module(library(pairs)).
+:- use_module(library(calls_to)).
 
 ref_head('<assertion>'(M:H), M, H).
 ref_head(M:H, M, H).
