@@ -55,7 +55,7 @@ prolog:message(acheck(module_loops)) -->
      'possible to decouple the module without changing the predicates,', nl,
      'it is reported as a strong module loop and will require further', nl,
      'refactoring or module merge to decouple the involved code.', nl,
-     'If the list of the strongly connected predicate is empty, it means', nl,
+     'If the list of strongly connected predicates is empty, it means', nl,
      'that is possible to resolve the loop involving more than 2 modules', nl,
      'and it will be reported as a complex module loop.', nl, nl].
 
@@ -64,24 +64,26 @@ prolog:message(acheck(module_loops, Issue)) -->
 
 module_loops_message_type(l(Loc/Loop)-[UnlinkL]) -->
     Loc,
-    ['Module loop found ~w, it can be broken at ~w'-[Loop, UnlinkL], nl].
+    ['Module loop found ~w, it can be broken at:'-[Loop], nl],
+    foldl(ml_msg_can_be_broken_at, UnlinkL).
 module_loops_message_type(m(Loc/Loop)-[PredL]) -->
     Loc,
     ['Complex module loop found ~w, involved predicates are ~w'-[Loop, PredL], nl].
 module_loops_message_type(s(Loc/Loop)-[StrongL]) -->
     Loc,
     ['Strong module loop found ~w, involved predicates are ~w'-[Loop, StrongL], nl].
-module_loops_message_type(u(Loc/M)-IssueL) -->
-    Loc,
-    ['Module ~w can be splitted to decouple indirectly linked modules'-[M], nl],
-    foldl(module_loops_unlink_message(M), IssueL).
 
-type_label(l, 'used by').
-type_label(r, 'uses').
+ml_msg_can_be_broken_at([M2, Loc1, M1, PL1, L1, Loc3, M3, PL3, L3]) -->
+    ml_msg_alternative_path(M2, 'used by', Loc1, M1, PL1, L1),
+    ml_msg_alternative_path(M2, 'uses',    Loc3, M3, PL3, L3).
 
-module_loops_unlink_message(M, LocL/(M1:L1/Type)) -->
-    {type_label(Type, Label)},
-    ['\t'|LocL], ['From ~w ~w ~w: ~w'-[M, Label, M1, L1], nl].
+ml_msg_alternative_path(M2, Label, Loc, M, PL, L) -->
+    ['\t'|Loc], ["~w ~w ~w: ~w"-[M2, Label, M, L]],
+    ( {PL \= []}
+    ->[".  Alternative paths present: ~w"-[PL]]
+    ; []
+    ),
+    [nl].
 
 checker:check(module_loops, Pairs, Options) :-
     collect_calls_to(Options, _),
@@ -91,21 +93,26 @@ checker:check(module_loops, Pairs, Options) :-
 
 loops_pairs(Loops, warning-Issue) :-
     member(Loop, Loops),
-    guess_loop_location(Loop, LoopLoc),
-    findall(Module, unlinkable_chain(Loop, _, Module, _), UnlinkL),
+    guess_link_location(Loop, LoopLoc),
+    findall([M2, Loc1, M1, PL1, L1, Loc3, M3, PL3, L3],
+            ( unlinkable_chain(Loop, M1, M2, M3),
+              findall([I|P],
+                      ( loads_db(M1, I, _, 1),
+                        loads_db(I, M2, P, _),
+                        \+ memberchk(M1, P)
+                      ), PL1),
+              findall([I|P],
+                      ( loads_db(M2, I, _, 1),
+                        loads_db(I, M3, P, _),
+                        \+ memberchk(M2, P)
+                      ), PL3),
+              mod_used_by_preds(M2, M1, L1),
+              module_uses_preds(M2, M3, L3),
+              guess_link_location([M1, M2], Loc1),
+              guess_link_location([M2, M3], Loc3)
+            ), UnlinkL),
     ( UnlinkL \= []
-    ->( Issue = l(LoopLoc/Loop)-UnlinkL
-      ; Issue = u(LinkLoc/Module)-ExLoc/Data,
-        unlink_loop(Loop, Module, Left->M1, Right->M3),
-        module_property(Module, file(File)),
-        from_location(file(File, 1, _, _), LinkLoc),
-        ( Data = M1:Left/l,
-          Rel = [M1, Module]
-        ; Data = M3:Right/r,
-          Rel = [Module, M3]
-        ),
-        guess_loop_location(Rel, ExLoc)
-      )
+    ->Issue = l(LoopLoc/Loop)-UnlinkL
     ; module_pred_links(Loop, PredL, StrongL),
       ( maplist(=[], StrongL)
       ->Issue = s(LoopLoc/Loop)-PredL
@@ -113,7 +120,7 @@ loops_pairs(Loops, warning-Issue) :-
       )
     ).
 
-guess_loop_location(Loop, Loc) :-
+guess_link_location(Loop, Loc) :-
     Loop = [LoadedIn|List],
     ( ( loc_declaration(           Alias,     LoadedIn, use_module,   From)
       ; loc_declaration(use_module(Alias, _), LoadedIn, use_module_2, From)

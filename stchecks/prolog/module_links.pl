@@ -38,7 +38,8 @@
             module_links/4,
             module_pred_links/2,
             module_pred_links/3,
-            unlink_loop/4,
+            mod_used_by_preds/3,
+            module_uses_preds/3,
             unlinkable_chain/4
           ]).
 
@@ -202,7 +203,8 @@ unlinkable_chain(ModuleL1, Module1, Module2, Module3) :-
     append(_, [Module1, Module2, Module3|_], ModuleL),
     \+ current_module_link(Module1, Module2, Module3, _).
 
-unlink_loop(ModuleL, Module2, PIL21->Module1, PIL23->Module3) :-
-    unlinkable_chain(ModuleL, Module1, Module2, Module3),
-    collect_dependents(mod_used_by(Module2, Module1), Module2, PIL21),
+mod_used_by_preds(Module2, Module1, PIL21) :-
+    collect_dependents(mod_used_by(Module2, Module1), Module2, PIL21).
+
+module_uses_preds(Module2, Module3, PIL23) :-
     collect_dependents(module_uses(Module2, Module3), Module2, PIL23).
