@@ -33,14 +33,12 @@
 */
 
 :- module(module_links,
-          [ update_depends_of/0,
-            module_links/6,
-            module_links/4,
+          [ current_chain_link/4,
+            loop_to_chain/2,
+            module_pred_chains/6,
             module_pred_links/2,
-            module_pred_links/3,
-            mod_used_by_preds/3,
-            module_uses_preds/3,
-            unlinkable_chain/4
+            preds_uses/3,
+            update_depends_of/0
           ]).
 
 :- use_module(library(pairs)).
@@ -119,92 +117,98 @@ collect_dependents(GetPI2, Module2, PIG21) :-
             ), PIL21),
     group_pairs_by_key(PIL21, PIG21).
 
-%!  module_links(+Module1, +Module2, +Module3, -UPIL, -PIL21, -PIL23) is det.
-%
-%   Used to help to break the link between Module1, Module2 and Module3 by
-%   suggesting how to reorganize the predicates in Module2.  UPIL is a list of
-%   predicates in Module2, used in Module1, that depends on Module3, and
-%   therefore prevents the independence of such modules.  PIL23 is the list of
-%   predicates in Module2 that depends on Module3.  PIL21 is the list of
-%   predicates in Module2 that Module1 depends on.  If UPIL is empty, the link
-%   between modules can be broken either by moving the predicates in PIL21 to
-%   Module1 or the predicates in PIL23 to Module3.
-
-module_links(Module1, Module2, Module3, UPIL, PIL21, PIL23) :-
-    module_links(Module1, Module2, Module3, UPIL),
-    collect_dependents(mod_used_by(Module2, Module1), Module2, PIL21),
-    collect_dependents(module_uses(Module2, Module3), Module2, PIL23).
-
-module_links(Module1, Module2, Module3, UPIL) :-
-    findall(PI, current_module_link(Module1, Module2, Module3, PI), UPIL).
-
-current_module_link(Module1, Module2, Module3, M2:F2/A2) :-
-    depends_of_db(_, _, H2, Module2, Module1, 1),
-    once(depends_of_db(H2, M2, _, Module3, Module2, _)),
-    functor(H2, F2, A2).
-
 module_pred_links(ModuleL1, PILL) :-
-    module_pred_links(ModuleL1, _, PILL).
+    % Create a circular linked list:
+    append(ModuleL1, ModuleL, ModuleL),
+    findall(PI, module_pred_1st(forw, ModuleL, PI), PI1),
+    module_pred_link_loop(ModuleL, PI1, [], PILL).
 
-module_pred_links(ModuleL1, PIL1, PILL) :-
-    last(ModuleL1, Last),
-    ModuleL1 = [First|ModuleT1],
-    append(ModuleT1, [First], ModuleL2),
-    module_pred_link(Last, First, PILast),
-    foldl(module_pred_link, ModuleL1, ModuleL2, PIL1, PILast, PIFirst),
-    foldl(module_pred_link, ModuleL1, ModuleL2, PILL, PIFirst, _).
+module_pred_link_loop([Module1, Module2|ModuleL], PI1, PILL1, PILL) :-
+    % Fixpoint algorithm, it will stop when PI2 is an empty list or
+    % when PI2 was already obtained in a previous iteraction:
+    module_pred(forw, Module1, Module2, PI1, PI2),
+    ( PI2 = []
+    ->PILL = [Module2:PI2, Module1:PI1|PILL1]
+    ; member(Module2:PI2, PILL1)
+    ->PILL = [Module1:PI1|PILL1]
+    ; module_pred_link_loop([Module2|ModuleL], PI2, [Module1:PI1|PILL1], PILL)
+    ).
 
-module_pred_link(Module1, Module2, PIL) :-
-    findall(Module2:F2/A2,
-            ( depends_of_db(_, _, H2, Module2, Module1, 1),
-              functor(H2, F2, A2)
-            ), PIU),
-    sort(PIU, PIL).
+module_pred_chains(forw, M1, M2, C, PILL, PIL) :-
+    module_pred_chains_2(forw, M2, M1, C, PILR, PIL),
+    reverse(PILR, PILL).
+module_pred_chains(back, M2, M3, C, PILL, PIL) :-
+    reverse(C, R),
+    module_pred_chains_2(back, M2, M3, R, PILR, PIL),
+    reverse(PILR, PILL).
 
-module_pred_link(Module1, Module2, PIL1, PIL2) :-
-    findall(Module2:F2/A2,
-            ( member(M1:F1/A1, PIL1),
-              functor(H1, F1, A1),
-              depends_of_db(H1, M1, H2, Module2, Module1, _),
-              functor(H2, F2, A2)
+module_pred_chains_2(D, M2, M1, P1, [M1:PI1|PILL], PIL) :-
+    append(P1, [M2], P2),
+    findall(PI, module_pred_1st(D, [M1|P2], PI), PIU),
+    sort(PIU, PI1),
+    foldl(module_pred(D), [M1|P1], P2, PILL, PI1, PIL).
+
+module_pred_1st(back, [Module3, Module2|_], F3/A3) :-
+    depends_of_db(_, _, H3, Module3, Module2, 1),
+    functor(H3, F3, A3).
+module_pred_1st(forw, [Module1, Module2|_], PI) :-
+    depends_of_db(H1, M1, _, Module2, Module1, 1),
+    functor(H1, F1, A1),
+    ( M1 \= Module1
+    ->PI = M1:F1/A1
+    ; PI = F1/A1
+    ).
+
+module_pred(D, Module1, Module2, Module2:PIL2, PIL1, PIL2) :-
+    module_pred(D, Module1, Module2, PIL1, PIL2).
+
+module_pred(D, Module1, Module2, PIL1, PIL2) :-
+    findall(PI,
+            ( member(PI1, PIL1),
+              get_module_pred(D, Module1, Module2, PI1, PI)
             ), PIU2),
     sort(PIU2, PIL2).
 
-module_pred_link(Module1, Module2, PIL1, PIL1, PIL2) :-
-    module_pred_link(Module1, Module2, PIL1, PIL2).
-
-mod_used_by(Module2, Module1, T-(M:H)) :-
-    depends_of_db(H1, M1, H2, Module2, Module1, 1),
-    ( T = c,
-      M:H = M1:H1
-    ; T = e,
-      M:H = Module2:H2
-    ; T = r,
-      M = Module2,
-      depends_of_db(H2, M, H, M, M, _)
+get_module_pred(back, Module3, Module2, F3/A3, PI) :-
+    % note we are ignoring M3:F3/A3, since they have no effect in dependencies
+    functor(H3, F3, A3),
+    depends_of_db(H2, M2, H3, Module3, Module2, _),
+    functor(H2, F2, A2),
+    ( M2 \= Module2
+    ->PI = M2:F2/A2
+    ; PI = F2/A2
     ).
+get_module_pred(forw, Module1, Module2, PI1, F2/A2) :-
+    ( PI1 = F1/A1
+    ->M1 = Module1
+    ; PI1 = M1:F1/A1
+    ),
+    functor(H1, F1, A1),
+    depends_of_db(H1, M1, H2, Module2, Module1, _),
+    functor(H2, F2, A2).
 
-module_uses(Module2, Module3, T-(M:H)) :-
-    depends_of_db(H2, M2, H3, Module3, Module2, 1),
-    ( T = e,
-      M:H = Module3:H3
-    ; ( T = c,
-        M:H = M2:H2
-      ; T = r,
-        M = Module2,
-        depends_of_db(H2, M2, H, M, M, _)
-      )
-    ).
-
-unlinkable_chain(ModuleL1, Module1, Module2, Module3) :-
+loop_to_chain(ModuleL1, ModuleL) :-
     last(ModuleL1, Last),
     ModuleL1 = [First|_],
-    append([Last|ModuleL1], [First], ModuleL),
-    append(_, [Module1, Module2, Module3|_], ModuleL),
-    \+ current_module_link(Module1, Module2, Module3, _).
+    append([Last|ModuleL1], [First], ModuleL).
 
-mod_used_by_preds(Module2, Module1, PIL21) :-
-    collect_dependents(mod_used_by(Module2, Module1), Module2, PIL21).
+current_chain_link(ModuleL, Module1, Module2, Module3) :-
+    append(_, [Module1, Module2, Module3|_], ModuleL).
 
-module_uses_preds(Module2, Module3, PIL23) :-
-    collect_dependents(module_uses(Module2, Module3), Module2, PIL23).
+pred_uses(Module2, P2, T-(M:H)) :-
+    member(PI, P2),
+    ( PI = M2:F2/A2
+    ->true
+    ; PI = F2/A2,
+      M2 = Module2
+    ),
+    functor(H2, F2, A2),
+    ( T = e,
+      M:H = M2:H2
+    ; T = r,
+      M = Module2,
+      depends_of_db(H2, M2, H, M, M, _)
+    ).
+
+preds_uses(Module, PIL, List) :-
+    collect_dependents(pred_uses(Module, PIL), Module, List).

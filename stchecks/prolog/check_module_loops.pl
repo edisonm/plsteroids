@@ -74,16 +74,15 @@ module_loops_message_type(s(Loc/Loop)-[StrongL]) -->
     ['Strong module loop found ~w, involved predicates are ~w'-[Loop, StrongL], nl].
 
 ml_msg_can_be_broken_at([M2, Loc1, M1, PL1, L1, Loc3, M3, PL3, L3]) -->
-    ml_msg_alternative_path(M2, 'used by', Loc1, M1, PL1, L1),
-    ml_msg_alternative_path(M2, 'uses',    Loc3, M3, PL3, L3).
+    ml_msg_alternative_paths(M2, 'used by', Loc1, M1, PL1, L1),
+    ml_msg_alternative_paths(M2, 'uses',    Loc3, M3, PL3, L3).
 
-ml_msg_alternative_path(M2, Label, Loc, M, PL, L) -->
-    ['\t'|Loc], ["~w ~w ~w: ~w"-[M2, Label, M, L]],
-    ( {PL \= []}
-    ->[".  Alternative paths present: ~w"-[PL]]
-    ; []
-    ),
-    [nl].
+ml_msg_alternative_paths(M2, Label, Loc, M, PL, L) -->
+    ['\t'|Loc], ["~w ~w ~w: ~w"-[M2, Label, M, L], nl],
+    foldl(ml_msg_alternative_path, PL).
+
+ml_msg_alternative_path(P) -->
+    ["\t\tAlternative path: ~w"-[P], nl].
 
 checker:check(module_loops, Pairs, Options) :-
     collect_calls_to(Options, _),
@@ -91,32 +90,51 @@ checker:check(module_loops, Pairs, Options) :-
     module_loops(Loops, Options),
     findall(Pair, loops_pairs(Loops, Pair), Pairs).
 
+%!  collect_module_pred_paths(+Direction, Module1, Module2, PL, P2L) is det.
+
+%   If Direction if forw, P2L is the list of predicates in Module2 that Module1
+%   depends on, if Direction is back, P2L is the list of predicates in Module2
+%   that depends on Module1.  PL is the list of alternative chains that connects
+%   Module2 with Module1.
+
+collect_module_pred_paths(D, M1, M2, PL, P2L) :-
+    findall(PILL-PIL,
+            ( ( C = []
+              ; C = [I|P],
+                loads_db(M1, I, _, 1),
+                loads_db(I, M2, P, _),
+                \+ memberchk(M1, P)
+              ),
+              module_pred_chains(D, M1, M2, C, PILL, PIL)
+            ), Pairs),
+    pairs_keys_values(Pairs, [_|PL], P2LL),
+    append(P2LL, P2U),
+    sort(P2U, P2L).
+
+loop_breakable_chain(Loop, [M2, Loc1, M1, PL1, L1, Loc3, M3, PL3, L3]) :-
+    loop_to_chain(Loop, Chain),
+    current_chain_link(Chain, M1, M2, M3),
+    collect_module_pred_paths(forw, M1, M2, PL1, PL12), % M2 used by M1
+    collect_module_pred_paths(back, M2, M3, PL3, PL23), % M2 uses M3
+    % The intersection of PL12 and PL23 gives the list of predicates in M2 used
+    % in M1 that depends on M3, and therefore prevents the independence of such
+    % modules.  So we can break such dependency if such intersection is empty:
+    intersection(PL12, PL23, []),
+    preds_uses(M2, PL12, L1),
+    preds_uses(M2, PL23, L3),
+    guess_link_location([M1, M2], Loc1),
+    guess_link_location([M2, M3], Loc3).
+
 loops_pairs(Loops, warning-Issue) :-
     member(Loop, Loops),
-    guess_link_location(Loop, LoopLoc),
-    findall([M2, Loc1, M1, PL1, L1, Loc3, M3, PL3, L3],
-            ( unlinkable_chain(Loop, M1, M2, M3),
-              findall([I|P],
-                      ( loads_db(M1, I, _, 1),
-                        loads_db(I, M2, P, _),
-                        \+ memberchk(M1, P)
-                      ), PL1),
-              findall([I|P],
-                      ( loads_db(M2, I, _, 1),
-                        loads_db(I, M3, P, _),
-                        \+ memberchk(M2, P)
-                      ), PL3),
-              mod_used_by_preds(M2, M1, L1),
-              module_uses_preds(M2, M3, L3),
-              guess_link_location([M1, M2], Loc1),
-              guess_link_location([M2, M3], Loc3)
-            ), UnlinkL),
+    guess_link_location(Loop, Loc),
+    findall(Unlink, loop_breakable_chain(Loop, Unlink), UnlinkL),
     ( UnlinkL \= []
-    ->Issue = l(LoopLoc/Loop)-UnlinkL
-    ; module_pred_links(Loop, PredL, StrongL),
-      ( maplist(=[], StrongL)
-      ->Issue = s(LoopLoc/Loop)-PredL
-      ; Issue = m(LoopLoc/Loop)-PredL
+    ->Issue = l(Loc/Loop)-UnlinkL
+    ; module_pred_links(Loop, PredLinksL),
+      ( PredLinksL = [_:[]|_]
+      ->Issue = m(Loc/Loop)-PredLinksL
+      ; Issue = s(Loc/Loop)-PredLinksL
       )
     ).
 
