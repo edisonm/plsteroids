@@ -121,7 +121,8 @@ collect_dependents(GetPI2, Module2, PIG21) :-
 module_pred_links(ModuleL1, PILL) :-
     % Create a circular linked list:
     append(ModuleL1, ModuleL, ModuleL),
-    findall(PI, module_pred_1st(forw, ModuleL, PI), PI1),
+    findall(PI, module_pred_1st(forw, ModuleL, PI), PIU),
+    sort(PIU, PI1),
     module_pred_link_loop(ModuleL, PI1, [], PILL).
 
 module_pred_link_loop([Module1, Module2|ModuleL], PI1, PILL1, PILL) :-
