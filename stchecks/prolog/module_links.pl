@@ -34,6 +34,7 @@
 
 :- module(module_links,
           [ current_chain_link/4,
+            depends_of_db/6,
             loop_to_chain/2,
             module_pred_chains/6,
             module_pred_links/2,
