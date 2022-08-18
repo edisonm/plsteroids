@@ -109,11 +109,7 @@ collect_dependents(GetPI2, Module2, PIG21) :-
             ( member(T-PI, PIA21),
               ( T = e
               ->true
-              ; \+ memberchk(e-PI, PIA21),
-                ( T = c
-                ->true
-                ; \+ memberchk(c-PI, PIA21)
-                )
+              ; \+ memberchk(e-PI, PIA21)
               )
             ), PIL21),
     group_pairs_by_key(PIL21, PIG21).

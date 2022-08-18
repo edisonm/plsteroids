@@ -54,10 +54,10 @@ prolog:message(acheck(module_loops)) -->
      'focus first on the predicates reported as `used by`.  If is not', nl,
      'possible to decouple the module without changing the predicates,', nl,
      'it is reported as a strong module loop and will require further', nl,
-     'refactoring or module merge to decouple the involved code.', nl,
-     'If the list of strongly connected predicates is empty, it means', nl,
-     'that is possible to resolve the loop involving more than 2 modules', nl,
-     'and it will be reported as a complex module loop.', nl, nl].
+     'refactoring or module merge to decouple the involved code.  If the', nl,
+     'list of strongly connected predicates is empty, it is possible to', nl,
+     'resolve the loop involving more than 2 modules and it is reported', nl,
+     'as a complex module loop.', nl, nl].
 
 prolog:message(acheck(module_loops, Issue)) -->
     module_loops_message_type(Issue).
