@@ -79,10 +79,10 @@ ml_msg_can_be_broken_at([M2, Loc1, M1, PL1, L1, Loc3, M3, PL3, L3]) -->
 
 ml_msg_alternative_paths(M2, Label, Loc, M, PL, L) -->
     ['\t'|Loc], ["~w ~w ~w: ~w"-[M2, Label, M, L], nl],
-    foldl(ml_msg_alternative_path, PL).
+    foldl(ml_msg_path, PL).
 
-ml_msg_alternative_path(P) -->
-    ["\t\tAlternative path: ~w"-[P], nl].
+ml_msg_path(P) -->
+    ["\t\tPath: ~w"-[P], nl].
 
 checker:check(module_loops, Pairs, Options) :-
     collect_calls_to(Options, _),
@@ -94,8 +94,8 @@ checker:check(module_loops, Pairs, Options) :-
 
 %   If Direction if forw, P2L is the list of predicates in Module2 that Module1
 %   depends on, if Direction is back, P2L is the list of predicates in Module2
-%   that depends on Module1.  PL is the list of alternative chains that connects
-%   Module2 with Module1.
+%   that depends on Module1.  PL is the list of chains that connects Module2
+%   with Module1.
 
 collect_module_pred_paths(D, M1, M2, PL, P2L) :-
     findall(PILL-PIL,
@@ -107,7 +107,7 @@ collect_module_pred_paths(D, M1, M2, PL, P2L) :-
               ),
               module_pred_chains(D, M1, M2, C, PILL, PIL)
             ), Pairs),
-    pairs_keys_values(Pairs, [_|PL], P2LL),
+    pairs_keys_values(Pairs, PL, P2LL),
     append(P2LL, P2U),
     sort(P2U, P2L).
 

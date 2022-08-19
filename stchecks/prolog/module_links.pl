@@ -42,7 +42,6 @@
             update_depends_of/0
           ]).
 
-:- use_module(library(pairs)).
 :- use_module(library(calls_to)).
 
 ref_head('<assertion>'(M:H), M, H).
@@ -92,27 +91,6 @@ update_depends_of_cm_rec(CM, N1) :-
     ->update_depends_of_cm_rec(CM, N)
     ; true
     ).
-
-:- meta_predicate collect_dependents(1, +, -).
-
-collect_dependents(GetPI2, Module2, PIG21) :-
-    findall(T-PI21,
-            ( call(GetPI2, T-(M2:H2)),
-              functor(H2, F21, A21),
-              ( M2 = Module2
-              ->PI21 = F21/A21
-              ; PI21 = M2:F21/A21
-              )
-            ), PIU21),
-    sort(PIU21, PIA21),
-    findall(T-PI,
-            ( member(T-PI, PIA21),
-              ( T = e
-              ->true
-              ; \+ memberchk(e-PI, PIA21)
-              )
-            ), PIL21),
-    group_pairs_by_key(PIL21, PIG21).
 
 module_pred_links(ModuleL1, PILL) :-
     % Create a circular linked list:
@@ -193,20 +171,19 @@ loop_to_chain(ModuleL1, ModuleL) :-
 current_chain_link(ModuleL, Module1, Module2, Module3) :-
     append(_, [Module1, Module2, Module3|_], ModuleL).
 
-pred_uses(Module2, P2, T-(M:H)) :-
-    member(PI, P2),
+pred_uses(M, PI, H) :-
     ( PI = M2:F2/A2
     ->true
     ; PI = F2/A2,
-      M2 = Module2
+      M2 = M
     ),
     functor(H2, F2, A2),
-    ( T = e,
-      M:H = M2:H2
-    ; T = r,
-      M = Module2,
-      depends_of_db(H2, M2, H, M, M, _)
-    ).
+    depends_of_db(H2, M2, H, M, M, _).
 
-preds_uses(Module, PIL, List) :-
-    collect_dependents(pred_uses(Module, PIL), Module, List).
+preds_uses(Module, PIL, RIL) :-
+    findall(F/A,
+            ( member(PI, PIL),
+              pred_uses(Module, PI, H),
+              functor(H, F, A)
+            ), RIU, PIL),
+    sort(RIU, RIL).
