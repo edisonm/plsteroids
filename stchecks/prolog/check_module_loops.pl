@@ -111,17 +111,32 @@ collect_module_pred_paths(D, M1, M2, PL, P2L) :-
     append(P2LL, P2U),
     sort(P2U, P2L).
 
+is_aux_pred(PI) :-
+    ( PI = _:F/_
+    ->true
+    ; PI = F/_
+    ),
+    atom_concat('__aux_', _, F).
+
+cleanup_aux_preds(L1, L) :- exclude(is_aux_pred, L1, L).
+
+chain_cleanup_aux_preds(M:L1, M:L) :- cleanup_aux_preds(L1, L).
+
 loop_breakable_chain(Loop, [M2, Loc1, M1, PL1, L1, Loc3, M3, PL3, L3]) :-
     loop_to_chain(Loop, Chain),
     current_chain_link(Chain, M1, M2, M3),
-    collect_module_pred_paths(forw, M1, M2, PL1, PL12), % M2 used by M1
-    collect_module_pred_paths(back, M2, M3, PL3, PL23), % M2 uses M3
+    collect_module_pred_paths(forw, M1, M2, APL1, PL12), % M2 used by M1
+    collect_module_pred_paths(back, M2, M3, APL3, PL23), % M2 uses M3
     % The intersection of PL12 and PL23 gives the list of predicates in M2 used
     % in M1 that depends on M3, and therefore prevents the independence of such
     % modules.  So we can break such dependency if such intersection is empty:
     intersection(PL12, PL23, []),
-    preds_uses(M2, PL12, L1),
-    preds_uses(M2, PL23, L3),
+    preds_uses(M2, PL12, AL1),
+    cleanup_aux_preds(AL1, L1),
+    preds_uses(M2, PL23, AL3),
+    cleanup_aux_preds(AL3, L3),
+    maplist(maplist(chain_cleanup_aux_preds), APL1, PL1),
+    maplist(maplist(chain_cleanup_aux_preds), APL3, PL3),
     guess_link_location([M1, M2], Loc1),
     guess_link_location([M2, M3], Loc3).
 
