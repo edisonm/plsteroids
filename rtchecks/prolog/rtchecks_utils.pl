@@ -52,8 +52,10 @@
 */
 
 filtered_backtrace:no_backtrace_clause_hook(_, ontrace).
+filtered_backtrace:no_backtrace_clause_hook(_, call_inoutex).
 filtered_backtrace:no_backtrace_clause_hook(_, rtchecks_utils).
 filtered_backtrace:no_backtrace_clause_hook(_, rtchecks_rt).
+filtered_backtrace:no_backtrace_clause_hook(_, rtchecks).
 filtered_backtrace:no_backtrace_clause_hook(_, ctrtchecks).
 filtered_backtrace:no_backtrace_clause_hook(_, intercept).
 filtered_backtrace:no_backtrace_clause_hook(_, globprops).
@@ -159,7 +161,9 @@ prop_values(From/Prop-Values) -->
 
 :- thread_local rtcheck_db/1.
 
-:- meta_predicate call_rtc(0).
+:- meta_predicate
+        call_rtc(0 ),
+        intercept_rtc(0 ).
 
 :- true pred call_rtc/1 : callable # "This predicate calls a goal and if an
         rtcheck signal is intercepted, an error message is shown and
@@ -167,7 +171,9 @@ prop_values(From/Prop-Values) -->
         exception depending on the flag rtchecks_abort_on_error
         value.".
 
-call_rtc(Goal) :-
+call_rtc(Goal) :- intercept_rtc(with_rtchecks(Goal)).
+
+intercept_rtc(Goal) :-
         Error = assrchk(_),
         ( current_prolog_flag(rtchecks_abort_on_error, yes)
 	->intercept(Goal, Error, throw(Error)) % rethrow signal as exception
