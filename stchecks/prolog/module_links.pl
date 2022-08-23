@@ -39,7 +39,9 @@
             module_pred_chains/6,
             module_pred_links/2,
             preds_uses/3,
-            update_depends_of/0
+            update_depends_of/0,
+            update_depends_of_1/0,
+            update_depends_of_n/0
           ]).
 
 :- use_module(library(calls_to)).
@@ -58,7 +60,7 @@ pred_calls_to(AH, AM, H, CM) :-
 
 update_depends_of :-
     update_depends_of_1,
-    update_depends_of_cm(_).
+    update_depends_of_n.
 
 update_depends_of_1 :-
     forall(( pred_calls_to(AH, AM, TH, CM),
@@ -75,12 +77,10 @@ update_depends_of_1 :-
 % performance problems, otherwise it will try all the possible paths between two
 % predicates, which is not needed actually
 
-:- table update_depends_of_cm/1.
+update_depends_of_n :-
+    update_depends_of_n(1).
 
-update_depends_of_cm(CM) :-
-    update_depends_of_cm_rec(CM, 1).
-
-update_depends_of_cm_rec(CM, N1) :-
+update_depends_of_n(N1) :-
     succ(N1, N),
     forall(( depends_of_db(AH, AM, IH, IM, CM, N1),
              depends_of_db(IH, IM, TH, TM, CM, 1),
@@ -88,7 +88,7 @@ update_depends_of_cm_rec(CM, N1) :-
            ),
            assertz(depends_of_db(AH, AM, TH, TM, CM, N))),
     ( depends_of_db(_, _, _, _, _, N)
-    ->update_depends_of_cm_rec(CM, N)
+    ->update_depends_of_n(N)
     ; true
     ).
 
