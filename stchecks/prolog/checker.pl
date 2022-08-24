@@ -36,7 +36,7 @@
           [check_wrapper/1, showcheck/1, showcheck/2, checkallc/1, checkeach/2,
            checkall/0, checkall/1, body_report/1, body_report/2, full_report/1,
            check/3, check_results/2, check_results/3, available_checker/1,
-           head_report/1
+           head_report/1, report_record_message/3
           ]).
 
 :- use_module(library(lists)).
