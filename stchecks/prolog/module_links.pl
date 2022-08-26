@@ -39,12 +39,13 @@
             module_pred_chains/6,
             module_pred_links/2,
             preds_uses/3,
-            update_depends_of/0,
-            update_depends_of_1/0,
-            update_depends_of_n/0
+            update_depends_of/0
           ]).
 
 :- use_module(library(calls_to)).
+
+:- multifile
+        update_depends_of_hook/0.
 
 ref_head('<assertion>'(M:H), M, H).
 ref_head(M:H, M, H).
@@ -60,6 +61,7 @@ pred_calls_to(AH, AM, H, CM) :-
 
 update_depends_of :-
     update_depends_of_1,
+    forall(update_depends_of_hook, true),
     update_depends_of_n.
 
 update_depends_of_1 :-

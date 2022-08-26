@@ -111,19 +111,6 @@ collect_module_pred_paths(D, M1, M2, PL, P2L) :-
     append(P2LL, P2U),
     sort(P2U, P2L).
 
-/*
-is_aux_pred(PI) :-
-    ( PI = _:F/_
-    ->true
-    ; PI = F/_
-    ),
-    atom_concat('__aux_', _, F).
-
-cleanup_aux_preds(L1, L) :- exclude(is_aux_pred, L1, L).
-
-chain_cleanup_aux_preds(M:L1, M:L) :- cleanup_aux_preds(L1, L).
-*/
-
 loop_breakable_chain(Loop, [M2, Loc1, M1, PL1, L1, Loc3, M3, PL3, L3]) :-
     loop_to_chain(Loop, Chain),
     current_chain_link(Chain, M1, M2, M3),
