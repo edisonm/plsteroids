@@ -42,6 +42,7 @@ patches:
 	find . -name "*.patch" -delete
 
 push:
+	git checkout bin/
 	git push
 	for i in `git subrepo status -q` ; do \
 	  git subrepo push $${i} ; \
