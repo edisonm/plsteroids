@@ -66,6 +66,7 @@ refactor/tests/refactor_37.plt
 refactor/tests/refactor_59.plt
 refactor/tests/refactor_34.plt
 refactor/tests/refactor_17.plt
+stchecks/tests/stchecks_2.plt
 refactor/tests/refactor_05.plt
 refactor/tests/refactor_06.plt
 refactor/tests/refactor_15.plt
@@ -78,7 +79,6 @@ refactor/tests/refactor_58.plt
 refactor/tests/refactor_08.plt
 refactor/tests/refactor_24.plt
 refactor/tests/refactor_23.plt
-stchecks/tests/stchecks_2.plt
 refactor/tests/refactor_09.plt
 refactor/tests/refactor_41.plt
 refactor/tests/refactor_03.plt
@@ -108,3 +108,4 @@ xlibrary/tests/interface.plt
 assertions/tests/metaprops.plt
 xlibrary/tests/i18n/i18n.plt
 refactor/tests/refactor_30.plt
+refactor/tests/move_terms.plt
