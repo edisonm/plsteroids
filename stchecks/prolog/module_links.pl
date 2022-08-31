@@ -38,6 +38,7 @@
             loop_to_chain/2,
             module_pred_chains/6,
             module_pred_links/2,
+            module_uses/3,
             preds_uses/3,
             update_depends_of/0
           ]).
@@ -189,3 +190,12 @@ preds_uses(Module, PIL, RIL) :-
               functor(H, F, A)
             ), RIU, PIL),
     sort(RIU, RIL).
+
+% Like module_uses/3 in [library(module_uses)], but using depends_of_db/6 database:
+
+module_uses(LoadedIn, Module, Uses) :-
+    findall(F/A, module_uses(LoadedIn, Module, F, A), Uses).
+
+module_uses(LoadedIn, Module, F, A) :-
+    depends_of_db(_, _, H, Module, LoadedIn, 1),
+    functor(H, F, A).
