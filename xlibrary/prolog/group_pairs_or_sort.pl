@@ -35,8 +35,11 @@
 :- module(group_pairs_or_sort, [group_pairs_or_sort/2]).
 
 group_pairs_by_key_u([], []).
-group_pairs_by_key_u([M-N|T0], [M-[N|TN]|T]) :-
-    same_key_u(M, T0, TN, T1),
+group_pairs_by_key_u([M-N|T1], [M-[N|TN]|T]) :-
+    same_key_u(M, T1, TN, T2),
+    !,
+    group_pairs_by_key_u(T2, T).
+group_pairs_by_key_u([X|T1], [X|T]) :-
     group_pairs_by_key_u(T1, T).
 
 same_key_u(M, [M-N|T0], [N|TN], T) :-
@@ -45,12 +48,16 @@ same_key_u(M, [M-N|T0], [N|TN], T) :-
 same_key_u(_, L, [], L).
 
 group_pairs_or_sort(Pairs, Grouped) :-
-    Pairs = [_-_|_],
-    !,
-    keysort(Pairs, Sorted),
-    group_pairs_by_key_u(Sorted, UnGrouped),
-    maplist(group_pairs_or_sort_into, UnGrouped, Grouped).
-group_pairs_or_sort(Unsorted, Sorted) :-
-    sort(Unsorted, Sorted).
+    sort(Pairs, Sorted),
+    group_pairs_or_sort_2(Sorted, Grouped).
 
-group_pairs_or_sort_into(K-U, K-S) :- group_pairs_or_sort(U, S).
+group_pairs_or_sort_2(Sorted, Grouped) :-
+    group_pairs_by_key_u(Sorted, UnGrouped),
+    !,
+    maplist(group_pairs_or_sort_into, UnGrouped, Grouped).
+group_pairs_or_sort_2(Sorted, Sorted).
+
+group_pairs_or_sort_into(K-U, K-S) :-
+    !,
+    group_pairs_or_sort_2(U, S).
+group_pairs_or_sort_into(K, K).
