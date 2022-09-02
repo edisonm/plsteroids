@@ -144,6 +144,7 @@ replace_goal_hook(retract(_),    _, true).
 replace_goal_hook(assertz(_),    _, true).
 replace_goal_hook(asserta(_),    _, true).
 replace_goal_hook(assert( _),    _, true).
+replace_goal_hook(gtrace, _, true).
 replace_goal_hook(call_ai(G), abstract_interpreter, G).
 replace_goal_hook(eval_ai(G), abstract_interpreter, G).
 replace_goal_hook(skip_ai(_), abstract_interpreter, true).
@@ -522,21 +523,25 @@ abstract_interpreter_body(A, M, _) -->
 
 abstract_interpreter_body(G, M, _) -->
     get_state(state(_, EvalL, _, _, _, _, _)),
-    { predicate_property(M:G, implementation_module(IM)),
-      ( ( evaluable_goal_hook(G, IM)
-        ; functor(G, F, A),
-          memberchk(IM:F/A, EvalL)
-        ),
-        R = G
-      ; replace_goal_hook(G, IM, R)
-      ; copy_term(EvalL, EvalC),
-        memberchk((IM:G as R), EvalC)
-      )
-    },
+    {get_body_replacement(G, M, EvalL, MR)},
     !,
-    {call(M:R)}.
+    {call(MR)}.
 abstract_interpreter_body(H, M, Abs) -->
     cut_to(abstract_interpreter_lit(H, M, M, Abs)).
+
+get_body_replacement(G, M, EvalL, MR) :-
+    predicate_property(M:G, implementation_module(IM)),
+    ( ( evaluable_goal_hook(G, IM)
+      ; functor(G, F, A),
+        memberchk(IM:F/A, EvalL)
+      ),
+      MR = M:G
+    ; replace_goal_hook(G, IM, R),
+      MR = M:R
+    ; copy_term(EvalL, EvalC),
+      memberchk((IM:G as R), EvalC),
+      MR = @(R, M)
+    ).
 
 is_bottom(State, State) :-
     State = state(_, _, _, _, _, _, bottom),
