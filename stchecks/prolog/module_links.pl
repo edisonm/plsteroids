@@ -44,6 +44,7 @@
           ]).
 
 :- use_module(library(calls_to)).
+:- use_module(library(solution_sequences)).
 
 :- multifile
         update_depends_of_hook/0.
@@ -197,5 +198,5 @@ module_uses(LoadedIn, Module, Uses) :-
     findall(F/A, module_uses(LoadedIn, Module, F, A), Uses).
 
 module_uses(LoadedIn, Module, F, A) :-
-    depends_of_db(_, _, H, Module, LoadedIn, 1),
+    distinct(H, depends_of_db(_, _, H, Module, LoadedIn, 1)),
     functor(H, F, A).
