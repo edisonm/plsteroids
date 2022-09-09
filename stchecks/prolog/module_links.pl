@@ -40,7 +40,8 @@
             module_pred_links/2,
             module_uses/3,
             preds_uses/3,
-            update_depends_of/0
+            update_depends_of/0,
+            cleanup_depends_of/0
           ]).
 
 :- use_module(library(calls_to)).
@@ -65,6 +66,9 @@ update_depends_of :-
     update_depends_of_1,
     forall(update_depends_of_hook, true),
     update_depends_of_n.
+
+cleanup_depends_of :-
+    retractall(depends_of_db(_, _, _, _, _, _)).
 
 update_depends_of_1 :-
     forall(( pred_calls_to(AH, AM, TH, CM),
