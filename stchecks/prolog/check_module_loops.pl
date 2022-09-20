@@ -64,8 +64,12 @@ prolog:message(acheck(module_loops, Issue)) -->
 
 module_loops_message_type(l(Loc/Loop)-[UnlinkL]) -->
     Loc,
-    ['Module loop found ~w, it can be broken at:'-[Loop], nl],
-    foldl(ml_msg_can_be_broken_at, UnlinkL).
+    {findall(M2, member([M2|_], UnlinkL), ML)},
+    ['Module loop found ~w, it can be broken at ~w'-[Loop, ML], nl],
+    ( {current_prolog_flag(verbose, normal)}
+    ->foldl(ml_msg_can_be_broken_at, UnlinkL)
+    ; []
+    ).
 module_loops_message_type(m(Loc/Loop)-[PredL]) -->
     Loc,
     ['Complex module loop found ~w, involved predicates are ~w'-[Loop, PredL], nl].
