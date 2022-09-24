@@ -95,7 +95,8 @@ dumpbench:
 	  done | sort -n -r
 
 tests: bin/benchtests.txt
-	$(MAKE) `cat $<`
+	$(MAKE) refactor/tests/refspeed.plt
+	$(MAKE) `cat $< |grep -v refactor/tests/refspeed.plt`
 	$(MAKE) bin/benchtests.txt -B
 
 get_plsteroids:
