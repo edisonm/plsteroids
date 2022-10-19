@@ -143,8 +143,8 @@ generate_rtchecks(Preds, Clauses) :-
 term_expansion((:- rtcheck(Preds)), Clauses) :-
     generate_rtchecks(Preds, Clauses).
 
-term_expansion(assertions:asr_head_prop(Asr, M, Pred, Status, Type, D, _, F),
-               [assertions:asr_head_prop(Asr, M, Pred, Status, Type, D, _, F)|Clauses]) :-
+term_expansion(assertions:asr_head_prop(Asr, M, Pred, Status, Type, Dict, Ctx, From),
+              [assertions:asr_head_prop(Asr, M, Pred, Status, Type, Dict, Ctx, From)|Clauses]) :-
     current_prolog_flag(rtchecks_static, StaticL),
     memberchk(Status, StaticL),
     Type \= (prop),
@@ -154,8 +154,8 @@ term_expansion(assertions:asr_head_prop(Asr, M, Pred, Status, Type, D, _, F),
          '$defined_predicate'(CM:'$rtchecked'(_)),
          CM:'$rtchecked'(Pred)
        ),
-    functor(Pred, F, A),
-    generate_rtchecks(F/A, Clauses).
+    functor(Pred, Func, Arity),
+    generate_rtchecks(Func/Arity, Clauses).
 
 :- multifile
     sandbox:safe_directive/1.
