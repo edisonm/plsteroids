@@ -35,7 +35,7 @@
 :- module(rtchecks,
           [(rtcheck)/1,
            unrtcheck/1,
-           rtcheck_wrap/1,
+           rtcheck_wrap/2,
            with_rtchecks/1,
            op(1150, fx, rtcheck)
           ]).
@@ -58,17 +58,15 @@
 
 wrap_asr_rtcheck(Asr, rtcheck(Asr)).
 
-rtcheck_wrap(M:G, CM, RAsrL) :-
+rtcheck_wrap(M, G, CM, RAsrL) :-
     wrap_predicate(M:G, rtchecks, W, rtcheck_pred(W, M, CM, RAsrL)).
 
 rtcheck_wrap_each(M, G, P, P-AsrL) :-
     qualify_meta_goal(G, M, CM, P),
     maplist(wrap_asr_rtcheck, AsrL, RAsrL),
-    rtcheck_wrap(M:G, CM, RAsrL).
+    rtcheck_wrap(M, G, CM, RAsrL).
 
-:- meta_predicate rtcheck_wrap(0 ).
-
-rtcheck_wrap(M:G) :-
+rtcheck_wrap(M, G) :-
     functor(G, F, A),
     functor(P, F, A),
     collect_asrs(F/A, M, L, []),
@@ -94,7 +92,7 @@ wrappers(Name/Arity) -->
       prolog_load_context(module, Module)
     },
     ['$rtchecked'(Head)],
-    [(:- initialization(rtcheck_wrap(Module:Head)))].
+    [(:- initialization(rtcheck_wrap(Module, Head)))].
 
 collect_asrs(Var, _) -->
     { var(Var),
@@ -210,7 +208,7 @@ rtcheck2(M-GLL) :-
 rtcheck2(M, (CM:G)-AsrL) :-
     maplist(wrap_asr_rtcheck, AsrL, RAsrL),
     dyn_rtcheck_record(G, M),
-    rtcheck_wrap(M:G, CM, RAsrL).
+    rtcheck_wrap(M, G, CM, RAsrL).
 
 ppassertion_type_goal(Goal, Status, Call, Loc) :-
     pp_status(Status),
