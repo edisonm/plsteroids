@@ -41,6 +41,7 @@
           ]).
 
 :- discontiguous '$exported_op'/3.
+:- use_module(library(apply)).
 :- use_module(library(compound_expand)).
 :- use_module(library(neck)).
 :- use_module(library(assertions)).
@@ -57,18 +58,22 @@
 
 wrap_asr_rtcheck(Asr, rtcheck(Asr)).
 
+rtcheck_wrap(M:G, CM, RAsrL) :-
+    wrap_predicate(M:G, rtchecks, W, rtcheck_pred(W, M, CM, RAsrL)).
+
+rtcheck_wrap_each(M, G, P, P-AsrL) :-
+    qualify_meta_goal(G, M, CM, P),
+    maplist(wrap_asr_rtcheck, AsrL, RAsrL),
+    rtcheck_wrap(M:G, CM, RAsrL).
+
 :- meta_predicate rtcheck_wrap(0 ).
 
 rtcheck_wrap(M:G) :-
     functor(G, F, A),
     functor(P, F, A),
-    collect_asrs(F/A, M, [P-AsrL], []),
-    qualify_meta_goal(G, M, CM, P),
-    maplist(wrap_asr_rtcheck, AsrL, RAsrL),
-    rtcheck_wrap(M:G, CM, RAsrL).
-
-rtcheck_wrap(M:G, CM, RAsrL) :-
-    wrap_predicate(M:G, rtchecks, W, rtcheck_pred(W, M, CM, RAsrL)).
+    collect_asrs(F/A, M, L, []),
+    % Note: L could have 0 or 1 elements
+    maplist(rtcheck_wrap_each(M, G, P), L).
 
 wrappers(Var) -->
     { var(Var),
