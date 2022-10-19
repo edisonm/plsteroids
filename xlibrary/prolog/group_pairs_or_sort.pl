@@ -34,6 +34,8 @@
 
 :- module(group_pairs_or_sort, [group_pairs_or_sort/2]).
 
+:- use_module(library(apply)).
+
 group_pairs_by_key_u([], []).
 group_pairs_by_key_u([M-N|T1], [M-[N|TN]|T]) :-
     same_key_u(M, T1, TN, T2),
