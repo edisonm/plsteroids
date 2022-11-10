@@ -43,11 +43,11 @@
    term_expansion/2/4 and goal_expansion/2/4 but don't export them.
 
    The  composition  of  expansions  is   instrumental  to  grammar  and  syntax
-   extensions, which is the  key point of Ciao Prolog, but  not supported in SWI
-   Prolog. We do not need to deal  with all the complexity that the Ciao package
-   system have, so with this helper the  port of Ciao Packages to SWI Prolog can
-   be achieved smoothly and such modules can be used in SWI Programs that do not
-   requires the Ciao dialect.
+   extensions,  which is  the key  point of  Ciao Prolog,  but not  supported in
+   SWI-Prolog. We  do not  need to deal  with all the  complexity that  the Ciao
+   package  system  has, so  with  this  helper the  port  of  Ciao Packages  to
+   SWI-Prolog  can be  achieved smoothly  and such  modules can  be used  in SWI
+   Programs that do not require the Ciao dialect.
 
 @author Edison Mera
 */
@@ -70,14 +70,16 @@ implemented_pi(M:F/A) :-
 collect_expansors(M, ExpansorName, ML) :-
     findall(EM-PI,
             ( expansion_module(M, EM),
-              ( implemented_pi(EM:ExpansorName/4)
-              ->PI=[ExpansorName/4|PIT],
-                ( implemented_pi(EM:ExpansorName/2)
-                ->PIT = [ExpansorName/2]
-                ; PIT = []
-                )
-              ; PI=[ExpansorName/2]
-              )
+              phrase(( ( {implemented_pi(EM:ExpansorName/4)}
+                       ->[ExpansorName/4]
+                       ; []
+                       ),
+                       ( {implemented_pi(EM:ExpansorName/2)}
+                       ->[ExpansorName/2]
+                       ; []
+                       )
+                     ), PI),
+              PI \= []
             ), MD),
     remove_dups(MD, ML).
 
