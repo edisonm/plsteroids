@@ -112,7 +112,7 @@ collect_imports_wc(M:Goal, Caller, From) :-
 
 caller_module(M:_,                _, M) :- !.
 caller_module('<assertion>'(M:_), _, M) :- !.
-caller_module(_, clause(Ptr), M) :- clause_property(Ptr, module(M)).
+caller_module(_,                  F, M) :- from_to_module(F, M).
 
 collect_imports(MFileD, Pairs, Tail) :-
     findall(warning-(c(use_module, import, U)-(Loc/(F/A))),
