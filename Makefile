@@ -70,7 +70,7 @@ noop:
 %.rtest:
 	$(MAKE) $(shell for i in `find $* -name '*.plt'`; do echo $${i%.*}.plr; done)
 
-CHECKERS=$(shell for i in `find . -name "check_*.pl"`; do echo `basename $${i%.*}`|sed -e s:check_::g ; done)
+CHECKERS=$(shell for i in `find stchecks -name "check_*.pl"`; do echo `basename $${i%.*}`|sed -e s:check_::g ; done)
 
 utests: $(shell find * -name "*.plt")
 	true
