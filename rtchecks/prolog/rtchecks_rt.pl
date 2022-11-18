@@ -101,11 +101,13 @@ rtchecks_enable :- retractall(rtchecks_disabled).
 :- meta_predicate '$with_ploc'(0 ).
 
 '$with_ploc'(Goal) :-
-    prolog_current_frame(Curr),
-    prolog_frame_attribute(Curr,  parent, Frame),
-    prolog_frame_attribute(Frame, clause, Clause),
-    prolog_frame_attribute(Curr,  pc,     PC),
-    '$with_ploc'(Goal, clause_pc(Clause, PC)).
+    ( prolog_current_frame(Curr),
+      prolog_frame_attribute(Curr,  parent, Frame),
+      prolog_frame_attribute(Frame, clause, Clause),
+      prolog_frame_attribute(Curr,  pc,     PC)
+    ->'$with_ploc'(Goal, clause_pc(Clause, PC))
+    ; Goal
+    ).
 
 :- meta_predicate rtcheck_pred(0, +, +, +).
 
