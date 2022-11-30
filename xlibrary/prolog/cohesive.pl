@@ -33,13 +33,17 @@
 */
 
 :- module(cohesive,
-          [ op(1150, fx, cohesive_pred)
+          [ cohesive_module/4,
+            scope_t/1,
+            op(1150, fx, cohesive_pred),
+            op(978, xfx, ::)
           ]).
 
-:- use_module(library(sequence_list)).
+:- use_module(library(apply)).
 :- use_module(library(extend_args)).
 :- use_module(library(normalize_head)).
 :- use_module(library(option)).
+:- use_module(library(sequence_list)).
 :- reexport(library(compound_expand)).
 
 /* <module> Cohesive predicates
@@ -61,60 +65,101 @@
 :- thread_local
     cm_db/1.
 
-aux_cohesive(M, F, A, CohM, CohesiveModule) :-
-    format(atom(CT), '__aux_cohesive_~w:~w/~w', [M, F, A]),
+aux_cohesive_module(M, F, A, CohM, CohesiveModule) :-
+    format(atom(CT), '__aux_cohm_~w:~w/~w', [M, F, A]),
     CohesiveModule =.. [CT, CohM].
+
+aux_cohesive_pred(H, CohM, HExt) :-
+    extend_args('__aux_cohp_', H, [CohM], HExt).
 
 cohesive_pred_pi(CM, PI) -->
     { normalize_head(CM:PI, M:H),
-      extend_args(H, [CohM], HExt),
+      aux_cohesive_pred(H, CohM, HExt),
       functor(H, F, A),
-      succ(A, AExt),
-      aux_cohesive(M, F, A, CohM, CohesiveModule)
+      aux_cohesive_module(M, F, A, CohM, CohesiveModule),
+      functor(HExt, FExt, AExt)
     },
     [ cohesive:'$cohesive'(H, M),
       (:- module_transparent M:F/A),
-      (:- multifile M:F/AExt),
-      (H :- context_module(Context),
-            freeze(CohM, Context:CohesiveModule),
-            % Origintal code to resolve this dynamically, but is slow:
-            % freeze(CohM, once(cohesive_module(H, Context, M, CohM))),
+      (:- multifile M:FExt/AExt)
+    ],
+    ( {'$predicate_property'((discontiguous), M:H)}
+    ->[(:- discontiguous M:FExt/AExt)]
+    ; []
+    ),
+    [ (H :- context_module(Context),
+            ignore(( Context \= user,
+                     % if called in the user context, asume all (equivalent to multifile)
+                     freeze(CohM, Context:CohesiveModule)
+                   )),
+            % Original code to resolve this dynamically, but is slow:
+            % ignore(( Context \= user,
+            %          freeze(CohM, once(cohesive_module(H, Context, M, CohM)))
+            %        )),
             HExt)
     ].
+
+scope_module(sprivat, C, P) :- atom_concat('__aux_private_', C, P).
+scope_module(spublic, _, _).
+scope_module(sexport, C, C).
+
+coh_head_expansion(Scope, Head, IM:HeadExt) :-
+    prolog_load_context(module, CM),
+    predicate_property(CM:Head, implementation_module(IM)),
+    '$cohesive'(Head, IM),
+    scope_module(Scope, CM, VM),
+    aux_cohesive_pred(Head, VM, HeadExt).
+
+% sprivat: can not be used externally
+% sexport: needs use_module to use it (default)
+% spublic: available to all (like user context)
+
+scope_t(spublic).
+scope_t(sexport).
+scope_t(sprivat).
 
 term_expansion((:- cohesive_pred PIs), ClauseL) :-
     prolog_load_context(module, CM),
     sequence_list(PIs, PIL, []),
     foldl(cohesive_pred_pi(CM), PIL, ClauseL, []).
-
-term_expansion((Head :- Body), (IM:HeadExt :- Body)) :-
-    prolog_load_context(module, CM),
-    predicate_property(CM:Head, imported_from(IM)),
-    '$cohesive'(Head, IM),
-    extend_args(Head, [CM], HeadExt).
-term_expansion(Head, IM:HeadExt) :-
-    prolog_load_context(module, CM),
-    predicate_property(CM:Head, imported_from(IM)),
-    '$cohesive'(Head, IM),
-    extend_args(Head, [CM], HeadExt).
+term_expansion(Scope :: Head :- Body, HeadExt :- Body) :-
+    scope_t(Scope),
+    coh_head_expansion(Scope, Head, HeadExt).
+term_expansion(Scope :: Head, HeadExt) :-
+    scope_t(Scope),
+    coh_head_expansion(Scope, Head, HeadExt).
+term_expansion((Head :- Body), (HeadExt :- Body)) :-
+    coh_head_expansion(sexport, Head, HeadExt).
+term_expansion(Head, HeadExt) :-
+    coh_head_expansion(sexport, Head, HeadExt).
 term_expansion(end_of_file, ClauseL) :-
     prolog_load_context(module, Context),
     findall(Context:CohesiveModule,
             ( '$cohesive'(H, IM),
-              predicate_property(Context:H, imported_from(IM)),
+              predicate_property(Context:H, implementation_module(IM)),
               functor(H, F, A),
-              call_cleanup(cohesive_module(H, Context, IM, CM),
-                           retractall(cm_db(_))),
-              aux_cohesive(IM, F, A, CM, CohesiveModule)
+              aux_cohesive_module(IM, F, A, CohM, CohesiveModule),
+              aux_cohesive_pred(H, CohM, HExt),
+              cohesive_module(H, Context, IM, CohM),
+              nonvar(CohM),
+              once(clause(IM:HExt, _))
             ), ClauseL, [end_of_file]).
 
-cohesive_module(_, Context, _, Context) :-
+%!  cohesive_module(+H, +Context, +IM, -CohM) is multi.
+
+cohesive_module(H, Context, IM, CohM) :-
+    call_cleanup(cohesive_module_1st(H, Context, IM, CohM),
+                 retractall(cm_db(_))).
+
+cohesive_module_1st(_, Context, _, Private) :-
+    scope_module(sprivat, Context, Private).
+cohesive_module_1st(_, Context, _, Context) :-
     assertz(cm_db(Context)).
-cohesive_module(H, Context, IM, CM) :-
+cohesive_module_1st(H, Context, IM, CM) :-
     '$load_context_module'(File, Context, _),
     module_property(M, file(File)),
     \+ cm_db(M),
-    predicate_property(M:H, imported_from(IM)),
+    '$predicate_property'(imported_from(IM), M:H),
     cohesive_module_rec(H, M, IM, CM).
 
 cohesive_module_rec(_, Context, _, Context) :-
@@ -124,5 +169,5 @@ cohesive_module_rec(H, C, IM, CM) :-
     option(reexport(true), Options),
     module_property(M, file(File)),
     \+ cm_db(M),
-    predicate_property(M:H, imported_from(IM)),
+    '$predicate_property'(imported_from(IM), M:H),
     cohesive_module_rec(H, M, IM, CM).
