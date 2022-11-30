@@ -87,6 +87,7 @@ type_expansors(term, term_expansion, call_term_expansion).
 type_expansors(goal, goal_expansion, call_goal_expansion).
 
 do_compound_expansion(M, Type, Term1, Pos1, Term, Pos) :-
+    \+ current_prolog_flag(xref, true),
     type_expansors(Type, Expansor, Closure),
     collect_expansors(M, Expansor, ML),
     call('$expand':Closure, ML, Term1, Pos1, Term, Pos), !.
