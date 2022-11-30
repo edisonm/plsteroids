@@ -77,7 +77,7 @@ element_group(name,           _:F/A,   F/A).
 
 ignore_dupcode(H, _, _) :-
     functor(H, Name, _),
-    member(Prefix, ['__aux_wrapper_', '__aux_neck_']),
+    member(Prefix, ['__aux_', '$']),
     atom_concat(Prefix, _, Name).
 ignore_dupcode(H, _, _) :-
     current_module(apply_macros),

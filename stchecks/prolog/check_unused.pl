@@ -437,7 +437,7 @@ hide_unused(_, plunit).
 hide_unused(_, ciao).
 hide_unused(Call, _) :-
     functor(Call, Name, _),
-    member(Prefix, ['__aux_wrapper_',
+    member(Prefix, ['__aux_',
                     '__wrap$',
                     '$wrap$'
                    ]),
