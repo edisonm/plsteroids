@@ -411,7 +411,7 @@ message_unused_rec(Level, Node-EdgeL) -->
 message_unused(T, Level, PI, Loc/D) -->
     Level,
     Loc,
-    ['~w ~w: ~w'-[T, D, PI], nl].
+    ['~w ~w: ~q'-[T, D, PI], nl].
 
 unused_type(0, 'unreferenced') :- !.
 unused_type(_, 'unreachable' ).

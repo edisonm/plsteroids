@@ -74,6 +74,10 @@ not_checkable_predicate(P) :-
     predicate_property(P, volatile).
 not_checkable_predicate(P) :-
     predicate_property(P, public).
+not_checkable_predicate(P) :-
+    strip_module(P, _, H),
+    functor(H, F, _),
+    atom_concat('__aux_', _, F).
 
 :- meta_predicate checkable_predicate(?).
 checkable_predicate(P) :-
