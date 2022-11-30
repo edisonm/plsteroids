@@ -33,21 +33,37 @@
 */
 
 :- module(extend_args,
-          [extend_args/3]).
+          [ extend_args/3,
+            extend_args/4
+          ]).
 
 %!  extend_args(+Goal, +Extra:list, -Goal) is det.
 %!  extend_args(-Goal, ?Extra:list, +Goal)
 
-extend_args(Goal, _, Goal) :-
-    var(Goal), !, fail.
-extend_args(M:Goal1, Extra, M:Goal) :- !,
-    extend_args(Goal1, Extra, Goal).
 extend_args(Goal1, Extra, Goal) :-
-    nonvar(Goal1), !,
-    Goal1 =.. [Name|Args1],
-    '$append'(Args1, Extra, Args),
-    Goal  =.. [Name|Args].
-extend_args(Goal1, Extra, Goal) :-
-    Goal  =.. [Name|Args],
-    '$append'(Args1, Extra, Args),
-    Goal1 =.. [Name|Args1].
+    extend_args('', Goal1, Extra, Goal).
+
+add_prefix('', Func, Func) :- !.
+add_prefix(Prefix, Func, FuncPredExt) :-
+    atom_concat(Prefix, Func, FuncPredExt).
+
+extend_args(_, Goal, _, Goal) :-
+    var(Goal),
+    !,
+    fail.
+extend_args(Prefix, M:Goal1, Extra, M:Goal) :-
+    !,
+    extend_args(Prefix, Goal1, Extra, Goal).
+extend_args(Prefix, Pred, ExArgs, PredExt) :-
+    nonvar(Pred),
+    !,
+    Pred   =.. [Func|Args1],
+    '$append'(Args1, ExArgs, Args),
+    add_prefix(Prefix, Func, FuncPredExt),
+    PredExt =.. [FuncPredExt|Args].
+extend_args(Prefix, Pred, ExArgs, PredExt) :-
+    PredExt =.. [FuncPredExt|Args],
+    once('$append'(Args1, ExArgs, Args)),
+    add_prefix(Prefix, Func, FuncPredExt),
+    Pred   =.. [Func|Args1].
+
