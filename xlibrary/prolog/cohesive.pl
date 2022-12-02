@@ -35,6 +35,8 @@
 :- module(cohesive,
           [ cohesive_module/4,
             scope_t/1,
+            call_cm/3,
+            call_cm/5,
             op(1150, fx, cohesive_pred),
             op(978, xfx, ::)
           ]).
@@ -65,18 +67,27 @@
 :- thread_local
     cm_db/1.
 
+:- meta_predicate
+        call_cm(0, +, -),
+        call_cm(0, +, ?, -, -).
+
+
 aux_cohesive_module(M, F, A, CohM, CohesiveModule) :-
     format(atom(CT), '__aux_cohm_~w:~w/~w', [M, F, A]),
     CohesiveModule =.. [CT, CohM].
 
-aux_cohesive_pred(H, CohM, HExt) :-
-    extend_args('__aux_cohp_', H, [CohM], HExt).
+aux_cohesive_pred(H, CohM, Scope, HExt) :-
+    extend_args('__aux_cohp_', H, [CohM, Scope], HExt).
+
+aux_cohesive_wrap(H, CM, CohM, HWrp) :-
+    extend_args('__aux_cohw_', H, [CM, CohM], HWrp).
 
 cohesive_pred_pi(CM, PI) -->
     { normalize_head(CM:PI, M:H),
-      aux_cohesive_pred(H, CohM, HExt),
+      aux_cohesive_pred(H, CohM, Scope, HExt),
       functor(H, F, A),
-      aux_cohesive_module(M, F, A, CohM, CohesiveModule),
+      aux_cohesive_module(M, F, A, CohM, CheckCohM),
+      aux_cohesive_wrap(H, Context, CohM, HWrp),
       functor(HExt, FExt, AExt)
     },
     [ cohesive:'$cohesive'(H, M),
@@ -87,28 +98,61 @@ cohesive_pred_pi(CM, PI) -->
     ->[(:- discontiguous M:FExt/AExt)]
     ; []
     ),
-    [ (H :- context_module(Context),
+    [ ( H :- context_module(Context),
+             CM:HWrp
+      ),
+      ( HWrp :-
             ignore(( Context \= user,
                      % if called in the user context, asume all (equivalent to multifile)
-                     freeze(CohM, Context:CohesiveModule)
+                     freeze(CohM,
+                            freeze(Scope,
+                                   ( Scope = spublic
+                                   ->true
+                                   ; Scope = sprivat
+                                   ->CohM = Context
+                                   ; Scope = sexport
+                                   ->( % First, try with fast precompiled checker
+                                       predicate_property(Context:CheckCohM, defined)
+                                     ->Context:CheckCohM
+                                     ; % Second, use the slower alternative, it works at compile time
+                                       cohesive_module(H, Context, M, CohM)
+                                     ->true
+                                     ; % Show a warning and fail, this should not happen
+                                       print_message(warning,
+                                                     format("~q failed since ~w is undefined", [Context:HWrp, CheckCohM])),
+                                       fail
+                                     )
+                                   )
+                                  )
+                           )
                    )),
             % Original code to resolve this dynamically, but is slow:
             % ignore(( Context \= user,
             %          freeze(CohM, once(cohesive_module(H, Context, M, CohM)))
             %        )),
-            HExt)
+            HExt
+      )
     ].
 
-scope_module(sprivat, C, P) :- atom_concat('__aux_private_', C, P).
-scope_module(spublic, _, _).
-scope_module(sexport, C, C).
+%!  call_cm(:Goal, -CohesiveModule) is multi.
+
+%   Calls Goal and returns the module where the current clause was implemented from.
+
+call_cm(Goal, Context, CohM, HWrp, IM) :-
+    strip_module(Goal, _, Head),
+    predicate_property(Goal, implementation_module(IM)),
+    aux_cohesive_wrap(Head, Context, CohM, HWrp).
+
+call_cm(Goal, Context, CohM) :-
+    call_cm(Goal, Context, CohM, HWrp, IM),
+    IM:HWrp.
 
 coh_head_expansion(Scope, Head, IM:HeadExt) :-
     prolog_load_context(module, CM),
     predicate_property(CM:Head, implementation_module(IM)),
     '$cohesive'(Head, IM),
-    scope_module(Scope, CM, VM),
-    aux_cohesive_pred(Head, VM, HeadExt).
+    % scope_module(Scope, CM, VM),
+    aux_cohesive_pred(Head, CM, Scope, HeadExt).
 
 % sprivat: can not be used externally
 % sexport: needs use_module to use it (default)
@@ -134,15 +178,18 @@ term_expansion(Head, HeadExt) :-
     coh_head_expansion(sexport, Head, HeadExt).
 term_expansion(end_of_file, ClauseL) :-
     prolog_load_context(module, Context),
-    findall(Context:CohesiveModule,
+    findall(Clause,
             ( '$cohesive'(H, IM),
               predicate_property(Context:H, implementation_module(IM)),
               functor(H, F, A),
-              aux_cohesive_module(IM, F, A, CohM, CohesiveModule),
-              aux_cohesive_pred(H, CohM, HExt),
-              cohesive_module(H, Context, IM, CohM),
-              nonvar(CohM),
-              once(clause(IM:HExt, _))
+              aux_cohesive_module(IM, F, A, CohM, CheckCohM),
+              functor(CheckCohM, CF, CA),
+              ( Clause = (:- multifile Context:CF/CA)
+              ; Clause = Context:CheckCohM,
+                aux_cohesive_pred(H, CohM, _Scope, HExt),
+                cohesive_module(H, Context, IM, CohM),
+                once(clause(IM:HExt, _))
+              )
             ), ClauseL, [end_of_file]).
 
 %!  cohesive_module(+H, +Context, +IM, -CohM) is multi.
@@ -151,15 +198,13 @@ cohesive_module(H, Context, IM, CohM) :-
     call_cleanup(cohesive_module_1st(H, Context, IM, CohM),
                  retractall(cm_db(_))).
 
-cohesive_module_1st(_, Context, _, Private) :-
-    scope_module(sprivat, Context, Private).
 cohesive_module_1st(_, Context, _, Context) :-
     assertz(cm_db(Context)).
 cohesive_module_1st(H, Context, IM, CM) :-
     '$load_context_module'(File, Context, _),
     module_property(M, file(File)),
     \+ cm_db(M),
-    '$predicate_property'(imported_from(IM), M:H),
+    predicate_property(M:H, implementation_module(IM)),
     cohesive_module_rec(H, M, IM, CM).
 
 cohesive_module_rec(_, Context, _, Context) :-
@@ -169,5 +214,5 @@ cohesive_module_rec(H, C, IM, CM) :-
     option(reexport(true), Options),
     module_property(M, file(File)),
     \+ cm_db(M),
-    '$predicate_property'(imported_from(IM), M:H),
+    predicate_property(M:H, implementation_module(IM)),
     cohesive_module_rec(H, M, IM, CM).
