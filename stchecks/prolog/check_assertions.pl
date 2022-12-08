@@ -76,11 +76,14 @@ cleanup_db :-
     retractall(violations_db(_, _, _)).
 
 check_assertions(Options1, Pairs) :-
+    % Note: is better to use source, since in clause the code is already
+    % expanded and could be really difficult to infer which was the original
+    % expression that was there before
     foldl(select_option_default,
-          [method(Method1)-clause],
+          [method(Method1)-source],
           Options1, Options2),
     ( \+ memberchk(Method1, [source, clause]) % only these methods are supported
-    ->Method = clause,
+    ->Method = source,
       print_message(
           warning,
           format("Method `~w' not supported, using `~w' instead",
@@ -228,7 +231,8 @@ collect_violations(M:Goal, Caller, From) :-
     ->normalize_pi(Caller, CPI),
       update_fact_from(violations_db(CPI, CTChecks), From)
     ; true
-    ).
+    ),
+    fail.
 
 check_property_ctcheck(Goal, M, Caller, AssrErrorL) :-
     tabled_generate_ctchecks(Goal, M, Caller, CTCheck),
