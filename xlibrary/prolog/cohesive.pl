@@ -34,6 +34,7 @@
 
 :- module(cohesive,
           [ cohesive_module/4,
+            cohesive_module_rt/6,
             scope_t/1,
             call_cm/3,
             call_cm/5,
@@ -54,8 +55,10 @@
    multifiles, but in order to use them, we need to import the predicates that
    defines their clauses.  If two or more modules are imported, they are added
    up.  This provides certain level of encapsulation, but at the same time
-   allows extensibility. TBD: this is very experimental, it should be tested in
-   the battlefield to see if is usable --EMM
+   allows extensibility.  It also pay attention to reexported modules so that
+   clauses in reexported modules of cohesive predicates become available in the
+   importing module.  TBD: this is very experimental, it should be tested in the
+   battlefield to see if is usable --EMM
 
 @author Edison Mera
 
@@ -82,6 +85,24 @@ aux_cohesive_pred(H, CohM, Scope, HExt) :-
 aux_cohesive_wrap(H, CM, CohM, HWrp) :-
     extend_args('__aux_cohw_', H, [CM, CohM], HWrp).
 
+cohesive_module_rt(H, Context, M, CohM, Scope, CheckCohM) :-
+    ( Scope = spublic
+    ->true
+    ; Scope = sprivat
+    ->CohM = Context
+    ; Scope = sexport
+    ->( predicate_property(Context:CheckCohM, defined) % First, try with fast precompiled checker
+      ->Context:CheckCohM
+      ; % Second, use the slower alternative, it works at compile time
+        cohesive_module(H, Context, M, CohM)
+      ->true
+      ; % Show a warning and fail, this should not happen
+        print_message(warning,
+                      format("In ~q, ~q failed since ~q is undefined or cohesive_module/4 failed", [Context, H, CheckCohM])),
+        fail
+      )
+    ).
+
 cohesive_pred_pi(CM, PI) -->
     { normalize_head(CM:PI, M:H),
       aux_cohesive_pred(H, CohM, Scope, HExt),
@@ -104,32 +125,8 @@ cohesive_pred_pi(CM, PI) -->
       ( HWrp :-
             ignore(( Context \= user,
                      % if called in the user context, asume all (equivalent to multifile)
-                     freeze(CohM,
-                            freeze(Scope,
-                                   ( Scope = spublic
-                                   ->true
-                                   ; Scope = sprivat
-                                   ->CohM = Context
-                                   ; Scope = sexport
-                                   ->( % First, try with fast precompiled checker
-                                       predicate_property(Context:CheckCohM, defined)
-                                     ->Context:CheckCohM
-                                     ; % Second, use the slower alternative, it works at compile time
-                                       cohesive_module(H, Context, M, CohM)
-                                     ->true
-                                     ; % Show a warning and fail, this should not happen
-                                       print_message(warning,
-                                                     format("~q failed since ~w is undefined", [Context:HWrp, CheckCohM])),
-                                       fail
-                                     )
-                                   )
-                                  )
-                           )
+                     freeze(CohM, freeze(Scope, cohesive_module_rt(H, Context, M, CohM, Scope, CheckCohM)))
                    )),
-            % Original code to resolve this dynamically, but is slow:
-            % ignore(( Context \= user,
-            %          freeze(CohM, once(cohesive_module(H, Context, M, CohM)))
-            %        )),
             HExt
       )
     ].
@@ -183,9 +180,10 @@ term_expansion(end_of_file, ClauseL) :-
               predicate_property(Context:H, implementation_module(IM)),
               functor(H, F, A),
               aux_cohesive_module(IM, F, A, CohM, CheckCohM),
-              functor(CheckCohM, CF, CA),
-              ( Clause = (:- multifile Context:CF/CA)
-              ; Clause = Context:CheckCohM,
+              ( % Note: CheckCohM must not be multifile, otherwise it will
+                % remain defined on recompilation and the compilation result
+                % will not be correct --EMM
+                Clause = Context:CheckCohM,
                 aux_cohesive_pred(H, CohM, _Scope, HExt),
                 cohesive_module(H, Context, IM, CohM),
                 once(clause(IM:HExt, _))
