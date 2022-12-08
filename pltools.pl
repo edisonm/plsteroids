@@ -20,6 +20,7 @@
 	user:prolog_exception_hook/4.
 
 skip_error(missing(undecided_call)).
+skip_error(error(type_error(Type, _), _)) :- member(Type, [integer, rational]).
 
 :- dynamic prolog:history/2.
 
