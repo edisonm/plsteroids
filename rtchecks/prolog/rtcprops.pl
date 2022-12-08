@@ -111,7 +111,7 @@ acheck(Goal) :- call(Goal).
 
 :- global no_acheck(T, G) + equiv(acheck(T, impossible, G))
     # "Declares that the assertion in which this comp property appears must not
-    be checked at run-time.".
+    be checked at compile-time/run-time.".
 
 no_acheck(_, Goal) :- call(Goal).
 
