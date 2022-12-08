@@ -50,7 +50,6 @@
 :- use_module(library(location_utils)).
 :- use_module(library(from_utils)).
 :- use_module(library(qualify_meta_goal)).
-:- use_module(library(assertions)).
 :- use_module(library(option_utils)).
 :- use_module(library(checkable_predicate)).
 :- use_module(library(ctrtchecks)).
@@ -225,13 +224,13 @@ ignore_predicate(M:Call) :- ignore_predicate(Call, M).
 
 :- meta_predicate collect_violations(0,0,+).
 collect_violations(M:Goal, Caller, From) :-
-    ( \+ ignore_predicate(Caller),
-      check_property_ctcheck(Goal, M, Caller, CTChecks),
-      CTChecks \= []
-    ->normalize_pi(Caller, CPI),
-      update_fact_from(violations_db(CPI, CTChecks), From)
-    ; true
-    ),
+    % For now skip all declarations, although we only need to skip assertions
+    Caller \= _:'<declaration>',
+    \+ ignore_predicate(Caller),
+    check_property_ctcheck(Goal, M, Caller, CTChecks),
+    CTChecks \= [],
+    normalize_pi(Caller, CPI),
+    update_fact_from(violations_db(CPI, CTChecks), From),
     fail.
 
 check_property_ctcheck(Goal, M, Caller, AssrErrorL) :-
