@@ -175,6 +175,8 @@ term_expansion(Head, HeadExt) :-
     coh_head_expansion(sexport, Head, HeadExt).
 term_expansion(end_of_file, ClauseL) :-
     prolog_load_context(module, Context),
+    module_property(Context, file(File)),
+    prolog_load_context(source, File),
     findall(Clause,
             ( '$cohesive'(H, IM),
               predicate_property(Context:H, implementation_module(IM)),
