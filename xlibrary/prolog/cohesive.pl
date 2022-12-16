@@ -85,23 +85,22 @@ aux_cohesive_pred(H, CohM, Scope, HExt) :-
 aux_cohesive_wrap(H, CM, CohM, HWrp) :-
     extend_args('__aux_cohw_', H, [CM, CohM], HWrp).
 
-cohesive_module_rt(H, Context, M, CohM, Scope, CheckCohM) :-
-    ( Scope = spublic
-    ->true
-    ; Scope = sprivat
-    ->CohM = Context
-    ; Scope = sexport
-    ->( predicate_property(Context:CheckCohM, defined) % First, try with fast precompiled checker
-      ->Context:CheckCohM
-      ; % Second, use the slower alternative, it works at compile time
-        cohesive_module(H, Context, M, CohM)
-      ->true
-      ; % Show a warning and fail, this should not happen
-        print_message(warning,
-                      format("In ~q, ~q failed since ~q is undefined or cohesive_module/4 failed", [Context, H, CheckCohM])),
-        fail
-      )
+/* Note that if cohesive_module_rt/6 is called from the wrong context you will
+ * get a run-time error since CheckCohM will not be defined, therefore you don't
+ * need to implement a run-time check here, just let the predicate fail --EMM
+*/
+
+cohesive_module_rt(_, user, _, _, _, _) :- !.
+cohesive_module_rt(_, _, _, _, spublic, _).
+cohesive_module_rt(H, Context, M, CohM, sexport, CheckCohM) :-
+    ( % First, try with fast precompiled checker
+      predicate_property(Context:CheckCohM, defined)
+    ->Context:CheckCohM
+    ; % Second, use the slower alternative, it works at compile time
+      predicate_property(Context:H, defined),
+      cohesive_module(H, Context, M, CohM)
     ).
+cohesive_module_rt(_, C, _, _, sprivat, C).
 
 cohesive_pred_pi(CM, PI) -->
     { normalize_head(CM:PI, M:H),
@@ -123,10 +122,7 @@ cohesive_pred_pi(CM, PI) -->
              CM:HWrp
       ),
       ( HWrp :-
-            ignore(( Context \= user,
-                     % if called in the user context, asume all (equivalent to multifile)
-                     freeze(CohM, freeze(Scope, cohesive_module_rt(H, Context, M, CohM, Scope, CheckCohM)))
-                   )),
+            cohesive_module_rt(H, Context, M, CohM, Scope, CheckCohM),
             HExt
       )
     ].

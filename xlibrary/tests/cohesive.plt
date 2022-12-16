@@ -5,11 +5,11 @@
 
 test(c4) :-
     findall(X, q(X), L),
-    assertion(L = [x, y, c, d, a, b, d]).
+    assertion(L = [d, a, b, c, d, x, y]).
 
 test(c2) :-
     findall(X, c2:p1(X), L),
-    assertion(L = [x, y, c, d, a, b]).
+    assertion(L = [a, b, c, d, x, y]).
 
 test(c5) :-
     findall(X, c5:p1(X), L),
