@@ -100,7 +100,7 @@ cohesive_module_rt(H, Context, M, CohM, sexport, CheckCohM) :-
       predicate_property(Context:H, defined),
       cohesive_module(H, Context, M, CohM)
     ).
-cohesive_module_rt(_, C, _, _, sprivat, C).
+cohesive_module_rt(_, C, _, C, sprivat, _).
 
 cohesive_pred_pi(CM, PI) -->
     { normalize_head(CM:PI, M:H),
