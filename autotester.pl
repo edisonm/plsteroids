@@ -5,7 +5,6 @@
 :- [assertions/tests/'assertions.plt'].
 :- [assertions/tests/foreign/'foreign.plt'].
 :- [refactor/tests/'gcb.plt'].
-:- [refactor/tests/'refactor.plt'].
 :- [rtchecks/tests/'rtchecks.plt'].
 :- [xlibrary/tests/i18n/'i18n_2.plt'].
 :- [xlibrary/tests/i18n/'i18n.plt'].

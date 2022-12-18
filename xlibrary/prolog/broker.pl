@@ -3,7 +3,7 @@
     Author:        Edison Mera
     E-mail:        efmera@gmail.com
     WWW:           https://github.com/edisonm/xlibrary
-    Copyright (C): 2015, Process Design Center, Breda, The Netherlands.
+    Copyright (C): 2021, Process Design Center, Breda, The Netherlands.
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without
