@@ -68,9 +68,6 @@ meta_decls2([H|T]) -->
     [',', nl, '\t\t~q'-[H]],
     meta_decls2(T).
 
-% cleanup_metainference :-
-%     retractall(prolog_metainference:inferred_meta_pred(_, _, _)).
-
 % Hook to hide messages:
 :- multifile
     hide_missing_meta_pred/2.

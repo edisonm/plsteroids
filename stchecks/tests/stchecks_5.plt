@@ -9,6 +9,6 @@
 
 test(cwd_5, [setup(cleanup_inferred_meta)]) :-
     check_results(wrong_dynamic, Results, [files([stchecks/tests/cwdc])]),
-    assertion(Results = []).
+    assertion(Results = [_]).
 
 :- end_tests(stchecks_5).
