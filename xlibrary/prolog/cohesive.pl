@@ -67,9 +67,6 @@
 :- multifile
     '$cohesive'/2.
 
-:- thread_local
-    cm_db/1.
-
 :- meta_predicate
         call_cm(0, +, -),
         call_cm(0, +, ?, -, -).
@@ -122,7 +119,10 @@ cohesive_pred_pi(CM, PI) -->
              CM:HWrp
       ),
       ( HWrp :-
-            cohesive_module_rt(H, Context, M, CohM, Scope, CheckCohM),
+            ignore(( Context \= user,
+                     % if called in the user context, asume all (equivalent to multifile)
+                     freeze(CohM, freeze(Scope, once(cohesive_module_rt(H, Context, M, CohM, Scope, CheckCohM))))
+                   )),
             HExt
       )
     ].
@@ -155,6 +155,22 @@ scope_t(spublic).
 scope_t(sexport).
 scope_t(sprivat).
 
+check_cohm_clauses(Context, ClauseL) :-
+    findall(Clause,
+            ( '$cohesive'(H, IM),
+              predicate_property(Context:H, implementation_module(IM)),
+              functor(H, F, A),
+              aux_cohesive_module(IM, F, A, CohM, CheckCohM),
+              ( % Note: CheckCohM must not be multifile, otherwise it will
+                % remain defined on recompilation and the compilation result
+                % will not be correct --EMM
+                Clause = Context:CheckCohM,
+                aux_cohesive_pred(H, CohM, _Scope, HExt),
+                cohesive_module(H, Context, IM, CohM),
+                once(clause(IM:HExt, _))
+              )
+            ), ClauseL, [end_of_file]).
+
 term_expansion((:- cohesive_pred PIs), ClauseL) :-
     prolog_load_context(module, CM),
     sequence_list(PIs, PIL, []),
@@ -173,42 +189,34 @@ term_expansion(end_of_file, ClauseL) :-
     prolog_load_context(module, Context),
     module_property(Context, file(File)),
     prolog_load_context(source, File),
-    findall(Clause,
-            ( '$cohesive'(H, IM),
-              predicate_property(Context:H, implementation_module(IM)),
-              functor(H, F, A),
-              aux_cohesive_module(IM, F, A, CohM, CheckCohM),
-              ( % Note: CheckCohM must not be multifile, otherwise it will
-                % remain defined on recompilation and the compilation result
-                % will not be correct --EMM
-                Clause = Context:CheckCohM,
-                aux_cohesive_pred(H, CohM, _Scope, HExt),
-                cohesive_module(H, Context, IM, CohM),
-                once(clause(IM:HExt, _))
-              )
-            ), ClauseL, [end_of_file]).
+    check_cohm_clauses(Context, ClauseL).
+
+:- thread_local
+    cm_db/2.
 
 %!  cohesive_module(+H, +Context, +IM, -CohM) is multi.
 
 cohesive_module(H, Context, IM, CohM) :-
-    call_cleanup(cohesive_module_1st(H, Context, IM, CohM),
-                 retractall(cm_db(_))).
+    setup_call_cleanup(
+        prolog_current_choice(CP),
+        cohesive_module_1st(CP, H, Context, IM, CohM),
+        retractall(cm_db(_, CP))).
 
-cohesive_module_1st(_, Context, _, Context) :-
-    assertz(cm_db(Context)).
-cohesive_module_1st(H, Context, IM, CM) :-
+cohesive_module_1st(CP, _, Context, _, Context) :-
+    assertz(cm_db(Context, CP)).
+cohesive_module_1st(CP, H, Context, IM, CM) :-
     '$load_context_module'(File, Context, _),
     module_property(M, file(File)),
-    \+ cm_db(M),
+    \+ cm_db(M, CP),
     predicate_property(M:H, implementation_module(IM)),
-    cohesive_module_rec(H, M, IM, CM).
+    cohesive_module_rec(CP, H, M, IM, CM).
 
-cohesive_module_rec(_, Context, _, Context) :-
-    assertz(cm_db(Context)).
-cohesive_module_rec(H, C, IM, CM) :-
+cohesive_module_rec(CP, _, Context, _, Context) :-
+    assertz(cm_db(Context, CP)).
+cohesive_module_rec(CP, H, C, IM, CM) :-
     '$load_context_module'(File, C, Options),
     option(reexport(true), Options),
     module_property(M, file(File)),
-    \+ cm_db(M),
+    \+ cm_db(M, CP),
     predicate_property(M:H, implementation_module(IM)),
-    cohesive_module_rec(H, M, IM, CM).
+    cohesive_module_rec(CP, H, M, IM, CM).
