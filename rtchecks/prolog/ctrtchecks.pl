@@ -52,6 +52,7 @@
 :- use_module(library(pairs)).
 :- use_module(library(assertions)).
 :- use_module(library(send_check)).
+:- use_module(library(extend_args)).
 :- use_module(library(clambda)).
 :- use_module(library(context_values)).
 :- use_module(library(rtcprops)).
@@ -308,8 +309,8 @@ current_asr_prop_value(VS, T, Cond, PType, NAsr, PropValue) :-
     ( type_cond_part_check_mult(Cond, PType, Part, Check, Mult),
       asr_aprop(NAsr, Part, Prop, From)
     *->
-      valid_prop(T, Prop), % if not valid, ignore property
-      \+ catch(check_prop(Check, VS, Prop),
+      make_valid_prop(T, Prop, VProp), % if not valid, ignore property
+      \+ catch(check_prop(Check, VS, VProp),
                Error,
                send_signal(at_location(From, Error))),
       last_prop_failure(L),
@@ -322,7 +323,46 @@ current_asr_prop_value(VS, T, Cond, PType, NAsr, PropValue) :-
 check_prop(compat, VS, Prop) :- compat(Prop, VS).
 check_prop(instan, VS, Prop) :- instan(Prop, VS).
 
-valid_prop(T, M:Prop) :-
+make_valid_prop(T, M:Prop, M:Valid) :-
+    make_valid_prop(Prop, M, T, Valid).
+
+disj_prop(true, A, A).
+disj_prop(A, true, A).
+disj_prop(A, B, (A;B)).
+
+conj_prop(true, _, true).
+conj_prop(_, true, true).
+conj_prop(A, B, (A,B)).
+
+make_valid_prop(A;B, M, T, V) :-
+    !,
+    make_valid_prop(A, M, T, VA),
+    make_valid_prop(B, M, T, VB),
+    once(disj_prop(VA, VB, V)).
+make_valid_prop((A,B), M, T, V) :-
+    !,
+    make_valid_prop(A, M, T, VA),
+    make_valid_prop(B, M, T, VB),
+    once(conj_prop(VA, VB, V)).
+make_valid_prop(list(Type, X), M, T, V) :-
+    % TBD: generalize this example (i.e., consider meta predicates) --EMM
+    !,
+    ( extend_args(Type, [_], Type1),
+      valid_prop(T, M, Type1)
+    ->V = list(Type, X)
+    ; V = list(X)
+    ).
+make_valid_prop(A, M, T, V) :-
+    ( valid_prop(T, M, A)
+    ->V = A
+    ; V = true
+    ).
+
+:- meta_predicate valid_prop(+, 0 ).
+
+valid_prop(T, M:Prop) :- valid_prop(T, M, Prop).
+
+valid_prop(T, M, Prop) :-
     functor(Prop, F, A),
     tabled_valid_prop(T, M, F, A).
 
