@@ -113,7 +113,7 @@ current_head_ctcheck(MFileD, head(Loc-PI)-AssrErrorL) :-
     \+ predicate_property(MH, imported_from(_)),
     \+ is_built_in(MH),
     \+ predicate_property(MH, foreign),
-    generate_ctchecks(H, M, [], CTCheck),
+    generate_ctchecks(head, H, M, [], CTCheck),
     CTCheck \= _:true,
     clause(MH, _, Clause),
     clause_property(Clause, file(File)),
@@ -298,7 +298,7 @@ tabled_generate_ctchecks(H, M, Caller, Goal) :-
     ->qualify_meta_goal(CM:P, Meta, G)
     ; G = P
     ),
-    generate_ctchecks(G, M, VInf, Goal),
+    generate_ctchecks(body, G, M, VInf, Goal),
     CM = M,
     P = H.
 
@@ -308,18 +308,18 @@ tabled_generate_ctchecks(H, M, Caller, Goal) :-
 %   if no ctchecks can be applied to Pred. VInf contains information about fresh
 %   variables.
 %
-generate_ctchecks(Goal, M, VInf, CTChecks) :-
+generate_ctchecks(Where, Goal, M, VInf, CTChecks) :-
     collect_assertions(ct, Goal, M, AsrL),
     ( AsrL \= []
-    ->maplist(wrap_asr_ctcheck(VInf), AsrL, PAsrL),
+    ->maplist(wrap_asr_ctcheck(Where, VInf), AsrL, PAsrL),
       CTChecks = ctrtchecks:check_call(ct, PAsrL, M:Goal)
     ; CTChecks = check_assertions:true
     ).
 
-wrap_asr_ctcheck(VInf, Asr, ctcheck(VInf, Asr)).
+wrap_asr_ctcheck(Where, VInf, Asr, ctcheck(Where, VInf, Asr)).
 
-assertions:asr_aprop(ctcheck(VInf, Asr), Key, Prop, From) :-
-    asr_aprop_ctcheck(Key, VInf, Asr, Prop, From).
+assertions:asr_aprop(ctcheck(Where, VInf, Asr), Key, Prop, From) :-
+    asr_aprop_ctcheck(Key, Where, VInf, Asr, Prop, From).
 
 %!  asr_aprop_ctcheck(Asr, Section, Property, From)
 %
@@ -328,20 +328,20 @@ assertions:asr_aprop(ctcheck(VInf, Asr), Key, Prop, From) :-
 %   makes static check decidable, the tradeoff is that we lose precision but we
 %   gain computability of checks at compile-time.
 
-asr_aprop_ctcheck(head, _, A, P, F) :- curr_prop_asr(head, P, F, A).
-asr_aprop_ctcheck(stat, _, A, P, F) :- curr_prop_asr(stat, P, F, A).
-asr_aprop_ctcheck(type, _, A, P, F) :- curr_prop_asr(type, P, F, A).
-asr_aprop_ctcheck(dict, _, A, P, F) :- curr_prop_asr(dict, P, F, A).
-asr_aprop_ctcheck(comm, _, A, P, F) :- curr_prop_asr(comm, P, F, A).
-asr_aprop_ctcheck(comp, _, A, P, F) :- curr_prop_asr(comp, P, F, A).
-asr_aprop_ctcheck(comp, _, A, P, F) :- curr_prop_asr(succ, P, F, A). % TBD: Key = succ
-asr_aprop_ctcheck(Key,  L, Asr, Prop, From) :-
-    asr_aprop_ctcheck_abstraction(Key, L, Asr, Prop, From).
+asr_aprop_ctcheck(head, _, _, A, P, F) :- curr_prop_asr(head, P, F, A).
+asr_aprop_ctcheck(stat, _, _, A, P, F) :- curr_prop_asr(stat, P, F, A).
+asr_aprop_ctcheck(type, _, _, A, P, F) :- curr_prop_asr(type, P, F, A).
+asr_aprop_ctcheck(dict, _, _, A, P, F) :- curr_prop_asr(dict, P, F, A).
+asr_aprop_ctcheck(comm, _, _, A, P, F) :- curr_prop_asr(comm, P, F, A).
+asr_aprop_ctcheck(comp, _, _, A, P, F) :- curr_prop_asr(comp, P, F, A).
+asr_aprop_ctcheck(comp, _, _, A, P, F) :- curr_prop_asr(succ, P, F, A). % TBD: Key = succ
+asr_aprop_ctcheck(Key, W, L, Asr, Prop, From) :-
+    asr_aprop_ctcheck_abstraction(Key, W, L, Asr, Prop, From).
 
 prop_abstraction(call, true).
 % prop_abstraction(succ, false).
 
-asr_aprop_ctcheck_abstraction(Key, L, Asr, Prop, From) :-
+asr_aprop_ctcheck_abstraction(Key, W, L, Asr, Prop, From) :-
     prop_abstraction(RKey, Fresh),
     curr_prop_asr(RKey, Prop, From, Asr),
     term_variables(Prop, Vars),
@@ -349,7 +349,11 @@ asr_aprop_ctcheck_abstraction(Key, L, Asr, Prop, From) :-
       member(Arg, Vars),
       Arg==Var
     ->Key = RKey
-    ; Key = comp
+    ; ( W = body
+      ; W = head,
+        Prop \= _:var(_)
+      )
+    ->Key = comp
     ).
 
 verif_is_property(system, true, 0) :- !. % ignore true (identity)
