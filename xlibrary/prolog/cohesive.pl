@@ -116,7 +116,7 @@ cohesive_pred_pi(CM, PI) -->
     ; []
     ),
     [ ( H :- context_module(Context),
-             CM:HWrp
+             call(CM:HWrp)
       ),
       ( HWrp :-
             ignore(( Context \= user,
