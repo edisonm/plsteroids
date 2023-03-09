@@ -314,7 +314,10 @@ handle_port(File, Line, call, Frame, _, _, Loc, continue) :-
                 predicate_property(Goal, Issue)
               ), IssueL),
       IssueL \= [],
-      atomic_list_concat(IssueL, ',', Issues)
+      atomic_list_concat(IssueL, ',', Issues),
+      strip_module(Goal, M, Call),
+      functor(Call, F, A),
+      PI = M:F/A
     ; strip_module(Goal, _, Call),
       functor(Call, F, _),
       neck_prefix(NeckPrefix),
