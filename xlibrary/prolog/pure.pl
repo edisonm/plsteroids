@@ -6,6 +6,7 @@
 
 :- use_module(library(lists)).
 :- use_module(library(resolve_calln)).
+:- use_module(library(qualify_meta_goal)).
 
 :- meta_predicate
         is_pure_pred(0 ),
@@ -54,7 +55,8 @@ is_pure_clause(Ref, Stack) :-
 % In general, any predicate that check the instantiation status of a variable is
 % not pure-prolog
 
-is_pure_body(M:G) :- is_pure_body(G, M, []).
+is_pure_body(M:G) :-
+    is_pure_body(G, M, []).
 
 is_pure_body(G, _, _) :-
     var(G),
@@ -82,7 +84,11 @@ is_pure_body((A;B), M, Stack) :-
 is_pure_body(CallN, M, Stack) :-
     do_resolve_calln(CallN, Call),
     is_pure_body(Call, M, Stack).
-is_pure_body(Goal, M, Stack) :-
+is_pure_body(H, M, Stack) :-
+    ( predicate_property(M:H, meta_predicate(Meta))
+    ->qualify_meta_goal(M:H, Meta, Goal)
+    ; Goal = H
+    ),
     is_pure_pred(M:Goal, Stack).
 
 /*

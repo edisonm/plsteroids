@@ -144,6 +144,7 @@ replace_goal_hook(retract(_),    _, true).
 replace_goal_hook(assertz(_),    _, true).
 replace_goal_hook(asserta(_),    _, true).
 replace_goal_hook(assert( _),    _, true).
+replace_goal_hook(erase(  _),    _, true).
 replace_goal_hook(gtrace, _, true).
 replace_goal_hook(call_ai(G), abstract_interpreter, G).
 replace_goal_hook(eval_ai(G), abstract_interpreter, G).
