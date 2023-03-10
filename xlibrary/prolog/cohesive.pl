@@ -53,7 +53,7 @@
 
    This module provides support for cohesive predicates, those are like
    multifiles, but in order to use them, we need to import the predicates that
-   defines their clauses.  If two or more modules are imported, they are added
+   define their clauses.  If two or more modules are imported, they are added
    up.  This provides certain level of encapsulation, but at the same time
    allows extensibility.  It also pay attention to reexported modules so that
    clauses in reexported modules of cohesive predicates become available in the
@@ -77,7 +77,10 @@ aux_cohesive_module(M, F, A, CohM, CohesiveModule) :-
     CohesiveModule =.. [CT, CohM].
 
 aux_cohesive_pred(H, CohM, Scope, HExt) :-
-    extend_args('__aux_cohp_', H, [CohM, Scope], HExt).
+    H =.. [F|Args],
+    atom_concat('__aux_cohp_', F, FExt),
+    HExt =.. [FExt, CohM, Scope|Args].
+    % extend_args('__aux_cohp_', H, [CohM, Scope], HExt).
 
 aux_cohesive_wrap(H, CM, CohM, HWrp) :-
     extend_args('__aux_cohw_', H, [CM, CohM], HWrp).
