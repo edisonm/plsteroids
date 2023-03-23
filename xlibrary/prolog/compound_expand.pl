@@ -33,7 +33,7 @@
 */
 
 :- module(compound_expand,
-          [op(1, fx, '$compound_expand') % Used to detect expansion modules
+          [ op(1, fx, '$compound_expand') % Used to detect expansion modules
           ]).
 
 /* <module> Compound expansions
@@ -53,11 +53,13 @@
 */
 
 :- use_module(library(expansion_module)).
-:- use_module(library(remove_dups)).
+:- use_module(library(lists)).
+:- use_module(library(sort)).
 
 :- multifile
     system:term_expansion/4,
-    system:goal_expansion/4.
+    system:goal_expansion/4,
+    before/2.
 
 :- public implemented_pi/1.
 :- meta_predicate implemented_pi(:).
@@ -66,6 +68,12 @@ implemented_pi(M:F/A) :-
     % Can not use current_module/1 at this stage: --EMM
     once(predicate_property(M:H, visible)),
     \+ predicate_property(M:H, imported_from(_)).
+
+expansion_order(>, M1-_, M2-_) :-
+    before(M2, M1),
+    !.
+expansion_order(=, X, X) :- !.
+expansion_order(<, _, _).
 
 collect_expansors(M, ExpansorName, ML) :-
     findall(EM-PI,
@@ -80,8 +88,8 @@ collect_expansors(M, ExpansorName, ML) :-
                        )
                      ), PI),
               PI \= []
-            ), MD),
-    remove_dups(MD, ML).
+            ), MU),
+    predsort(expansion_order, MU, ML).
 
 type_expansors(term, term_expansion, call_term_expansion).
 type_expansors(goal, goal_expansion, call_goal_expansion).
@@ -114,6 +122,10 @@ compound_term_expansion(Term1, Pos1, Term, Pos) :-
       Pos  = Pos2
     ).
 
+system:term_expansion(:- before(B), [compound_expand:before(A, B)]) :-
+    '$current_source_module'(A).
+system:term_expansion(:- after(B), [compound_expand:before(B, A)]) :-
+    '$current_source_module'(A).
 system:term_expansion(Term1, Pos1, Term, Pos) :-
     \+ lock_compound,
     compound_term_expansion(Term1, Pos1, Term, Pos).
