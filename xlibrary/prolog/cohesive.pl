@@ -39,7 +39,8 @@
             call_cm/3,
             call_cm/5,
             op(1150, fx, cohesive_pred),
-            op(978, xfx, ::)
+            op(978, xfx, ::),
+            op(600, fx, ::)
           ]).
 
 :- use_module(library(apply)).
@@ -178,12 +179,16 @@ term_expansion((:- cohesive_pred PIs), ClauseL) :-
     prolog_load_context(module, CM),
     sequence_list(PIs, PIL, []),
     foldl(cohesive_pred_pi(CM), PIL, ClauseL, []).
-term_expansion(Scope :: Head :- Body, HeadExt :- Body) :-
+term_expansion(Scope::Head :- Body, HeadExt :- Body) :-
     scope_t(Scope),
     coh_head_expansion(Scope, Head, HeadExt).
-term_expansion(Scope :: Head, HeadExt) :-
+term_expansion(Scope::Head, HeadExt) :-
     scope_t(Scope),
     coh_head_expansion(Scope, Head, HeadExt).
+term_expansion((::Head :- Body), (HeadExt :- Body)) :-
+    coh_head_expansion(sexport, Head, HeadExt).
+term_expansion(::Head, HeadExt) :-
+    coh_head_expansion(sexport, Head, HeadExt).
 term_expansion((Head :- Body), (HeadExt :- Body)) :-
     coh_head_expansion(sexport, Head, HeadExt).
 term_expansion(Head, HeadExt) :-
