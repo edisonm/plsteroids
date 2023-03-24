@@ -138,6 +138,11 @@ cu_caller_hook(Caller, Head, CM, Type, Goal, _, From) :-
 collect_unused(M, MGoal, Caller, From) :-
     record_location_meta(MGoal, M, From, all_call_refs, cu_caller_hook(Caller)).
 
+:- public record_head_deps/2.
+record_head_deps(Head, _) :-
+    forall(calls_to_hook(Head, M, Called),
+           record_calls_to(Head, M, Called)).
+
 mark_compile_time_called :-
     forall(distinct(M:H,
                     ( compile_time_called(H, M, C),
@@ -167,7 +172,3 @@ collect_calls_to(Options1, MFileD) :-
     option_module_files(Options, MFileD),
     walk_code([module_files(MFileD)|Options]),
     mark_compile_time_called.
-
-record_head_deps(Head, _) :-
-    forall(calls_to_hook(Head, M, Called),
-           record_calls_to(Head, M, Called)).
