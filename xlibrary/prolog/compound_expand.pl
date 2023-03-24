@@ -33,7 +33,9 @@
 */
 
 :- module(compound_expand,
-          [ op(1, fx, '$compound_expand') % Used to detect expansion modules
+          [ before/1,
+            after/1,
+            op(1, fx, '$compound_expand') % Used to detect expansion modules
           ]).
 
 /* <module> Compound expansions
@@ -60,6 +62,10 @@
     system:term_expansion/4,
     system:goal_expansion/4,
     before/2.
+
+before(_).
+
+after(_).
 
 :- public implemented_pi/1.
 :- meta_predicate implemented_pi(:).
