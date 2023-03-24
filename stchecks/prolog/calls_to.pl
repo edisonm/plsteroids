@@ -55,6 +55,9 @@
     calls_to_clause/3,
     calls_to_predid/4.
 
+:- multifile
+    calls_to_hook/3.
+
 cleanup_calls_to :-
     retractall(calls_to_public(_, _)),
     retractall(calls_to_exported(_, _)),
@@ -114,10 +117,11 @@ cu_caller_hook(Caller, Head, CM, Type, Goal, _, From) :-
     ->compact_goal(Goal, Comp),
       record_location_goal(Head, M, Type, CM, Comp, From)
     ; Caller = '<assertion>'(A:H),
-      member(Goal, [foreign_props:fimport(_),
-                    foreign_props:fimport(_, _),
-                    foreign_props:tgen(_),
-                    foreign_props:sgen(_)])
+      member(Goal, [ foreign_props:fimport(_),
+                     foreign_props:fimport(_, _),
+                     foreign_props:tgen(_),
+                     foreign_props:sgen(_)
+                   ])
     ->( A \= CM
       ->record_calls_to('<exported>', A, H)
       ; record_calls_to('<public>',   A, H)
@@ -157,8 +161,13 @@ collect_calls_to(Options1, MFileD) :-
     merge_options(Options2,
                   [source(false), % False, otherwise this will not work
                    method(Method),
-                   on_trace(collect_unused(M))
+                   on_trace(collect_unused(M)),
+                   on_head(record_head_deps)
                   ], Options),
     option_module_files(Options, MFileD),
     walk_code([module_files(MFileD)|Options]),
     mark_compile_time_called.
+
+record_head_deps(Head, _) :-
+    forall(calls_to_hook(Head, M, Called),
+           record_calls_to(Head, M, Called)).
