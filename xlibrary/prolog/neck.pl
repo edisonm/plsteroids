@@ -49,7 +49,7 @@
 :- use_module(library(ordsets)).
 :- use_module(library(solution_sequences)).
 :- use_module(library(compound_expand)).
-:- use_module(library(ontrace)).
+:- reexport(library(checkct)).
 
 :- multifile file_clause:head_calls_hook/5.
 
@@ -101,7 +101,6 @@ neckis.
 neckis --> [].
 
 :- thread_local
-    issue_found/5,
     head_calls_hook_db/5.
 
 current_seq_lit(Seq, Lit, Left, Right) :-
@@ -130,6 +129,9 @@ assign_value(A, V) -->
     ).
 
 neck_prefix('__aux_neck_').
+
+call_checks(File, Line, Call, HasCP) :-
+    has_choicepoints(call_checkct(Call, File, Line, []), nb_setarg(1, HasCP, no)).
 
 term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
     \+ ( nonvar(Head),
@@ -265,11 +267,6 @@ warning_nocp(File, Line, M, H, Term) :-
             file(File, Line, -1, _),
             format("Ignored neck on ~w, since it could cause performance degradation (~w)", [M:H, Term]))).
 
-in_module_file :-
-    '$current_source_module'(M),
-    module_property(M, file(File)),
-    prolog_load_context(source, File).
-
 term_expansion((Head :- Body), ClauseL) :-
     term_expansion_hb(Head, Body, NB, (Head :- NB), ClauseL).
 term_expansion((Head --> Body), ClauseL) :-
@@ -281,53 +278,6 @@ term_expansion((:- Body), ClauseL) :-
     term_expansion_hb('<declaration>', Body, NB, (:- NB), ClauseL).
 term_expansion(end_of_file, ClauseL) :-
     in_module_file,
-    forall(distinct([File, Line, Issues, PI, Loc],
-                    ( retract(issue_found(File, Line, Issues, PI, Loc1)),
-                      clause_pc_location(Loc1, Loc)
-                    )),
-           print_message(
-               warning,
-               at_location(
-                   file(File, Line, -1, _),
-                   at_location(
-                       Loc,
-                       format("~w ~w called at compile time", [Issues, PI]))))),
     findall(file_clause:head_calls_hook(Head, M, Body, File, Line),
             retract(head_calls_hook_db(Head, M, Body, File, Line)),
-           ClauseL, [end_of_file]).
-
-clause_pc_location(clause_pc(Clause, PC), Loc) :-
-    clause_pc_location(Clause, PC, Loc),
-    !.
-clause_pc_location(Loc, Loc).
-
-call_checks(File, Line, Call, HasCP) :-
-    has_choicepoints(ontrace(Call, handle_port(File, Line), []), nb_setarg(1, HasCP, no)).
-
-% Note: this is not called by make/0, since it is wrapped by notrace/1, you
-% should use make:make_no_trace/0 instead --EMM
-
-handle_port(File, Line, call, Frame, _, _, Loc, continue) :-
-    prolog_frame_attribute(Frame, goal, Goal),
-    ( findall(Issue,
-              ( member(Issue, [multifile, dynamic]),
-                predicate_property(Goal, Issue)
-              ), IssueL),
-      IssueL \= [],
-      atomic_list_concat(IssueL, ',', Issues),
-      strip_module(Goal, M, Call),
-      functor(Call, F, A),
-      PI = M:F/A
-    ; strip_module(Goal, _, Call),
-      functor(Call, F, _),
-      neck_prefix(NeckPrefix),
-      atom_concat(NeckPrefix, _, F),
-      Issues = 'already necked',
-      once(( prolog_frame_attribute(Frame, parent, Parent),
-             prolog_frame_attribute(Parent, predicate_indicator, PI)
-           ; prolog_frame_attribute(Frame, predicate_indicator, PI)
-           ))
-    ),
-    retractall(issue_found(File, Line, Issues, PI, Loc)),
-    assertz(issue_found(File, Line, Issues, PI, Loc)),
-    fail.
+            ClauseL, [end_of_file]).
