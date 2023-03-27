@@ -39,7 +39,7 @@
 :- use_module(library(lists)).
 :- use_module(library(apply)).
 :- use_module(library(error)).
-:- use_module(library(compound_expand)).
+:- reexport(library(compound_expand)).
 
 :- multifile
     '$interface'/1,

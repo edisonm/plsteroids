@@ -34,7 +34,7 @@
 
 :- module(i18n_expansion, []).
 
-:- use_module(library(compound_expand)).
+:- reexport(library(compound_expand)).
 :- reexport(library(i18n/i18n_op)).
 :- use_module(library(i18n/i18n_support)).
 

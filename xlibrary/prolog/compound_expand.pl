@@ -51,6 +51,10 @@
    SWI-Prolog  can be  achieved smoothly  and such  modules can  be used  in SWI
    Programs that do not require the Ciao dialect.
 
+   Note:  Use  reexport(library(compound_expand))  in  order for  this  to  work
+   efficiently, otherwise you will have to import compound_expand on each of the
+   dependent expansions.
+
 @author Edison Mera
 */
 

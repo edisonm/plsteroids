@@ -41,7 +41,7 @@
 :- use_module(library(lists)).
 :- use_module(library(neck)).
 :- use_module(library(codegen)).
-:- use_module(library(compound_expand)).
+:- reexport(library(compound_expand)).
 :- use_module(library(change_alias)).
 :- reexport(library(interface)).
 

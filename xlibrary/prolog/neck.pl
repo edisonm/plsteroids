@@ -48,6 +48,8 @@
 :- use_module(library(statistics)).
 :- use_module(library(ordsets)).
 :- use_module(library(solution_sequences)).
+:- reexport(library(compound_expand)).
+:- reexport(library(checkct)).
 :- use_module(library(compound_expand)).
 :- reexport(library(checkct)).
 
