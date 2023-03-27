@@ -60,7 +60,9 @@
 
 :- use_module(library(expansion_module)).
 :- use_module(library(lists)).
+:- use_module(library(option)).
 :- use_module(library(sort)).
+:- use_module(library(partsort)).
 
 :- multifile
     system:term_expansion/4,
@@ -80,10 +82,28 @@ implemented_pi(M:F/A) :-
     \+ predicate_property(M:H, imported_from(_)).
 
 expansion_order(>, M1-_, M2-_) :-
-    before(M2, M1),
+    expansion_order_gt(M1, M2),
     !.
 expansion_order(=, X, X) :- !.
-expansion_order(<, _, _).
+
+% Control the expansion orders via reexport, i.e., first the transformations in
+% the current library and later the transformation in the reexported one.
+expansion_order_gt(M1, M2) :-
+    before(M2, M1), % let programmers decide
+    !.
+expansion_order_gt(M1, M2) :-
+    module_property(M1, file(File)),
+    current_op(1, fx, M1:'$compound_expand'),
+    '$load_context_module'(File, M2, Options),
+    option(reexport(true), Options),
+    !.
+expansion_order_gt(M, M2) :-
+    '$load_context_module'(File1, M2, Options),
+    option(reexport(true), Options),
+    module_property(M1, file(File1)),
+    current_op(1, fx, M1:'$compound_expand'),
+    expansion_order_gt(M, M1),
+    !.
 
 collect_expansors(M, ExpansorName, ML) :-
     findall(EM-PI,
@@ -99,7 +119,7 @@ collect_expansors(M, ExpansorName, ML) :-
                      ), PI),
               PI \= []
             ), MU),
-    predsort(expansion_order, MU, ML).
+    partsort(expansion_order, MU, ML).
 
 type_expansors(term, term_expansion, call_term_expansion).
 type_expansors(goal, goal_expansion, call_goal_expansion).
