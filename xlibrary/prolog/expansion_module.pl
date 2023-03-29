@@ -33,8 +33,10 @@
 */
 
 :- module(expansion_module,
-          [expansion_module/2,
-           is_expansion_module/1]).
+          [ expanded_module/2,
+            expansion_module/2,
+            is_expansion_module/1
+          ]).
 
 :- use_module(library(option)).
 
@@ -67,6 +69,21 @@ expansion_module_rec(M, EM) :-
 
 is_expansion_module(EM) :-
     current_op(1, fx, EM:'$compound_expand'),
-    CM = compound_expand,
-    module_property(CM, file(CF)),
-    '$load_context_module'(CF, EM, _).
+    '$load_context_module'(File, EM, Opts),
+    option(reexport(true), Opts),
+    module_property(CM, file(File)),
+    current_op(1, fx, CM:'$compound_expand'),
+    !.
+
+expanded_module(EM, M) :-
+    is_expansion_module(EM),
+    expanded_module_rec(EM, M).
+
+expanded_module_rec(EM, M) :-
+    module_property(EM, file(File)),
+    '$load_context_module'(File, CM, Opts),
+    ( M = CM
+    ; option(reexport(true), Opts),
+      current_op(1, fx, CM:'$compound_expand'),
+      expanded_module_rec(CM, M)
+    ).
