@@ -44,6 +44,7 @@
 :- use_module(library(prolog_codewalk),  []). % for message_location
 :- use_module(library(filtered_backtrace)).
 :- use_module(library(intercept)).
+:- use_module(library(rtchecks), [with_rtchecks/1]).
 
 :- multifile
     prolog:message_location//1.
