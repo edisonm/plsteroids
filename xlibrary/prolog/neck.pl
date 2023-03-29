@@ -50,8 +50,6 @@
 :- use_module(library(solution_sequences)).
 :- reexport(library(compound_expand)).
 :- reexport(library(checkct)).
-:- use_module(library(compound_expand)).
-:- reexport(library(checkct)).
 
 :- multifile file_clause:head_calls_hook/5.
 

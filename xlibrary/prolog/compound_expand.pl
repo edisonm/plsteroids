@@ -53,7 +53,7 @@
 
    Note:  Use  reexport(library(compound_expand))  in  order for  this  to  work
    efficiently, otherwise you will have to import compound_expand on each of the
-   dependent expansions.
+   dependent expansions, but also avoid to do it in the user module.
 
 @author Edison Mera
 */
@@ -159,3 +159,4 @@ system:term_expansion(:- after(B), [compound_expand:before(B, A)]) :-
 system:term_expansion(Term1, Pos1, Term, Pos) :-
     \+ lock_compound,
     compound_term_expansion(Term1, Pos1, Term, Pos).
+                      
