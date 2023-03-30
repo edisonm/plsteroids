@@ -46,6 +46,7 @@
 :- use_module(library(neck)).
 :- use_module(library(assertions)).
 :- use_module(library(metaprops)).
+:- use_module(library(ppntprops)).
 :- use_module(library(prolog_wrap)).
 :- use_module(library(rtcprops), []).
 :- use_module(library(ctrtchecks)).
