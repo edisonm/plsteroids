@@ -72,7 +72,7 @@ is_expansion_module(EM) :-
     '$load_context_module'(File, EM, Opts),
     option(reexport(true), Opts),
     module_property(CM, file(File)),
-    current_op(1, fx, CM:'$compound_expand'),
+    CM = compound_expand,
     !.
 
 expanded_module(EM, M) :-
