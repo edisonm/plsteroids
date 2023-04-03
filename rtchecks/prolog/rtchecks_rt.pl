@@ -51,6 +51,7 @@
              '$with_gloc'/2,
              '$with_ploc'/2,
              check_call/3]).
+:- init_expansors.
 
 /** <module> Predicates that are required to implement run-time checks
 

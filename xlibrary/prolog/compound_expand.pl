@@ -35,6 +35,7 @@
 :- module(compound_expand,
           [ before/1,
             after/1,
+            init_expansors/0,
             op(1, fx, '$compound_expand') % Used to detect expansion modules
           ]).
 
@@ -61,7 +62,6 @@
 :- use_module(library(expansion_module)).
 :- use_module(library(lists)).
 :- use_module(library(option)).
-:- use_module(library(sort)).
 :- use_module(library(partsort)).
 
 :- multifile
@@ -105,7 +105,7 @@ expansion_order_gt(M, M2) :-
     expansion_order_gt(M, M1),
     !.
 
-collect_expansors(M, ExpansorName, ML) :-
+collect_expansors(ExpansorName, M, ML) :-
     findall(EM-PI,
             ( expansion_module(M, EM),
               phrase(( ( {implemented_pi(EM:ExpansorName/4)}
@@ -124,11 +124,25 @@ collect_expansors(M, ExpansorName, ML) :-
 type_expansors(term, term_expansion, call_term_expansion).
 type_expansors(goal, goal_expansion, call_goal_expansion).
 
+:- multifile init_expansion_decl_optional/0.
+
+% init_expansion_decl_optional.
+
+module_expansors(M, Type, ML) :-
+    '$defined_predicate'(M:'$module_expansors'(_, _)),
+    M:'$module_expansors'(Type, ML).
+:- if(init_expansion_decl_optional).
+module_expansors(M, Type, ML) :-
+    type_expansors(Type, Expansor, _),
+    collect_expansors(Expansor, M, ML).
+:- endif.
+
 do_compound_expansion(M, Type, Term1, Pos1, Term, Pos) :-
     \+ current_prolog_flag(xref, true),
-    type_expansors(Type, Expansor, Closure),
-    collect_expansors(M, Expansor, ML),
-    call('$expand':Closure, ML, Term1, Pos1, Term, Pos), !.
+    type_expansors(Type, _, Closure),
+    once(module_expansors(M, Type, ML)),
+    call('$expand':Closure, ML, Term1, Pos1, Term, Pos),
+    !.
 
 do_compound_expansion(Type, Term1, Pos1, Term, Pos) :-
     '$current_source_module'(M),
@@ -145,18 +159,57 @@ compound_term_expansion(Term1, Pos1, Term, Pos) :-
     \+ (Term1 =@= Term2),
     % continue with other expansions:
     ( setup_call_cleanup(assertz(lock_compound),
-                         '$expand':expand_terms(call_term_expansion([system-[term_expansion/4]]), Term2, Pos2, Term, Pos),
+                         '$expand':expand_terms(call_term_expansion([system-[term_expansion/4], system-[term_expansion/2]]), Term2, Pos2, Term, Pos),
                          retractall(lock_compound))
     ->true
     ; Term = Term2,
       Pos  = Pos2
     ).
 
+%!  init_expansors is det.
+%
+%   Declaration to say that the compound expansion definition has finish and now
+%   the expansions can begin.  This is required to speed up the compilation,
+%   since the predicate collect_expansors/3 is expensive but its solution
+%   doesn't change once no more expansors are added.
+%
+%   @note: Perhaps we will need something like stop_expansors in the future.
+
+init_expansors.
+
+:- if(init_expansion_decl_optional).
+no_more_expansions_after_init(Source) :-
+    type_expansors(Type, Expansor, _),
+    collect_expansors(Expansor, Source, TN),
+    ( '$defined_predicate'(Source:'$module_expansors'(_, _))
+    ->Source:'$module_expansors'(Type, TL),
+      TL \= TN,
+      subtract(TN, TL, EL),
+      print_message(warning, format("More expansors added after :- init_expansors declaration: ~w", [EL]))
+    ; TN \= []
+    ->print_message(warning, format("Missing :- init_expansors declaration, but expansors present: ~w", [TN]))
+    ).
+
+system:term_expansion(end_of_file, _) :-
+    '$current_source_module'(Source),
+    module_property(Source, file(File)),
+    prolog_load_context(source, File),
+    no_more_expansions_after_init(Source),
+    fail.
+:- endif.
 system:term_expansion(:- before(B), [compound_expand:before(A, B)]) :-
     '$current_source_module'(A).
 system:term_expansion(:- after(B), [compound_expand:before(B, A)]) :-
     '$current_source_module'(A).
+system:term_expansion((:- init_expansors),
+                      [ (:- volatile '$module_expansors'/2),
+                        '$module_expansors'(term, TL),
+                        '$module_expansors'(goal, GL)
+                      ]) :-
+    '$current_source_module'(Source),
+    collect_expansors(term_expansion, Source, TL),
+    collect_expansors(goal_expansion, Source, GL).
+
 system:term_expansion(Term1, Pos1, Term, Pos) :-
     \+ lock_compound,
     compound_term_expansion(Term1, Pos1, Term, Pos).
-                      

@@ -52,6 +52,7 @@
 :- use_module(library(ungroup_keys_values)).
 :- use_module(library(condconc)).
 :- use_module(library(calls_to)).
+:- init_expansors.
 
 /** <module> Check unused predicates
 

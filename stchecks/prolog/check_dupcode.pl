@@ -49,6 +49,7 @@
 :- use_module(library(location_utils)).
 :- use_module(library(option_utils)).
 :- use_module(library(ungroup_keys_values)).
+:- init_expansors.
 
 :- multifile
     prolog:message//1,

@@ -47,6 +47,8 @@ performance.
 :- use_module(library(apply)).
 :- use_module(library(lists)).
 :- use_module(library(occurs)).
+:- init_expansors.
+
 % Next module will require the installation of lambda package, comment it out if
 % you only want compiled lambda expressions:
 

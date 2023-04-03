@@ -12,6 +12,7 @@
 :- use_module(library(foreign/foreign_generator)).
 :- use_module(library(foreign/foreign_interface)).
 :- use_module(library(foreign/foreign_props)).
+:- init_expansors.
 % :- extra_compiler_opts('-O2 -gdwarf-2 -g3 -lmpfr').
 :- extra_compiler_opts('-lmpfr -lgmp').
 :- use_foreign_header('pl-floatn').

@@ -43,6 +43,7 @@
 :- use_module(library(assertions)).
 :- use_module(library(codewalk)).
 :- use_module(library(from_utils)).
+:- init_expansors.
 
 :- dynamic
     deprecated_db/6.

@@ -1,6 +1,7 @@
 :- module(mqu, [mqu/1, queens/1]).
 
 :- use_module(library(andorra)).
+:- init_expansors.
 
 :- determinate(queens(_),true).
 :- determinate(zero(A),nonvar(A)).

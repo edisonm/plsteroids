@@ -42,6 +42,7 @@
 
 :- use_module(library(clambda)).
 :- use_module(library(mapnargs)).
+:- init_expansors.
 
 :- meta_predicate
     mapargs(1,+),

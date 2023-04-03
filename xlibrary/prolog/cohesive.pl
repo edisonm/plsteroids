@@ -49,6 +49,7 @@
 :- use_module(library(option)).
 :- use_module(library(sequence_list)).
 :- reexport(library(compound_expand)).
+:- init_expansors.
 
 /* <module> Cohesive predicates
 

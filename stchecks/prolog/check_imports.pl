@@ -45,6 +45,7 @@
 :- use_module(library(option_utils)).
 :- use_module(library(location_utils)).
 :- use_module(library(module_files)).
+:- init_expansors.
 
 :- multifile
     prolog:message//1.

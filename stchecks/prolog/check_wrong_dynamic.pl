@@ -52,6 +52,7 @@
 :- use_module(library(option_utils)).
 :- use_module(library(compact_goal)).
 :- use_module(library(from_utils)).
+:- init_expansors.
 
 :- multifile
     prolog:message//1,

@@ -4,6 +4,7 @@
 
 :- use_module(library(assertions)).
 :- use_module(library(extend_args)).
+:- init_expansors.
 
 :- global evaluable/1.
 

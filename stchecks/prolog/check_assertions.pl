@@ -55,6 +55,7 @@
 :- use_module(library(ctrtchecks)).
 :- use_module(library(rtchecks_rt)).
 :- use_module(library(rtchecks_utils), []).
+:- init_expansors.
 
 :- dynamic
        violations_db/3.

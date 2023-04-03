@@ -3,6 +3,7 @@
            intf_meta/2]).
 
 :- use_module(library(interface)).
+:- init_expansors.
 
 :- interface.
 

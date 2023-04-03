@@ -1,6 +1,8 @@
 :- module(fib,[fib/2]).
 
 :- use_module(library(andorra)).
+:- init_expansors.
+
 :- determinate(fib(X,Y),(nonvar(X);(nonvar(Y),Y \== 1))).
 
 fib(0,1).

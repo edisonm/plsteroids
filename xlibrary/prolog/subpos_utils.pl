@@ -44,6 +44,7 @@
 
 :- use_module(library(lists)).
 :- use_module(library(neck)).
+:- init_expansors.
 
 :- meta_predicate
         subterm_location(1,+,?),

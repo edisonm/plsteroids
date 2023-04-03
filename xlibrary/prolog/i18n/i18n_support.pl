@@ -61,6 +61,7 @@
 :- use_module(library(language_iso)).
 :- use_module(library(i18n/i18n_op)).
 :- use_module(library(i18n/i18n_parser)).
+:- init_expansors.
 
 /*
 

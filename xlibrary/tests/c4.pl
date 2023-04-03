@@ -1,6 +1,7 @@
 :- module(c4, [q/1]).
 
 :- use_module(c2).
+:- init_expansors.
 
 q(X) :-
     p1(X).

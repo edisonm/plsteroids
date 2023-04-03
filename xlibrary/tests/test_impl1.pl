@@ -1,6 +1,7 @@
 :- module(test_impl1, []).
 
 :- use_module(library(interface)).
+:- init_expansors.
 
 :- implements(test_intf).
 

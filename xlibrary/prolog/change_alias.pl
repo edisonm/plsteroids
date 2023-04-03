@@ -36,6 +36,7 @@
 
 :- use_module(library(aggregate)).
 :- use_module(library(clambda)).
+:- init_expansors.
 
 :- meta_predicate change_alias(2,+,-).
 change_alias(Changer, Alias1, Alias) :-

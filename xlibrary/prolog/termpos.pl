@@ -38,6 +38,7 @@
 :- use_module(library(apply)).
 :- use_module(library(lists)).
 :- use_module(library(transpose)).
+:- init_expansors.
 
 :- multifile '$add_termpos'/4.
 

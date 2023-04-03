@@ -4,6 +4,7 @@
 :- module(money, [money/0, go/0]).
 
 :- use_module(library(andorra)).
+:- init_expansors.
 
 :- determinate(test, true).
 :- determinate(go, true).

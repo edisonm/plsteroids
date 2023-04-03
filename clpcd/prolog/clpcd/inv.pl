@@ -46,8 +46,9 @@
 :- use_module(library(clpcd/domain_ops)).
 :- use_module(library(clpcd/nf)).
 :- use_module(library(clpcd/dump)).
+:- init_expansors.
 
-		 /*******************************
+/*******************************
 		 *	 TOPLEVEL PRINTING	*
 		 *******************************/
 

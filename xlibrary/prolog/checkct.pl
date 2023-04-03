@@ -42,6 +42,7 @@
 :- use_module(library(ontrace)).
 :- use_module(library(option)).
 :- use_module(library(solution_sequences)).
+:- init_expansors.
 
 :- thread_local
     issue_found/5.

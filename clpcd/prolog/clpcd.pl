@@ -57,6 +57,7 @@
 :- reexport(library(clpcd/ordering),   [clp_type/2]).
 :- reexport(library(clpcd/ordering),   [ordering/1]).
 :- reexport(library(clpcd/domain_ops), [set_clpcd/1]).
+:- init_expansors.
 
 inf(Expression, Inf) :-
     active_clpcd(D),

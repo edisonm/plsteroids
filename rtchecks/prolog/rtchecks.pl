@@ -53,6 +53,7 @@
 :- use_module(system:library(rtchecks_rt)).
 :- use_module(library(qualify_meta_goal)).
 :- use_module(library(group_pairs_or_sort)).
+:- init_expansors.
 
 :- multifile
     prolog:rename_predicate/2.

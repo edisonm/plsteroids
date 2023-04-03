@@ -57,6 +57,7 @@
 :- use_module(library(context_values)).
 :- use_module(library(rtcprops)).
 :- use_module(library(metaprops)).
+:- init_expansors.
 
 :- meta_predicate checkif_modl(?, ?, 0, ?, 0).
 checkif_modl(M, M,    _,    _, Goal) :- !, call(Goal).

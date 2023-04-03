@@ -45,6 +45,7 @@
 :- use_module(library(option_utils)).
 :- use_module(library(compact_goal)).
 :- use_module(library(compilation_module)).
+:- init_expansors.
 
 :- dynamic
     calls_to_public/2,

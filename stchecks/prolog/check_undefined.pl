@@ -48,6 +48,7 @@
 :- use_module(library(referenced_by)).
 :- use_module(library(extra_location)).
 :- use_module(library(group_pairs_or_sort)).
+:- init_expansors.
 
 :- multifile
     prolog:message//1.

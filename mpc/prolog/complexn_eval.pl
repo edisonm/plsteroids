@@ -40,6 +40,8 @@
 :- use_module(library(compare_eq)).
 :- use_module(library(list_sequence)).
 :- use_module(library(complexn_desc)).
+:- init_expansors.
+
 :- include(library(floatn_reserve_eps)).
 
 cd_prefix(complexn(R, I), complexn, [R, I]).

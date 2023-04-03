@@ -11,6 +11,7 @@
 :- use_module(library(foreign/foreign_interface)).
 :- use_module(library(foreign/foreign_props)).
 :- use_module(library(libfloatn), []).
+:- init_expansors.
 % :- extra_compiler_opts('-O2 -gdwarf-2 -g3 -lmpfr').
 :- extra_compiler_opts('-lmpc -lmpfr -lgmp').
 :- include_foreign_dir('../../mpfr/prolog').

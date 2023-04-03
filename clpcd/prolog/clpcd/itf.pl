@@ -55,6 +55,7 @@
 :- use_module(library(clpcd/nf)).
 :- use_module(library(clpcd/store)).
 :- use_module(library(clpcd/solve)).
+:- init_expansors.
 
 % ----------------------------------- dump ------------------------------------
 

@@ -6,6 +6,7 @@
 :- use_module(library(clpcd/nf)).
 :- use_module(library(clpcd/inv)).
 :- use_module(library(arithex)).
+:- init_expansors.
 
 :- meta_predicate cdqr_eval_d(+,?).
 

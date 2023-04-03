@@ -51,6 +51,7 @@
 :- use_module(library(plprops)).
 :- use_module(library(foreign/foreign_interface)).
 :- use_module(library(foreign/foreign_props)).
+:- init_expansors.
 % Note: We will let the parameters as default
 :- extra_compiler_opts('-DDECIMAL_CALL_BY_REFERENCE=1 -DDECIMAL_GLOBAL_ROUNDING=1 -DDECIMAL_GLOBAL_EXCEPTION_FLAGS=1 -fPIC').
 :- library_foreign_dir(idfpml/'LIBRARY').

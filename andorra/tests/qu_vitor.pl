@@ -1,6 +1,7 @@
 :- module(qu_vitor, [run/2]).
 
 :- use_module(library(andorra)).
+:- init_expansors.
 
 :- determinate(snint(A),nonvar(A)).
 :- determinate(safe(_,_,C),nonvar(C)).

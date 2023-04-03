@@ -51,6 +51,8 @@
 :- reexport(library(compound_expand)).
 :- reexport(library(checkct)).
 
+:- init_expansors.
+
 :- multifile file_clause:head_calls_hook/5.
 
 %!  neck        is det.

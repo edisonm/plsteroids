@@ -46,6 +46,7 @@
 :- use_module(library(lists)).
 :- use_module(library(neck)).
 :- use_module(library(extend_args)).
+:- init_expansors.
 
 :- meta_predicate mapnlist(1, ?).
 :- meta_predicate mapnlist(2, ?, ?).

@@ -1,6 +1,7 @@
 :- module(mutest, [mutest/0]).
 
 :- use_module(library(andorra)).
+:- init_expansors.
 
 :- determinate( test, true ).
 :- determinate( rule1(_,_), true ).

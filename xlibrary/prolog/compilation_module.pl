@@ -44,6 +44,7 @@
 :- use_module(library(lists)).
 :- use_module(library(sequence_list)).
 :- reexport(library(compound_expand)).
+:- init_expansors.
 
 :- meta_predicate
         compilation_module(:),

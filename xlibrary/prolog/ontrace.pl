@@ -46,6 +46,7 @@
 :- use_module(library(prolog_source)).
 :- use_module(library(clambda)).
 :- use_module(library(call_inoutex)).
+:- init_expansors.
 
 :- meta_predicate ontrace(0,6,:).
 

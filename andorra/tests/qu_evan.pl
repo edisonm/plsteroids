@@ -1,6 +1,7 @@
 :- module(qu_evan, [queen/2]).
 
 :- use_module(library(andorra)).
+:- init_expansors.
 
 test:- queen(8,_), fail.
 

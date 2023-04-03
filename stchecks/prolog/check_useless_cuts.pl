@@ -50,6 +50,7 @@
 :- use_module(library(checkable_predicate)).
 :- use_module(library(checker)).
 :- use_module(library(check), []).
+:- init_expansors.
 
 :- multifile
     prolog:message//1,

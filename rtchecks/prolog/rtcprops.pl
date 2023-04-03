@@ -37,6 +37,7 @@
 :- use_module(library(assertions)).
 :- use_module(library(metaprops)).
 :- use_module(library(globprops)).
+:- init_expansors.
 
 :- true comp [functor/3,
               predicate_property/2,

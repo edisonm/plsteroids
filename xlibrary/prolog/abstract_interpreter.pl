@@ -55,6 +55,9 @@
 :- use_module(library(term_size)).
 :- use_module(library(terms_share)).
 :- use_module(library(neck)).
+:- use_module(library(interface), []).
+
+:- init_expansors.
 
 /** <module> An abstract interpreter
 
@@ -309,7 +312,7 @@ bottom(state(Loc, EvalL, OnErr, CallL, D, Cont, _),
 %   Like abstract_interpret(M:Goal,  Abstraction, Options, State),  where State1
 %   is determined using  Options, but intended to be  called recursivelly during
 %   the interpretation.
-            
+
 abstract_interpreter_body(Goal, M, _) -->
     {var(Goal) ; var(M)}, bottom, !.
 abstract_interpreter_body(M:Goal, _, Abs) -->
@@ -628,11 +631,9 @@ match_head_body(MGoal, CMBody, From) :-
       CMBody = CM:Body
     ).
 
-:- use_module(library(interface), []).
-
 extra_clauses(M:Goal, Body, From) :-
     extra_clauses(Goal, M, Body, From).
-    
+
 %!  extra_clauses(Goal, Module, :Body, -From) is multi.
 %
 %   Called   inside  match_head_body/3   to  increase   the  precision   of  the

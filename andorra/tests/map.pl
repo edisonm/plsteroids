@@ -1,6 +1,7 @@
 :- module(map, [test/1,test_all/1]).
 
 :- use_module(library(andorra)).
+:- init_expansors.
 
 :- determinate(test_all(A),nonvar(A)).
 :- determinate(next(A,B),(nonvar(A),nonvar(B))).

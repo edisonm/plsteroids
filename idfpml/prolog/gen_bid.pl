@@ -40,6 +40,7 @@
 :- use_module(library(lists)).
 :- use_module(library(assertions)).
 :- use_module(library(bid_desc)).
+:- init_expansors.
 
 gen_bid :-
     absolute_file_name(plbin('.'), Dir, [file_type(directory), access(exist)]),

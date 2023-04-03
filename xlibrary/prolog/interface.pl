@@ -40,6 +40,7 @@
 :- use_module(library(apply)).
 :- use_module(library(error)).
 :- reexport(library(compound_expand)).
+:- init_expansors.
 
 :- multifile
     '$interface'/1,

@@ -1,6 +1,7 @@
 :- module(dia_sums, [dia_sums/0, member/3]).
 
 :- use_module(library(andorra)).
+:- init_expansors.
 
 :- determinate(dia_sums,true).
 

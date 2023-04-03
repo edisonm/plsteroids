@@ -1,10 +1,13 @@
 :- begin_tests(clpcd).
 
+:- init_expansors.
+
 :- [mip].
 
 test(entailed) :-
     {A =< 4},
-    entailed(A=\=5).
+    entailed(A=\=5),
+    !.
 
 test(entailed) :-
     {A =< 4},
