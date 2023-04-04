@@ -132,8 +132,21 @@ assign_value(A, V) -->
 
 neck_prefix('__aux_neck_').
 
-call_checks(File, Line, Call, HasCP) :-
-    has_choicepoints(call_checkct(Call, File, Line, []), nb_setarg(1, HasCP, no)).
+neck_needs_check(neck,         true).
+neck_needs_check(necki,        true).
+neck_needs_check(neck(  _, _), true).
+neck_needs_check(necki( _, _), true).
+neck_needs_check(necks,        fail).
+neck_needs_check(necks( _, _), fail).
+neck_needs_check(neckis,       fail).
+neck_needs_check(neckis(_, _), fail).
+
+call_checks(Neck, File, Line, Call, HasCP) :-
+    neck_needs_check(Neck, Check),
+    has_choicepoints(do_call_checks(Check, File, Line, Call), nb_setarg(1, HasCP, no)).
+
+do_call_checks(true, File, Line, Call) :- call_checkct(Call, File, Line, []).
+do_call_checks(fail, _,    _,    Call) :- call(Call).
 
 term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
     \+ ( nonvar(Head),
@@ -178,7 +191,7 @@ term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
       conj(LRight, SepHead, NeckBody),
       strip_module(M:Head, MH, Pred),
       freeze(Pred, assertz(head_calls_hook_db(Pred, MH, Expanded, File, Line), Ref)),
-      findall(t(Pattern, Head), call_checks(File, Line, Expanded, HasCP), ClausePIL),
+      findall(t(Pattern, Head), call_checks(Neck, File, Line, Expanded, HasCP), ClausePIL),
       ( '$get_predicate_attribute'(M:SepHead, defined, 1),
         '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
       ->true
@@ -202,7 +215,7 @@ term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
     ; expand_goal(M:Right, M:NeckBody),
       strip_module(M:Head, MH, Pred),
       freeze(Pred, assertz(head_calls_hook_db(Pred, MH, Expanded, File, Line), Ref)),
-      findall(t(Pattern, Head), call_checks(File, Line, Expanded, HasCP), ClausePIL),
+      findall(t(Pattern, Head), call_checks(Neck, File, Line, Expanded, HasCP), ClausePIL),
       RTHead = Head,
       ClauseL1 = []
     ),
