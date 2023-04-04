@@ -44,7 +44,6 @@
 :- use_module(library(near_utils)).
 :- use_module(library(cdqr), []).
 :- reexport(library(clpcd)).
-:- init_expansors.
 
 clpcd_domain_ops:clpcd_module(cdr, cdr).
 
