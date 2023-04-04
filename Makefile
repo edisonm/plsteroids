@@ -44,6 +44,7 @@ patches:
 push:
 	git checkout bin/
 	git push
+	git subrepo clean --all
 	for i in `git subrepo status -q` ; do \
 	  git subrepo push $${i} ; \
 	done
