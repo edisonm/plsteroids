@@ -36,6 +36,7 @@
           [ before/1,
             after/1,
             init_expansors/0,
+            stop_expansors/0,
             op(1, fx, '$compound_expand') % Used to detect expansion modules
           ]).
 
@@ -173,9 +174,12 @@ compound_term_expansion(Term1, Pos1, Term, Pos) :-
 %   since the predicate collect_expansors/3 is expensive but its solution
 %   doesn't change once no more expansors are added.
 %
-%   @note: Perhaps we will need something like stop_expansors in the future.
 
 init_expansors.
+
+stop_expansors :-
+    '$current_source_module'(Source),
+    abolish(Source:'$module_expansors'/2).
 
 :- if(init_expansion_decl_optional).
 no_more_expansions_after_init(Source) :-
@@ -197,13 +201,18 @@ system:term_expansion(end_of_file, _) :-
     no_more_expansions_after_init(Source),
     fail.
 :- endif.
+system:term_expansion(end_of_file, _) :-
+    '$current_source_module'(Source),
+    module_property(Source, file(File)),
+    prolog_load_context(source, File),
+    stop_expansors,
+    fail.
 system:term_expansion(:- before(B), [compound_expand:before(A, B)]) :-
     '$current_source_module'(A).
 system:term_expansion(:- after(B), [compound_expand:before(B, A)]) :-
     '$current_source_module'(A).
 system:term_expansion((:- init_expansors),
-                      [ (:- volatile '$module_expansors'/2),
-                        '$module_expansors'(term, TL),
+                      [ '$module_expansors'(term, TL),
                         '$module_expansors'(goal, GL)
                       ]) :-
     '$current_source_module'(Source),

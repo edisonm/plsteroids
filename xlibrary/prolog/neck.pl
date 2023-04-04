@@ -77,8 +77,8 @@
 %   necki (i=inlined) is  used if you don't want to  create ancillary predicates
 %   for the body, but rather have the body inlined.
 
-%   necks (s=silent, or static) will not  warn you if the non-expanded parts are
-%   called at compile-time.
+%   necks (s=silent) will not warn you if the non-expandable parts are called at
+%   compile-time.
 
 %   neckis is a combination of inlined and silent.
 
