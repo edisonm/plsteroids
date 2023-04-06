@@ -160,22 +160,33 @@ scope_t(spublic).
 scope_t(sexport).
 scope_t(sprivat).
 
+check_cohm_clause(Context, H, IM, Clause) :-
+    predicate_property(Context:H, implementation_module(IM)),
+    functor(H, F, A),
+    aux_cohesive_module(IM, F, A, CohM, CheckCohM),
+    ( % Note: CheckCohM must not be multifile, otherwise it will
+      % remain defined on recompilation and the compilation result
+      % will not be correct --EMM
+      Clause = Context:CheckCohM,
+      aux_cohesive_pred(H, CohM, _Scope, HExt),
+      cohesive_module(H, Context, IM, CohM),
+      ( CohM \= Context
+      ->once(clause(IM:HExt, _))
+      ; true
+      )
+    ).
+
 check_cohm_clauses(Context, ClauseL) :-
     findall(Clause,
             ( '$cohesive'(H, IM),
-              predicate_property(Context:H, implementation_module(IM)),
-              functor(H, F, A),
-              aux_cohesive_module(IM, F, A, CohM, CheckCohM),
-              ( % Note: CheckCohM must not be multifile, otherwise it will
-                % remain defined on recompilation and the compilation result
-                % will not be correct --EMM
-                Clause = Context:CheckCohM,
-                aux_cohesive_pred(H, CohM, _Scope, HExt),
-                cohesive_module(H, Context, IM, CohM),
-                once(clause(IM:HExt, _))
-              )
+              check_cohm_clause(Context, H, IM, Clause)
             ), ClauseL, [end_of_file]).
 
+term_expansion(end_of_file, ClauseL) :-
+    prolog_load_context(module, Context),
+    module_property(Context, file(File)),
+    prolog_load_context(source, File),
+    check_cohm_clauses(Context, ClauseL).
 term_expansion((:- cohesive_pred PIs), ClauseL) :-
     prolog_load_context(module, CM),
     sequence_list(PIs, PIL, []),
@@ -194,11 +205,6 @@ term_expansion((Head :- Body), (HeadExt :- Body)) :-
     coh_head_expansion(sexport, Head, HeadExt).
 term_expansion(Head, HeadExt) :-
     coh_head_expansion(sexport, Head, HeadExt).
-term_expansion(end_of_file, ClauseL) :-
-    prolog_load_context(module, Context),
-    module_property(Context, file(File)),
-    prolog_load_context(source, File),
-    check_cohm_clauses(Context, ClauseL).
 
 :- thread_local
     cm_db/2.

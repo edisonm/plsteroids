@@ -155,18 +155,6 @@ system:goal_expansion(Goal1, Pos1, Goal, Pos) :-
 
 :- thread_local lock_compound/0.
 
-compound_term_expansion(Term1, Pos1, Term, Pos) :-
-    do_compound_expansion(term, Term1, Pos1, Term2, Pos2),
-    \+ (Term1 =@= Term2),
-    % continue with other expansions:
-    ( setup_call_cleanup(assertz(lock_compound),
-                         '$expand':expand_terms(call_term_expansion([system-[term_expansion/4], system-[term_expansion/2]]), Term2, Pos2, Term, Pos),
-                         retractall(lock_compound))
-    ->true
-    ; Term = Term2,
-      Pos  = Pos2
-    ).
-
 %!  init_expansors is det.
 %
 %   Declaration to say that the compound expansion definition has finish and now
@@ -181,6 +169,24 @@ stop_expansors :-
     '$current_source_module'(Source),
     abolish(Source:'$module_expansors'/2).
 
+compound_term_expansion(:- before(B), _, compound_expand:before(A, B), _) :-
+    '$current_source_module'(A).
+compound_term_expansion(:- after(B), _, compound_expand:before(B, A), _) :-
+    '$current_source_module'(A).
+compound_term_expansion(Term1, Pos1, Term, Pos) :-
+    do_compound_expansion(term, Term1, Pos1, Term2, Pos2),
+    \+ (Term1 =@= Term2),
+    % continue with other expansions:
+    ( setup_call_cleanup(assertz(lock_compound),
+                         '$expand':expand_terms(call_term_expansion([system-[term_expansion/4],
+                                                                     system-[term_expansion/2]]),
+                                                Term2, Pos2, Term, Pos),
+                         retractall(lock_compound))
+    ->true
+    ; Term = Term2,
+      Pos  = Pos2
+    ).
+
 :- if(init_expansion_decl_optional).
 no_more_expansions_after_init(Source) :-
     type_expansors(Type, Expansor, _),
@@ -193,7 +199,6 @@ no_more_expansions_after_init(Source) :-
     ; TN \= []
     ->print_message(warning, format("Missing :- init_expansors declaration, but expansors present: ~w", [TN]))
     ).
-
 system:term_expansion(end_of_file, _) :-
     '$current_source_module'(Source),
     module_property(Source, file(File)),
@@ -207,18 +212,15 @@ system:term_expansion(end_of_file, _) :-
     prolog_load_context(source, File),
     stop_expansors,
     fail.
-system:term_expansion(:- before(B), [compound_expand:before(A, B)]) :-
-    '$current_source_module'(A).
-system:term_expansion(:- after(B), [compound_expand:before(B, A)]) :-
-    '$current_source_module'(A).
-system:term_expansion((:- init_expansors),
-                      [ '$module_expansors'(term, TL),
-                        '$module_expansors'(goal, GL)
-                      ]) :-
+system:term_expansion((:- init_expansors), Pos1, Term, Pos) :-
     '$current_source_module'(Source),
     collect_expansors(term_expansion, Source, TL),
-    collect_expansors(goal_expansion, Source, GL).
-
+    collect_expansors(goal_expansion, Source, GL),
+    retractall(Source:'$module_expansors'(_, _)),
+    assertz(Source:'$module_expansors'(term, TL)),
+    assertz(Source:'$module_expansors'(goal, GL)),
+    % this allows to use (:- init_expansors) as a hook for other expansors:
+    do_compound_expansion(term, (:- init_expansors), Pos1, Term, Pos).
 system:term_expansion(Term1, Pos1, Term, Pos) :-
     \+ lock_compound,
     compound_term_expansion(Term1, Pos1, Term, Pos).
