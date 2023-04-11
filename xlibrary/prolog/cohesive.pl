@@ -37,10 +37,7 @@
             cohesive_module_rt/6,
             scope_t/1,
             call_cm/3,
-            call_cm/5,
-            op(1150, fx, cohesive_pred),
-            op(978, xfx, ::),
-            op(600, fx, ::)
+            call_cm/5
           ]).
 
 :- use_module(library(apply)).
@@ -48,6 +45,7 @@
 :- use_module(library(normalize_head)).
 :- use_module(library(option)).
 :- use_module(library(sequence_list)).
+:- reexport(library(cohesive_op)).
 :- reexport(library(compound_expand)).
 :- init_expansors.
 
