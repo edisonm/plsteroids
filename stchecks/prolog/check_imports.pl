@@ -92,22 +92,27 @@ check_imports(Options, Pairs) :-
 :- public head_used_usemod/2.
 
 head_used_usemod(Head, From) :-
-    caller_module(Head, From, M),
-    from_to_file(From, File),
-    module_property(CM, file(File)),
-    ignore(mark_used_usemod(CM, M)),
-    record_head_deps(CM, Head).
+    record_multifile_deps(Head, From),
+    fail.
+head_used_usemod(Head, From) :-
+    record_head_deps(Head, From),
+    fail.
 
 mark_used_usemod(CM, M) :-
     M \= CM,
     \+ used_usemod(CM, M),
     assertz(used_usemod(CM, M)).
 
-record_head_deps(CM, Head) :-
-    forall(( calls_to_hook(Head, M, Goal),
-             predicate_property(M:Goal, implementation_module(IM)),
-             mark_used_usemod(CM, IM)
-           ), true).
+record_multifile_deps(Head, From) :-
+    caller_module(Head, From, M),
+    from_to_file(From, File),
+    module_property(CM, file(File)),
+    mark_used_usemod(CM, M).
+
+record_head_deps(Head, From) :-
+    calls_to_hook(Head, From, CM, Goal),
+    predicate_property(CM:Goal, implementation_module(IM)),
+    mark_used_usemod(CM, IM).
 
 :- public collect_imports_wc/3.
 

@@ -38,7 +38,7 @@
            calls_to/1,
            calls_to/3,
            calls_to/4,
-           calls_to_hook/3
+           calls_to_hook/4
           ]).
 
 :- use_module(library(codewalk)).
@@ -58,7 +58,7 @@
     calls_to_predid/4.
 
 :- multifile
-    calls_to_hook/3.
+    calls_to_hook/4.
 
 cleanup_calls_to :-
     retractall(calls_to_public(_, _)),
@@ -141,8 +141,8 @@ collect_unused(M, MGoal, Caller, From) :-
     record_location_meta(MGoal, M, From, all_call_refs, cu_caller_hook(Caller)).
 
 :- public record_head_deps/2.
-record_head_deps(Head, _) :-
-    forall(calls_to_hook(Head, M, Called),
+record_head_deps(Head, From) :-
+    forall(calls_to_hook(Head, From, M, Called),
            record_calls_to(Head, M, Called)).
 
 mark_compile_time_called :-
