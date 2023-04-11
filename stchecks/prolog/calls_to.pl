@@ -37,7 +37,8 @@
            collect_calls_to/2,
            calls_to/1,
            calls_to/3,
-           calls_to/4
+           calls_to/4,
+           calls_to_hook/3
           ]).
 
 :- use_module(library(codewalk)).

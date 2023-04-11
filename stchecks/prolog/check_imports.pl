@@ -38,6 +38,7 @@
 :- use_module(library(lists)).
 :- use_module(library(checker)).
 :- use_module(library(clambda)).
+:- use_module(library(calls_to)).
 :- use_module(library(expansion_module)).
 :- use_module(library(codewalk)).
 :- use_module(library(extra_location)).
@@ -81,35 +82,40 @@ check_imports(Options, Pairs) :-
     option_module_files(Options, MFileD),
     walk_code([source(false),
                module_files(MFileD),
-               on_head(collect_multifile),
+               concurrent(false),
+               on_head(head_used_usemod),
                on_trace(collect_imports_wc)|Options]),
     collect_imports(MFileD, Pairs, Tail),
     collect_usemods(MFileD, Tail, []),
     cleanup_imports.
 
-:- public collect_multifile/2.
+:- public head_used_usemod/2.
 
-collect_multifile(Head, From) :-
+head_used_usemod(Head, From) :-
     caller_module(Head, From, M),
     from_to_file(From, File),
     module_property(CM, file(File)),
-    ( M \= CM,
-      \+ used_usemod(CM, M)
-    ->assertz(used_usemod(CM, M))
-    ; true
-    ).
+    ignore(mark_used_usemod(CM, M)),
+    record_head_deps(CM, Head).
+
+mark_used_usemod(CM, M) :-
+    M \= CM,
+    \+ used_usemod(CM, M),
+    assertz(used_usemod(CM, M)).
+
+record_head_deps(CM, Head) :-
+    forall(( calls_to_hook(Head, M, Goal),
+             predicate_property(M:Goal, implementation_module(IM)),
+             mark_used_usemod(CM, IM)
+           ), true).
 
 :- public collect_imports_wc/3.
 
 collect_imports_wc(M:Goal, Caller, From) :-
     record_location_meta(M:Goal, _, From, all_call_refs, mark_import),
-    ( nonvar(Caller),
-      caller_module(Caller, From, CM),
-      M \= CM,
-      \+ used_usemod(CM, M)
-    ->assertz(used_usemod(CM, M))
-    ; true
-    ).
+    nonvar(Caller),
+    caller_module(Caller, From, CM),
+    mark_used_usemod(CM, M).
 
 caller_module(M:_,                _, M) :- !.
 caller_module('<assertion>'(M:_), _, M) :- !.
