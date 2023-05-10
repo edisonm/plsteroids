@@ -512,13 +512,14 @@ abstract_interpreter_body(memberchk(A, B), _, _) -->
 abstract_interpreter_body(true, _, _) --> !.
 abstract_interpreter_body(fail, _, _) --> !, {fail}.
 abstract_interpreter_body(A, M, _) -->
-    get_state(state(Loc, _, OnError, _, _, _, _)),
+    get_state(state(Loc, _, OnError, CallL, _, _, _)),
     {evaluable_body_hook(A, M, Condition)},
     !,
     ( {call(Condition)}
     ->{catch(M:A,
              Error,
              ( call(OnError, at_location(Loc, Error)),
+               call(OnError, call_stack(CallL)),
                fail
              ))
       }
@@ -576,12 +577,12 @@ abstract_interpreter_lit(H, M, CM, Abs) -->
     },
     {predicate_property(M:Goal, implementation_module(IM))},
     get_state(state(Loc, EvalL, OnError, CallL, Data, Cont, Result)),
-    ( {member(MCall, CallL),
+    ( {member(MCall-_, CallL),
        MCall =@= IM:Goal
       }
     ->bottom
     ; {copy_term(IM:Goal, MCall)},
-      put_state(state(Loc, EvalL, OnError, [MCall|CallL], Data, Cont, Result)),
+      put_state(state(Loc, EvalL, OnError, [MCall-Loc|CallL], Data, Cont, Result)),
       ( { copy_term(EvalL, EvalC), % avoid undesirable unifications
           memberchk((IM:Goal :- Body), EvalC)
         ; replace_body_hook(Goal, IM, Body)
@@ -589,6 +590,7 @@ abstract_interpreter_lit(H, M, CM, Abs) -->
       ->cut_to(abstract_interpreter_body(Body, M, Abs))
       ; { \+ predicate_property(M:Goal, defined) }
       ->{ call(OnError, error(existence_error(procedure, M:Goal), Loc)),
+          call(OnError, call_stack(CallL)),
           % TBD: information to error
           fail
         }
@@ -606,7 +608,7 @@ match_head(MGoal, M:true) -->
     {predicate_property(MGoal, interpreted)},
     !,
     {strip_module(MGoal, M, _)},
-    get_state(state(_, EvalL, OnErr, CallL, D, Cont, Result)),
+    get_state(state(_,   EvalL, OnErr, CallL, D, Cont, Result)),
     put_state(state(Loc, EvalL, OnErr, CallL, D, Cont, Result)),
     {match_head_body(MGoal, Body, Loc)},
     ( {Body = _:true}

@@ -170,8 +170,14 @@ slicer_abstraction(Spec, VarsR, Scope, MGoal, Body) -->
     },
     put_state(state(Loc, EvalL, OnErr, CallL, Data, Cont, Result)).
 slicer_abstraction(_, _, _, MGoal, M:true) -->
-    get_state(state(Loc, _, OnError, _, _, _, _)),
+    get_state(state(Loc, _, OnError, CallL, _, _, _)),
     { call(OnError, error(existence_error(evaluation_rule, MGoal), Loc)),
+      call(OnError, call_stack(CallL)),
       strip_module(MGoal, M, _)
     },
     bottom.
+
+prolog:message(call_stack(CallL)) --> foldl(call_at, CallL).
+
+call_at(Call-Loc) -->
+    ["    "], '$messages':swi_location(Loc), ["~q"-[Call], nl].
