@@ -41,14 +41,15 @@
 # distribute the execution among several computers.
 
 # To use it, first create the ~/.concurrent directory in the home directory, and
-# then modify your scripts placing run_jobs in front of the command you want to
+# then modify your scripts placing run_pull in front of the command you want to
 # make concurrent.
 
 LOCKDIR=$HOME/.concurrent/
 
 scan_line () {
     if [ x$3 == x${1##*:} ] && [ x`echo $HOME|sed s:"\(${3}\).*":"\1":g` == x${3} ] ; then
-        echo ${1%:*}:`ssh -q ${1%:*} "cd ${PWD} ; . bin/concurrent; show_procs"`
+        SSHCMD=`getssh ${1%:*}`
+        echo ${1%:*}:`${SSHCMD} "cd ${PWD} ; . bin/concurrent; show_procs"`
     fi
 }
 
@@ -67,7 +68,7 @@ show_hostname_procs () {
 }
 
 scan_slave () {
-    echo ssh -q ${6%:*} '"cd ${PWD} ; . bin/concurrent; show_hostname_procs '$1'" ; '
+    echo `getssh ${6%:*}` '"cd ${PWD} ; . bin/concurrent; show_hostname_procs '$1'" ; '
 }
 
 do_get_slaves () {
@@ -75,7 +76,7 @@ do_get_slaves () {
 }
 
 show_slaves () {
-    ssh -q ${1%:*} "cd ${PWD} ; . bin/concurrent; do_get_slaves $1"
+    `getssh ${1%:*}` "cd ${PWD} ; . bin/concurrent; do_get_slaves $1"
 }
 
 get_workers () {
@@ -104,18 +105,42 @@ get_workers () {
     echo $master $slaves
 }
 
-# setup_workers () {
-#     workers="`hostname`:`cat /proc/cpuinfo|grep 'cpu cores'|sort -u|awk '{print $$4}'`"
-# }
+cached_workers () {
+    if [ "x${CONCURRENT_DISABLED}" == "x1" ] ; then # allow disabling of concurrency
+        echo `hostname`:`cat /proc/cpuinfo|grep 'cpu cores'|sort -u|awk '{print $4}'`
+    else
+        # using flock to avoid race conditions:
+        ( flock -x 8 || return 1
+          if [ -f ${LOCKDIR}workers ] && [ $(( `date +%s` - `stat -L --format %Y ${LOCKDIR}workers ` < 30*60 )) == 1 ] ; then # cache workers for 30 minutes
+              cached_workers=`cat ${LOCKDIR}workers`
+              if [ "${cached_workers}" != "" ] ; then
+                  echo ${cached_workers}
+              else
+                  echo `get_workers` | tee ${LOCKDIR}workers
+              fi
+          else
+              echo `get_workers` | tee ${LOCKDIR}workers
+          fi
+        ) 8>${LOCKDIR}workers.lck
+    fi
+}
+
+this_host_first () {
+    for workerjobs in $* ; do
+        if [ "${workerjobs%:*}" == "`hostname`" ] ; then
+            echo $workerjobs
+        fi
+    done
+    for workerjobs in $* ; do
+        if [ "${workerjobs%:*}" != "`hostname`" ] ; then
+            echo $workerjobs
+        fi
+    done
+}
 
 setup_workers () {
-    # cache workers for 30 minutes:
-    if [ -f ${LOCKDIR}workers ] && [ $(( `date +%s` - `stat -L --format %Y ~/.concurrent/workers ` < 30*60 )) == 1 ] ; then
-        workers=`cat ${LOCKDIR}workers`
-    else
-        workers=`get_workers`
-        echo $workers > ${LOCKDIR}workers
-    fi
+    workers1=`cached_workers`
+    workers=`this_host_first ${workers1}`
 }
 
 run_job () {
@@ -125,21 +150,51 @@ run_job () {
     shift
     job=$1
     shift
-    if [ "x$concurrent_silent" == "x" ] ; then
-        echo "% info : concurrent: Round = $round Worker = $worker Job = $job"
-    fi
+    getsh=$1
+    shift
     # PROSYN environment variables should be passed through ssh
     vars1=`set|grep '^PROSYN_'`
     vars2=`echo ${vars1}`
-    if [ $worker == `hostname` ] ; then
-        caller="bash -c"
+    if [ "${getsh}" == "thissh" ] ; then
+        cd ${PWD} ; export CC_ROUND=$round CC_WORKER=$worker CC_JOB=$job $vars2; $* || echo "ERROR: [$*] failed, exit=$?"
     else
-        caller="ssh -q $worker"
+        jobsh=`${getsh} ${worker}`
+        $jobsh "cd ${PWD} ; export CC_ROUND=$round CC_WORKER=$worker CC_JOB=$job $vars2; $* || echo ERROR: [$*] failed, exit=\$?"
     fi
-    $caller "cd ${PWD} ; export CC_ROUND=$round CC_WORKER=$worker CC_JOB=$job $vars2; $*"
+}
+
+run_csh () {
+    vars1=`set|grep '^PROSYN_'`
+    vars2=`echo ${vars1}`
+    jobsh=`getcsh ${CC_WORKER}`
+    $jobsh "cd ${PWD} ; export CC_ROUND=$CC_ROUND CC_WORKER=$CC_WORKER CC_JOB=$CC_JOB $vars2; $*"
+}
+
+getcsh () {
+    if [ "$1" == "`hostname`" ] ; then
+        getlsh $*
+    else
+        getssh $*
+    fi
+}
+
+getlsh () {
+    echo "bash -c"
+}
+
+getssh () {
+    echo "ssh -q -o ConnectTimeout=2 -o BatchMode=yes -o ControlMaster=yes -o ControlPersist=60 -o ControlPath=${LOCKDIR}ssh-master-%L-%r@$1:%p $1"
 }
 
 run_pull () {
+    run_base getcsh $*
+}
+
+run_local () {
+    run_base thissh $*
+}
+
+run_base () {
     setup_workers
     round=0
     while true
@@ -152,16 +207,27 @@ run_pull () {
                 LOCK=$LOCKDIR$round.$worker.$job.lck
                 # echo Trying $LOCK
                 if (
-                    flock -n 9 || exit 1
+                    flock -n 9 || return 1
                     run_job $round $worker $job $*
-                    exit 0
+                    return 0
                 ) 9>$LOCK ; then
-                    exit 0
+                    return 0
                 fi
+                sleep 0.1
             done
         done
         round=$(($round+1))
     done
+}
+
+run_each () {
+    setup_workers
+    for workerjobs in $workers; do
+        worker=${workerjobs%:*}
+        jobs=${workerjobs##*:}
+        run_job 0 $worker $jobs getcsh $* &
+    done
+    wait
 }
 
 get_jobs () {
