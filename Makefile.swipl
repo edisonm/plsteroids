@@ -1,0 +1,52 @@
+# -*- mode: Makefile; -*-
+
+# for binary installations this will be redefined:
+SWIPL_SRC?=$(HOME)/swipl-devel
+SWIPL_INSTALL_PREFIX?=$(HOME)
+
+PROVIDED_SWIPL="`which swipl`"
+REQUIRED_SWIPL=$(SWIPL_INSTALL_PREFIX)/bin/swipl
+SWIPL_PROVIDED_VERSION_CMD=test -f $(REQUIRED_SWIPL) && $(REQUIRED_SWIPL) -g 'current_prolog_flag(version_git,A),format("V~w", [A]),halt'
+SWIPL_PROVIDED_VERSION=`$(SWIPL_PROVIDED_VERSION_CMD)`
+SWIPL_REQUIRED_VERSION=$(shell cat bin/swipl_version)
+
+plstatus:
+	echo SWIPL_PROVIDED_VERSION=$(SWIPL_PROVIDED_VERSION)
+	echo SWIPL_REQUIRED_VERSION=$(SWIPL_REQUIRED_VERSION)
+	echo PROVIDED_SWIPL=$(PROVIDED_SWIPL)
+	echo REQUIRED_SWIPL=$(REQUIRED_SWIPL)
+
+# Note: To remove debug info, add -DCMAKE_BUILD_TYPE=Release -E env CFLAGS="-DNDEBUG" to cmake options
+
+swipl:
+	if [ ! -d $(SWIPL_SRC) ] ; then \
+	  ( cd `dirname $(SWIPL_SRC)` ; \
+            git clone https://github.com/SWI-Prolog/swipl-devel.git `basename $(SWIPL_SRC)` ) ; \
+	else \
+	  ( cd $(SWIPL_SRC) ; \
+            git fetch ) ; \
+	fi ; \
+	( cd $(SWIPL_SRC) ; \
+          if [ "$(SWIPL_PROVIDED_VERSION)" != "$(SWIPL_REQUIRED_VERSION)" ] ; then \
+	    echo "NOTE: Checking out supported SWI-Prolog Version $${SWIPL_VERSION}" ; \
+	    git checkout --recurse-submodules $(SWIPL_REQUIRED_VERSION) ; \
+	  fi ; \
+	  DIR=build-`hostname`-$(SWIPL_REQUIRED_VERSION) ; \
+	  if test -d $${DIR} ; then \
+	    echo "NOTE: (`hostname`) SWI-Prolog already compiled, skipping" ; \
+	    echo "NOTE: (`hostname`) To recompile it anyway first execute:" ; \
+	    echo "rm -rf $(SWIPL_SRC)/$${DIR}" ; \
+	  else \
+            git submodule update --init ; \
+	    rm -rf build-`hostname`-V* ; \
+	    mkdir -p $${DIR} ; \
+            cd $${DIR} ; \
+            cmake -DCMAKE_INSTALL_PREFIX=$(SWIPL_INSTALL_PREFIX) -G Ninja .. ; \
+            ninja ; \
+            ninja install ; \
+	  fi ) ; \
+	if [ "$(PROVIDED_SWIPL)" = "" ] ; then \
+	  echo "WARNING: Can not find swipl, please add $(SWIPL_INSTALL_PREFIX)/bin upfront to your PATH" ; \
+	elif [ "$(PROVIDED_SWIPL)" != "$(REQUIRED_SWIPL)" ] ; then \
+	  echo "WARNING: Using wrong swipl copy $(PROVIDED_SWIPL), please add $(SWIPL_INSTALL_PREFIX)/bin upfront to your PATH" ; \
+	fi
