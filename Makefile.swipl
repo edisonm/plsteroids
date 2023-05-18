@@ -50,3 +50,13 @@ swipl:
 	elif [ "$(PROVIDED_SWIPL)" != "$(REQUIRED_SWIPL)" ] ; then \
 	  echo "WARNING: Using wrong swipl copy $(PROVIDED_SWIPL), please add $(SWIPL_INSTALL_PREFIX)/bin upfront to your PATH" ; \
 	fi
+
+swipl.build:
+	cd $(SWIPL_SRC) ; \
+          DIR=build-`hostname`-$(SWIPL_REQUIRED_VERSION) ; \
+	  rm -rf build-`hostname`-V* ; \
+	  mkdir -p $${DIR} ; \
+          cd $${DIR} ; \
+          cmake -DCMAKE_INSTALL_PREFIX=$(SWIPL_INSTALL_PREFIX) -G Ninja .. ; \
+          ninja ; \
+          ninja install
