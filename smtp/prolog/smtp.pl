@@ -96,9 +96,10 @@ Data is currently being sent using the =DATA= keyword.
 :- meta_predicate
     setup_call_error_cleanup(0,0,0).
 
-%!  smtp_send_mail(+To, :Goal, +Options)
+%!  smtp_send_mail(+Recipients, :Goal, +Options)
 %
-%   Send mail using SMTP.  To is the e-mail address of the receiver.
+%   Send mail using SMTP.  Recipients  is   the  e-mail  address  of the
+%   receiver or a list of e-mail addresses.
 %   Options:
 %
 %     * smtp(+Host)
@@ -138,7 +139,7 @@ Data is currently being sent using the =DATA= keyword.
 %   @arg Goal is called as call(Goal, Stream) and must provide
 %        the body of the message.
 
-smtp_send_mail(To, Goal, Options) :-
+smtp_send_mail(Recipients, Goal, Options) :-
     setting(security, DefSecurity),
     setting(host, DefHost),
     setting(port, DefPort0),
@@ -158,7 +159,7 @@ smtp_send_mail(To, Goal, Options) :-
     debug( smtp, 'Starting smtp with options: ~w', [Options] ),
     setup_call_cleanup(
         smtp_open(Host:Port, In, Out, Options1),
-        do_send_mail(In, Out, To, Goal, Options1),
+        do_send_mail(In, Out, Recipients, Goal, Options1),
         smtp_close(In, Out)).
 
 add_auth_method(Options0, Options) :-
@@ -239,7 +240,7 @@ error_cleanup(!, _) :- !.
 error_cleanup(_, Cleanup) :-
     call(Cleanup).
 
-%!  do_send_mail(+In, +Out, +To, :Goal, +Options) is det.
+%!  do_send_mail(+In, +Out, +Recipients, :Goal, +Options) is det.
 %
 %   Perform the greeting and possibly upgrade   to TLS. Then proceed
 %   using do_send_mail_cont/5.
@@ -251,21 +252,21 @@ error_cleanup(_, Cleanup) :-
 %   @tbd    Fall back to RFC 821 if the server does not understand
 %           EHLO.  Probably not needed anymore?
 
-do_send_mail(In, Out, To, Goal, Options) :-
+do_send_mail(In, Out, Recipients, Goal, Options) :-
     read_ok(In, 220),
     option(hostname(Me), Options),
     sock_send(Out, 'EHLO ~w\r\n', [Me]),
     read_ok(In, 250, Lines),
     setup_call_cleanup(
         starttls(In, Out, In1, Out1, Lines, Lines1, Options),
-        do_send_mail_cont(In1, Out1, To, Goal, Lines1, Options),
+        do_send_mail_cont(In1, Out1, Recipients, Goal, Lines1, Options),
         close_tls(In, Out, In1, Out1)).
 
 close_tls(In, Out, In, Out) :- !.
 close_tls(_, _, In, Out) :-
     smtp_close(In, Out).
 
-do_send_mail_cont(In, Out, To, Goal, Lines, Options) :-
+do_send_mail_cont(In, Out, Recipients, Goal, Lines, Options) :-
     (   option(from(From), Options)
     ->  true
     ;   existence_error(smtp_option, from)
@@ -273,8 +274,7 @@ do_send_mail_cont(In, Out, To, Goal, Lines, Options) :-
     auth(In, Out, From, Lines, Options),
     sock_send(Out, 'MAIL FROM:<~w>\r\n', [From]),
     read_ok(In, 250),
-    sock_send(Out, 'RCPT TO:<~w>\r\n', [To]),
-    read_ok(In, 250),
+    add_recipients(In, Out, Recipients, To),
     sock_send(Out, 'DATA\r\n', []),
     read_ok(In, 354),
     format(Out, 'To: ~w\r\n', [To]),
@@ -288,6 +288,21 @@ do_send_mail_cont(_In, _Out, To, _Goal, _Lines, Options ) :-
     debug(smtp, 'Failed to sent email To: ~w, with options: ~w',
           [To,Options]),
     fail.
+
+add_recipients(In, Out, Recipients, To) :-
+    is_list(Recipients),
+    !,
+    atomics_to_string(Recipients, ", ", To),
+    maplist(add_recipient(In, Out), Recipients).
+add_recipients(In, Out, Recipients, To) :-
+    To = Recipients,
+    add_recipient(In, Out, Recipients).
+
+add_recipient(In, Out, To) :-
+    must_be(atomic, To),
+    sock_send(Out, 'RCPT TO:<~w>\r\n', [To]),
+    read_ok(In, 250).
+
 
 %!  starttls(+In0, +Out0, -In, -Out, +LinesIn, -LinesOut, +Options)
 %
