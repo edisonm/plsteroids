@@ -216,6 +216,8 @@ system:term_expansion((:- init_expansors), Pos1, Term, Pos) :-
     '$current_source_module'(Source),
     collect_expansors(term_expansion, Source, TL),
     collect_expansors(goal_expansion, Source, GL),
+    dynamic(Source:'$module_expansors'/2),
+    public(Source:'$module_expansors'/2),
     retractall(Source:'$module_expansors'(_, _)),
     assertz(Source:'$module_expansors'(term, TL)),
     assertz(Source:'$module_expansors'(goal, GL)),
