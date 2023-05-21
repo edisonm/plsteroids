@@ -223,10 +223,13 @@ ppassertion_type_goal(Goal, Status, Call, Loc) :-
 
 wrap_ppcheck :-
     forall(ppassertion_type_goal(Goal, Status, Call, Loc),
-           wrap_predicate(metaprops:Goal, rtchecks, _, rtcheck_call(Status, Call, Loc))).
+           wrap_predicate(ppntprops:Goal, rtchecks, _, rtcheck_call(Status, Call, Loc))).
 
 unwrap_ppcheck :-
-    forall(pp_status(Status), unwrap_predicate(metaprops:Status/1, rtchecks)).
+    forall(( pp_status(Status),
+             member(Arity, [1, 2])
+           ),
+           unwrap_predicate(ppntprops:Status/Arity, rtchecks)).
 
 dyn_rtcheck_record(Head, M) :-
     (   M:'$rtchecked'(Head)
