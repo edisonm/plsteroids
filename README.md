@@ -12,7 +12,14 @@ Scripts to facilitate testing and development of the Prolog libraries published 
 * Script to execute common commands:
 
   ```
-  ./pltool.sh option [args]
+  make option
+  make [target].option
+  ```
+
+  some few options are still in pltool.sh
+
+  ```
+  ./pltool.sh option [target]
   ```
 
   Where option is one of:
@@ -20,6 +27,7 @@ Scripts to facilitate testing and development of the Prolog libraries published 
 
   If it is not one of them, it will execute it as a command in each submodule
 
-Since those commands are changing very often, it is better to read the source
+  Since those commands are changing very often, documentation would be outdated,
+  so it is better to read the source
 
   https://blog.codinghorror.com/learn-to-read-the-source-luke/
