@@ -49,11 +49,10 @@
 
 %!  call_checkct(:Call, +File, +Line, Options) is multi.
 %
-%   Meta-predicate to  prevent that Call  uses dynamic or  multifile predicates.
-%   This is important to prevent wrong  expansions of optimizers that depends on
-%   certain parts  of the program  being evaluated at compile-time,  for example
-%   library(neck).  It has been placed in its  own library to allow its usage in
-%   other libraries.
+%   Meta-predicate to prevent that Call uses dynamic or multifile predicates.
+%   This is important to prevent wrong usage of compile-time optimizations on
+%   parts of the program intended to be evaluated at run-time.  It was part of
+%   library(neck), but now it is in its own module to allow its usage elsewhere.
 
 :- meta_predicate call_checkct(0,+,+,+).
 
