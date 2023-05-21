@@ -89,11 +89,11 @@ setup_trace(State, M:OnTrace, MOptL) :-
     select_option(goal(ValidGoal), OptL,  OptL1, ontrace:true_1),
     select_option(file(ValidFile), OptL1, OptL2, ontrace:true_1),
     % redo port has weird bugs, ignoring it for now:
-    select_option(ports(PortList), OptL2, _,
-                  [call, exit, fail, unify, exception]),
+    select_option(ports(Ports), OptL2, _,
+                  [+call, +exit, +fail, +unify, +exception]),
     % it is safer to use asserta here, in case this hook was already defined while debugging
     asserta(ontrace_enabled(M, OnTrace, ValidGoal, ValidFile), Ref),
-    foldl(port_mask, PortList, 0, Mask),
+    once('$syspreds':map_bits(port_name, Ports, 0, Mask)),
     '$visible'(Visible, Mask),
     '$leash'(Leash, Mask),
     nb_setarg(1, State, Visible),
@@ -112,9 +112,6 @@ cleanup_trace(state(Visible, Leash, Ref)) :-
 cleanup_trace(State) :-
     print_message(error, format('Failed when saving tracer data', [State])),
     fail.
-
-port_mask(Port, Mask1, Mask) :- '$syspreds':port_name(Port, Bit),
-    Mask is Mask1\/Bit.
 
 user_defined_module(M) :-
     module_property(M, class(user)),
