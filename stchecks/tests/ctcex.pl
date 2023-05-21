@@ -2,6 +2,7 @@
 
 :- use_module(library(assertions)).
 :- use_module(library(plprops)).
+:- init_expansors.
 
 :- set_prolog_flag(check_assertions, [defined,
                                       is_prop,

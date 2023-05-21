@@ -10,6 +10,7 @@
 :- use_module(library(assertions)).
 :- use_module(library(plprops)).
 :- use_module(library(rtchecks)).
+:- init_expansors.
 
 :- pred nullasr/2.
 

@@ -57,6 +57,7 @@
 
 :- use_module(library(assertions)).
 :- use_module(library(plprops)).
+:- init_expansors.
 
 /** <module> Examples of assertions that can be processed by rtchecks
 */

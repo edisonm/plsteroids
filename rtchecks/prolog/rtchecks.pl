@@ -53,6 +53,7 @@
 :- use_module(system:library(rtchecks_rt)).
 :- use_module(library(qualify_meta_goal)).
 :- use_module(library(group_pairs_or_sort)).
+:- after(assertions).
 :- init_expansors.
 
 :- multifile
@@ -149,7 +150,7 @@ term_expansion((:- rtcheck(Preds)), Clauses) :-
     generate_rtchecks(Preds, Clauses).
 
 term_expansion(assertions:asr_head_prop(Asr, M, Pred, Status, Type, Dict, Ctx, From),
-              [assertions:asr_head_prop(Asr, M, Pred, Status, Type, Dict, Ctx, From)|Clauses]) :-
+               [assertions:asr_head_prop(Asr, M, Pred, Status, Type, Dict, Ctx, From)|Clauses]) :-
     current_prolog_flag(rtchecks_static, StaticL),
     memberchk(Status, StaticL),
     Type \= (prop),

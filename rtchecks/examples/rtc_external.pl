@@ -37,6 +37,7 @@
 :- use_module(library(edinburgh)).
 :- use_module(library(assertions)).
 :- use_module(library(plprops)).
+:- init_expansors.
 
 /** <module> Assertions of an imported (or even builtin) predicate.
 */

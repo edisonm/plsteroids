@@ -3,6 +3,7 @@
 :- use_module(library(rtchecks)).
 :- use_module(library(assertions)).
 :- use_module(library(plprops)).
+:- init_expansors.
 
 :- rtcheck p1/1.
 

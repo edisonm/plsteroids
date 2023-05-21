@@ -38,6 +38,7 @@
 
 :- use_module(library(assertions)).
 :- use_module(library(plprops)).
+:- init_expansors.
 
 /** <module> Examples of assertions for processing by the run-time checker.
 */

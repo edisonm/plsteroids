@@ -37,6 +37,7 @@
 :- use_module(library(filesex)).
 :- use_module(library(i18n/i18n_expansion)).
 :- use_module(library(i18n/i18n_support)).
+:- init_expansors.
 
 :- retractall(i18n_support:language(_)).          % overriding language
 :- retractall(i18n_support:i18n_resource_dir(_)). % overriding resource dir

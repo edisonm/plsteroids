@@ -2,6 +2,7 @@
 
 :- use_module(library(assertions)).
 :- use_module(library(plprops)).
+:- init_expansors.
 
 :- discontiguous disc1/1.
 
