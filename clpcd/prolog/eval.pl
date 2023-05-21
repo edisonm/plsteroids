@@ -44,6 +44,16 @@
 
 :- public eval_1/4.
 
+:- multifile check_dupcode:ignore_dupcode/3.
+
+% TBD: Move the predicates refered in this clause to a module, instead of an included file
+check_dupcode:ignore_dupcode(Head, Source, _) :-
+    '$current_source_module'(Source),
+    member(F/A, [eepsilon/2, eepsilon/3, eval/3, cast/3, castable/2, compare/4, near_compare/4,
+                 compare/5, do_eval_cputime/2, do_eval_z/2, reserve_eps/1, near_compare_b/4]),
+    functor(Head, F, A),
+    neck.
+
 eval_1(Type, Arg, eval(Type, Arg, EA), EA).
 
 eval(_, Expr, _) :-
