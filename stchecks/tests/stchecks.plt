@@ -14,6 +14,9 @@ user:message_property(_, stream(current_output)) :- user:error_on_co.
 :- use_module(library(checker)).
 :- use_module(library(check_assertions)).
 :- use_module(library(listing), []).
+:- use_module(library(clambda)).
+:- init_expansors.
+
 :- set_setting(listing:tab_distance, 0). % Use only spaces, no tabs
 
 :- comment_data:enable.
@@ -25,29 +28,33 @@ Warning: Check asssertions
 Warning: -----------------
 Warning: The predicates contain assertions that are inconsistent
 Warning: with the implementation.
-Warning:
+Warning: 
 ctcex.pl:xx: In the body of ctcex:q/0:
-ctcex.pl:12: Assertion failure for a(1,b).
-    In *calls*, unsatisfied properties:
-        ctcex.pl:12:15: compat(ctcex:list(b)).
-ctcex.pl:15: In the head of ctcex:a/2:
-ctcex.pl:12: Assertion failure for a(a,b).
-    In *calls*, unsatisfied properties:
-        ctcex.pl:12:10: compat(ctcex:int(a)).
-        ctcex.pl:12:15: compat(ctcex:list(b)).
-ctcex.pl:30: In assertions of [ctcex:b/2]:
-    ctcex.pl:30:15: ctcex:is_3/1 is not a property
-ctcex.pl:32: In assertions of [ctcex:b/2]:
-    ctcex.pl:32:10: ctcex:is_2/1 is not a property
-ctcex.pl:36: In assertions of [ctcex:b/2]:
-    ctcex.pl:36:10: In call to ctcex:is_num/2:
-ctcex.pl:26: Assertion failure for is_num(a,A).
-    In *calls*, unsatisfied properties:
-        ctcex.pl:26:15: compat(ctcex:int(a)).
-    ctcex.pl:36:21: In call to ctcex:is_num/2:
-ctcex.pl:26: Assertion failure for is_num(b,A).
-    In *calls*, unsatisfied properties:
-        ctcex.pl:26:15: compat(ctcex:int(b)).
+Assertion failure for ctcex:a(1,b).
+ctcex.pl:xx:     In *calls*, unsatisfied properties: 
+        ctcex.pl:xx: compat(ctcex:list(b)), because: [(nonvar(A):-nonvar(A)=list(b),var(A))].
+
+ctcex.pl:16: In the head of ctcex:a/2:
+Assertion failure for ctcex:a(a,b).
+ctcex.pl:xx:     In *calls*, unsatisfied properties: 
+        ctcex.pl:xx: compat(ctcex:int(a)), because: [(nonvar(A):-nonvar(A)=int(B),B=a,var(A),\+integer(B))].
+        ctcex.pl:xx: compat(ctcex:list(b)), because: [(nonvar(C):-nonvar(C)=list(b),var(C))].
+
+ctcex.pl:xx: In assertions of [ctcex:b/2]:
+    ctcex.pl:xx: ctcex:is_3/1 is not a property
+ctcex.pl:xx: In assertions of [ctcex:b/2]:
+    ctcex.pl:xx: ctcex:is_2/1 is not a property
+ctcex.pl:xx: In assertions of [ctcex:b/2]:
+    ctcex.pl:xx: In call to ctcex:is_num/2:
+Assertion failure for ctcex:is_num(a,A).
+ctcex.pl:xx:     In *calls*, unsatisfied properties: 
+        ctcex.pl:xx: compat(ctcex:int(a)), because: [(nonvar(C):-nonvar(C)=int(D),D=a,var(C),\+integer(D))].
+
+    ctcex.pl:xx: In call to ctcex:is_num/2:
+Assertion failure for ctcex:is_num(b,A).
+ctcex.pl:xx:     In *calls*, unsatisfied properties: 
+        ctcex.pl:xx: compat(ctcex:int(b)), because: [(nonvar(C):-nonvar(C)=int(D),D=b,var(C),\+integer(D))].
+
 */
 
 test(ctcex) :-
@@ -60,25 +67,30 @@ Warning: Check asssertions
 Warning: -----------------
 Warning: The predicates contain assertions that are inconsistent
 Warning: with the implementation.
-Warning:
-p1.pl:16:4: In the body of p1:p0/0:
-p1.pl:9:8: Assertion failure for p1(p1:q2).
-    In *calls*, unsatisfied properties:
-        p1.pl:9:11: compat(typeprops:goal(0,p1:q2)).
-p1.pl:22:4: In the body of p1:p2/1:
-p1.pl:18:8: Assertion failure for q(A,B,C).
-    In *calls*, unsatisfied properties:
-        p1.pl:18:11: instan(p1:int(A)).
-p1.pl:19:8: Assertion failure for q(A,B,C).
-    In *calls*, unsatisfied properties:
-        p1.pl:19:11: instan(p1:atm(A)).
-p1.pl:26:4: In the body of p1:p2/1:
-p1.pl:18:8: Assertion failure for q(X,Y,Z).
-    In *calls*, unsatisfied properties:
-        p1.pl:18:11: instan(p1:int(X)).
-p1.pl:19:8: Assertion failure for q(X,Y,Z).
-    In *calls*, unsatisfied properties:
-        p1.pl:19:11: instan(p1:atm(X)).
+Warning: 
+p1.pl:17:4: In the body of p1:p0/0:
+Assertion failure for p1:p1(p1:q2).
+p1.pl:10:8:     In *calls*, unsatisfied properties: 
+        p1.pl:10:11: compat(typeprops:goal(0,p1:q2)), because: [(nonvar(A):-nonvar(A)=goal(0,p1:q2),var(A))].
+
+p1.pl:23:4: In the body of p1:p2/1:
+Assertion failure for p1:q(A,B,C).
+p1.pl:20:8:     In *calls*, unsatisfied properties: 
+        p1.pl:20:11: instan(p1:atm(A)).
+
+Assertion failure for p1:q(A,B,C).
+p1.pl:19:8:     In *calls*, unsatisfied properties: 
+        p1.pl:19:11: instan(p1:int(A)).
+
+p1.pl:27:4: In the body of p1:p2/1:
+Assertion failure for p1:q(X,Y,Z).
+p1.pl:20:8:     In *calls*, unsatisfied properties: 
+        p1.pl:20:11: instan(p1:atm(X)).
+
+Assertion failure for p1:q(X,Y,Z).
+p1.pl:19:8:     In *calls*, unsatisfied properties: 
+        p1.pl:19:11: instan(p1:int(X)).
+
 */
 test(ctmeta1) :-
     test_ct(p11, [module(p1), method(source)]).
@@ -88,18 +100,21 @@ Warning: Check asssertions
 Warning: -----------------
 Warning: The predicates contain assertions that are inconsistent
 Warning: with the implementation.
-Warning:
-p1.pl:14: In the body of p1:p0/0:
-p1.pl:9:8: Assertion failure for p1(p1:q2).
-    In *calls*, unsatisfied properties:
-        p1.pl:9:11: compat(typeprops:goal(0,p1:q2)).
-p1.pl:21: In the body of p1:p2/1:
-p1.pl:18:8: Assertion failure for q(A,B,C).
-    In *calls*, unsatisfied properties:
-        p1.pl:18:11: instan(p1:int(A)).
-p1.pl:19:8: Assertion failure for q(A,B,C).
-    In *calls*, unsatisfied properties:
-        p1.pl:19:11: instan(p1:atm(A)).
+Warning: 
+p1.pl:15: In the body of p1:p0/0:
+Assertion failure for p1:p1(p1:q2).
+p1.pl:10:8:     In *calls*, unsatisfied properties: 
+        p1.pl:10:11: compat(typeprops:goal(0,p1:q2)), because: [(nonvar(A):-nonvar(A)=goal(0,p1:q2),var(A))].
+
+p1.pl:22: In the body of p1:p2/1:
+Assertion failure for p1:q(A,B,C).
+p1.pl:20:8:     In *calls*, unsatisfied properties: 
+        p1.pl:20:11: instan(p1:atm(A)).
+
+Assertion failure for p1:q(A,B,C).
+p1.pl:19:8:     In *calls*, unsatisfied properties: 
+        p1.pl:19:11: instan(p1:int(A)).
+
 */
 
 test(ctmeta2) :-
@@ -134,16 +149,18 @@ test(samename) :-
     assertion(Result == ""),
     retractall(user:error_on_co).
 
+replace_substrings_lc(L, C) -->
+    { atomics_to_string(["ctcex.pl:", L, ":", C, ":"], SubS),
+      Repl = "ctcex.pl:xx:"
+    },
+    replace_substrings(SubS, Repl).
+
 replace_noisy_strings(SD) -->
     replace_substrings(SD, ""),
     replace_substrings("ERROR: ", ""),
-    replace_substrings("ctcex.pl:12:8:", "ctcex.pl:12:"),
-    replace_substrings("ctcex.pl:18:4:", "ctcex.pl:xx:"),
-    replace_substrings("ctcex.pl:17:",   "ctcex.pl:xx:"),
-    replace_substrings("ctcex.pl:26:8:", "ctcex.pl:26:"),
-    replace_substrings("ctcex.pl:30:8:", "ctcex.pl:30:"),
-    replace_substrings("ctcex.pl:36:8:", "ctcex.pl:36:"),
-    replace_substrings("ctcex.pl:32:8:", "ctcex.pl:32:").
+    {findall(L, between(1, 50, L), Ls)},
+    {findall(C, between(0, 30, C), Cs)},
+    foldl([Cs] +\ L^foldl(replace_substrings_lc(L), Cs), Ls).
 
 replace_substrings(SubS, Repl, String, Result) :-
     ( sub_string(String, Before, _, After, SubS)

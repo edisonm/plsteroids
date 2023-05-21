@@ -3,6 +3,7 @@
 :- use_module(library(assertions)).
 :- use_module(library(typeprops)).
 :- use_module(q1).
+:- init_expansors.
 
 :- meta_predicate p1(0).
 
