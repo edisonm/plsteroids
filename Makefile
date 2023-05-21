@@ -21,6 +21,8 @@ compile:
 	    pack=`basename $${i%/pack.pl}` ; \
 	    find $${pack}/prolog -type d -exec mkdir -p target/lib/{} \; ; \
 	    find $${pack}/prolog -type f -name "*.pl" -exec ln -sf `pwd`/{} target/lib/{} \; ; \
+            find $pack/prolog -type f -name "*.c" -exec ln -sf ${PWD}/{} target/lib/{} \;
+	    find $pack/prolog -type f -name "*.h" -exec ln -sf ${PWD}/{} target/lib/{} \;
 	done
 	swipl -q -s qcompile.pl -t halt
 
@@ -33,6 +35,21 @@ plclean:
 	mkdir -p target/bin
 
 clean: bidclean plclean
+
+distclean:
+	rm -rf target
+
+checkc:
+	swipl -q -s loadall.pl -g 'checkallc([dir(pltool(prolog))])'
+
+check:
+	swipl -tty -q -s loadall.pl -g 'time(checkall([dir(pltool(prolog))]))'
+
+%.checkc:
+	swipl -q -s loadall.pl -g "showcheck($*,[dir(pltool(prolog))])"
+
+%.check:
+	swipl -tty -q -s loadall.pl -g "time(showcheck($*,[dir(pltool(prolog))]))"
 
 $(PLSTEROIDS):
 	mkdir -p `dirname $@`
@@ -107,6 +124,26 @@ get_plsteroids:
 
 doc:
 	swipl -s plsdoc.pl
+
+checkh:
+	swipl -q -s loadall.pl -g "[pltoolmisc]" -g "checkhelp,halt" 2>&1
+
+updatedoc:
+	swipl -q -s loadall.pl -g "[pltoolmisc]" \
+              -g "updatedoc('stchecks/README.md'),halt"
+
+checkload:
+	for i in `find . -name pack.pl`; do \
+	    pack=`basename $${i%/pack.pl}` \
+		echo "checking stand alone load of $pack" \
+		swipl -q -s plsconfig.pl -g "assertz(package($${pack})),[checkload],halt" \
+	    done
+
+%.checkload:
+	swipl -tty -q -s plsconfig.pl -g "assertz(package($*)),[checkload],halt"
+
+loadall:
+	swipl -q -s loadall.pl
 
 packstrees:
 	swipl -q -s ./plsteroids -g "[collect_deps,library(packs_trees),library(show_tree)],packs_trees(A),show_trees(A),halt"
