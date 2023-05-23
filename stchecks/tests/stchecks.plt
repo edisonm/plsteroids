@@ -8,6 +8,7 @@
 
 user:message_property(_, stream(current_output)) :- user:error_on_co.
 
+:- use_module(library(filesex)).
 :- use_module(library(record_locations)).
 :- use_module(library(comment_data)).
 :- use_module(library(call_in_dir)).
@@ -20,6 +21,31 @@ user:message_property(_, stream(current_output)) :- user:error_on_co.
 :- set_setting(listing:tab_distance, 0). % Use only spaces, no tabs
 
 :- comment_data:enable.
+
+test_ct(CommentName, Options) :-
+    setup_call_cleanup(
+        ( set_prolog_flag(verbose, silent),
+          assert(user:error_on_co)
+        ),
+        do_test_ct(CommentName, Options),
+        ( set_prolog_flag(verbose, normal),
+          % set_prolog_flag(check_assertions, []).
+          retractall(user:error_on_co)
+        )).
+
+do_test_ct(CommentName, Options) :-
+    notrace(with_output_to(string(Result), showcheck(assertions, Options))),
+    comment_data(CommentName, Pattern),
+    module_property(ctcex, file(File)),
+    directory_file_path(Dir, _, File),
+    directory_file_path(Dir, '', AD),
+    atom_string(AD, SD),
+    replace_noisy_strings(SD, Result, AResult),
+    ( Pattern \== AResult
+    ->format("~n~s", [AResult])
+    ; true
+    ),
+    assertion(Pattern == AResult).
 
 :- use_module(ctcex).
 
@@ -119,25 +145,6 @@ p1.pl:19:8:     In *calls*, unsatisfied properties:
 
 test(ctmeta2) :-
     test_ct(p12, [module(p1), method(clause)]).
-
-test_ct(CommentName, Options) :-
-    set_prolog_flag(verbose, silent),
-    assert(user:error_on_co),
-    notrace(with_output_to(string(Result), showcheck(assertions, Options))),
-    comment_data(CommentName, Pattern),
-    module_property(ctcex, file(File)),
-    directory_file_path(Dir, _, File),
-    directory_file_path(Dir, '', AD),
-    atom_string(AD, SD),
-    replace_noisy_strings(SD, Result, AResult),
-    ( Pattern \== AResult
-    ->format("~n~s", [AResult])
-    ; true
-    ),
-    assertion(Pattern == AResult),
-    set_prolog_flag(verbose, normal),
-    % set_prolog_flag(check_assertions, []).
-    retractall(user:error_on_co).
 
 :- use_module(p2).
 
