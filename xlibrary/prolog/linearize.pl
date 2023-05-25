@@ -52,8 +52,8 @@ substitutable(atms, Term) :- atomic(Term).
 
 %!  linearize(+SubTermType, +Term, -Linear, List, Tail) is det
 %
-%   If SubTermType is term, replace bounded variables in Term so that it becomes
-%   linear, and place it with Linear.  If SubTermType is atom, do such
+%   If SubTermType is vars, replace unbounded variables in Term so that it becomes
+%   linear, and place it with Linear.  If SubTermType is atms, do such
 %   replacement with atomic values in the term.  List collects the performed
 %   substitutions in the form of Substitution=OriginalSubTerm.
 
