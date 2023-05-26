@@ -149,6 +149,16 @@ replace_goal_hook(asserta(_),    _, true).
 replace_goal_hook(assert( _),    _, true).
 replace_goal_hook(erase(  _),    _, true).
 replace_goal_hook(gtrace, _, true).
+replace_goal_hook(write(_, _), _, true).
+replace_goal_hook(writeq(_, _), _, true).
+replace_goal_hook(writeln(_, _), _, true).
+replace_goal_hook(write(_), _, true).
+replace_goal_hook(writeq(_), _, true).
+replace_goal_hook(writeln(_), _, true).
+replace_goal_hook(write_term(_, _), _, true).
+replace_goal_hook(write_term(_, _, _), _, true).
+replace_goal_hook(nl, _, true).
+replace_goal_hook(nl(_), _, true).
 replace_goal_hook(call_ai(G), abstract_interpreter, G).
 replace_goal_hook(eval_ai(G), abstract_interpreter, G).
 replace_goal_hook(skip_ai(_), abstract_interpreter, true).
