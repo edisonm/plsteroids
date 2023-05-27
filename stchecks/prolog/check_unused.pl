@@ -377,13 +377,12 @@ check_pred_file(Ref, FileD, From) :-
 prolog:message(acheck(unused)) -->
     ['Unused Predicates',nl,
      '-----------------',nl,
-     'The predicates has been implemented, however they are', nl,
-     'never referenced in the code nor exported.  Probably are', nl,
-     'dead-code, part of an incomplete implementation, or called', nl,
-     'indirectly by some meta predicate without or with incorrect', nl,
-     'meta_predicate declaration.  In any case this represents a', nl,
-     'bad design and must be fixed, either completing the program',nl,
-     'or removing the unreferenced predicates.', nl, nl].
+     'The predicates has been implemented, however they are never', nl,
+     'referenced in the code nor exported.  Probably are dead-code, part', nl,
+     'of an incomplete implementation, or called indirectly by some meta', nl,
+     'predicate without or with incorrect meta_predicate declaration.', nl,
+     'In any case this represents a bad design and must be fixed, either', nl,
+     'completing the program or removing the unreferenced predicates.', nl, nl].
 prolog:message(acheck(unused, Node-EdgeLL)) -->
     message_unused_node(Node, ['*', ' ']),
     foldl(foldl(message_unused_rec([' ', ' ', ' ', ' '])), EdgeLL).
