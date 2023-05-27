@@ -65,9 +65,6 @@ balancing
 :- multifile
     '$broker'/1.
 
-:- discontiguous
-    '$broker'/1.
-
 alias_file(RelTo, Alias, File) :-
     absolute_file_name(Alias, File, [file_type(prolog), relative_to(RelTo)]).
 
