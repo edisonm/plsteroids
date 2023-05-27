@@ -70,7 +70,17 @@
     system:goal_expansion/4,
     before/2.
 
+%!  before(+Module) is det.
+%
+%   Declaration to say that the expansion provided by this Module must happen
+%   before the expansion in Module
+
 before(_).
+
+%!  after(+Module) is det.
+%
+%   Declaration to say that the expansion provided by this Module must happen
+%   after the expansion in Module
 
 after(_).
 
