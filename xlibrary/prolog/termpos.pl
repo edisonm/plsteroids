@@ -38,6 +38,7 @@
 :- use_module(library(apply)).
 :- use_module(library(lists)).
 :- use_module(library(transpose)).
+:- use_module(library(sequence_list)).
 :- init_expansors.
 
 :- multifile '$add_termpos'/4.
@@ -90,6 +91,21 @@ link_argpos(HArgPosLL, [Arg, Pos]) -->
     ; [[Arg, Pos]]
     ).
 
+normalize_pi(M, H1, C:H) :-
+    strip_module(M:H1, C, H).
+
+expand_pi(meta_predicate, M:H1, M:H) :-
+    ( termpos:'$add_termpos'(M, H1, H, [_, InL, InL, OutL, OutL])
+    ->true
+    ; H = H1
+    ).
+expand_pi(_, M:F1/A1, M:F/A) :-
+    functor(Head, F1, A1),
+    ( termpos:'$add_termpos'(M, Head, NewHead, _)
+    ->functor(NewHead, F, A)
+    ; F1/A1 = F/A
+    ).
+
 term_expansion((:- add_termpos Spec),
                termpos:'$add_termpos'(M, Head, NewHead, InOutArgPosLL)) :-
     '$current_source_module'(M),
@@ -113,6 +129,15 @@ term_expansion((Head :- Body), (NewHead :- NewBody)) :-
     expand_goal(Body, NewBody),
     nb_delete('$termpos'),
     nb_delete('$argpos').
+term_expansion((:- Decl1), (:- Decl2)) :-
+    Decl1 =.. [F, PIs1],
+    current_op(1150, fx, F), % ad-hoc way to check it is a declaration
+    Decl2 =.. [F, PIL2],
+    sequence_list(PIs1, PIL1, []),
+    '$current_source_module'(M),
+    maplist(normalize_pi(M), PIL1, PIL),
+    maplist(expand_pi(F), PIL, PIL2),
+    PIL \= PIL2.
 term_expansion(Head, NewHead) :-
     '$current_source_module'(M),
     '$add_termpos'(M, Head, NewHead, [_, InL, InPosL, OutL, OutPosL]),
