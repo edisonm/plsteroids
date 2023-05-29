@@ -96,6 +96,7 @@ hide_var_dynamic_hook(goal_expansion(_, _, _, _), _).
 hide_var_dynamic_hook(raw_load_loop(_, _), raw_loader).
 hide_var_dynamic_hook(ref_head(_, _, _), module_links).
 hide_var_dynamic_hook(check_cohm_clause(_, _, _, _), cohesive).
+hide_var_dynamic_hook(profile_expander(_, _, _, _, _), neck).
 
 :- dynamic
     wrong_dynamic_db/4,

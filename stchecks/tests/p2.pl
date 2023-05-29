@@ -4,6 +4,7 @@
 :- use_module(library(plprops)).
 :- use_module(library(rtchecks)).
 :- use_module(p3).
+:- init_expansors.
 
 :- rtcheck p/1.
 

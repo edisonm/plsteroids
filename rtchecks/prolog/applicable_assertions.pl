@@ -39,6 +39,7 @@
 :- use_module(library(assertions)).
 :- use_module(library(ctrtchecks)).
 :- use_module(library(intercept)).
+:- init_expansors.
 
 :- meta_predicate
        applicable_assertions(0, -, -).

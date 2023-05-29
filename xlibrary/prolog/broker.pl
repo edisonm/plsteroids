@@ -44,6 +44,7 @@
 :- reexport(library(compound_expand)).
 :- use_module(library(change_alias)).
 :- reexport(library(interface)).
+:- init_expansors.
 
 /** <module> WebSocket broker
 

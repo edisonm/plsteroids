@@ -91,6 +91,7 @@ refactor/tests/operator_to_pred.plt
 refactor/tests/collapse_bindings.plt
 refactor/tests/substitute_list.plt
 refactor/tests/operator_to_operator.plt
+refactor/tests/successive_operators.plt
 refactor/tests/keep_layout.plt
 refactor/tests/change_arithmetic.plt
 refactor/tests/subst_modq_term.plt
@@ -101,7 +102,6 @@ refactor/tests/add_singleton.plt
 refactor/tests/del_last_literal.plt
 refactor/tests/rename_term.plt
 refactor/tests/var_to_term.plt
-refactor/tests/successive_operators.plt
 refactor/tests/ident_sentence.plt
 refactor/tests/remove_sentence.plt
 xlibrary/tests/i18n/i18n_2.plt

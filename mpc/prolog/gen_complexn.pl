@@ -41,6 +41,7 @@
 :- use_module(library(neck)).
 :- use_module(library(assertions)).
 :- use_module(library(complexn_desc)).
+:- init_expansors.
 
 gen_complexn :-
     absolute_file_name(plbin('.'), Dir, [file_type(directory), access(exist)]),

@@ -36,6 +36,7 @@
 
 :- use_module(library(http/websocket)).
 :- use_module(library(broker)).
+:- init_expansors.
 
 %  Note: remote call of meta predicates can not be supported, because the client
 %  context module could be inexistent in the server.

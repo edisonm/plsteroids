@@ -41,6 +41,7 @@
 :- use_module(library(neck)).
 :- use_module(library(assertions)).
 :- use_module(library(floatn_desc)).
+:- init_expansors.
 
 gen_floatn :-
     absolute_file_name(plbin('.'), Dir, [file_type(directory), access(exist)]),
