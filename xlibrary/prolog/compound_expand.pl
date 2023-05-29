@@ -135,14 +135,14 @@ collect_expansors(ExpansorName, M, ML) :-
 type_expansors(term, term_expansion, call_term_expansion).
 type_expansors(goal, goal_expansion, call_goal_expansion).
 
-:- multifile init_expansion_decl_optional/0.
+:- multifile init_expansors_decl_optional/0.
 
-% init_expansion_decl_optional.
+% init_expansors_decl_optional.
 
 module_expansors(M, Type, ML) :-
     '$defined_predicate'(M:'$module_expansors'(_, _)),
     M:'$module_expansors'(Type, ML).
-:- if(init_expansion_decl_optional).
+:- if(init_expansors_decl_optional).
 module_expansors(M, Type, ML) :-
     type_expansors(Type, Expansor, _),
     collect_expansors(Expansor, M, ML).
@@ -197,7 +197,7 @@ compound_term_expansion(Term1, Pos1, Term, Pos) :-
       Pos  = Pos2
     ).
 
-:- if(init_expansion_decl_optional).
+:- if(\+ init_expansors_decl_optional).
 no_more_expansions_after_init(Source) :-
     type_expansors(Type, Expansor, _),
     collect_expansors(Expansor, Source, TN),
