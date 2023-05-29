@@ -42,7 +42,9 @@
                  neckis/2]).
 
 :- use_module(library(lists)).
+:- use_module(library(pairs)).
 :- use_module(library(apply)).
+:- use_module(library(transpose)).
 :- use_module(library(list_sequence)).
 :- use_module(library(choicepoints)).
 :- use_module(library(statistics)).
@@ -125,9 +127,9 @@ current_seq_lit((H, T), S, L1, L, R1, R) :-
     ).
 
 assign_value(A, V) -->
-    ( {var(V)}
+    ( {var(A)}
     ->{A=V}
-    ; [A=V]
+    ; [A-V]
     ).
 
 neck_prefix('__aux_neck_').
@@ -144,6 +146,48 @@ neck_needs_check(neckis(_, _), fail).
 call_checks(Neck, File, Line, Call, HasCP) :-
     neck_needs_check(Neck, Check),
     has_choicepoints(do_call_checks(Check, File, Line, Call), nb_setarg(1, HasCP, no)).
+
+avl_testclause(AVL, F, Head, Body) :-
+    pairs_keys_values(AVL, ArgH, ArgB),
+    Head =.. [F|ArgH],
+    Body =.. [F|ArgB].
+
+sumarize_1(Key-LL, Key-[InfCurrent, InfOptimal]) :-
+    transpose(LL, [CL, OL]),
+    sum_list(CL, InfCurrent),
+    sum_list(OL, InfOptimal).
+
+variant_sha1_nat(Term, Hash) :-
+    copy_term_nat(Term, Tnat),
+    variant_sha1(Tnat, Hash).
+
+performance_issue(_-[InfCurrent, InfOptimal]) :- InfCurrent =< InfOptimal.
+
+profile_expander(M, Head, AssignedL, Expanded, Issues) :-
+    findall(Key-[InfCurrent, InfOptimal],
+            ( F1 = '__aux_test_clause_evl',
+              TestH =.. [F1|AssignedL],
+              functor(TestH, F1, A),
+              F2 = '__aux_test_clause_seq',
+              functor(TestL, F2, A),
+              setup_call_cleanup(
+                  assertz(M:TestH :- Expanded),
+                  call_time(M:TestH, T1),
+                  abolish(M:F1/A)),
+              foldl(assign_value, AssignedL, _, AVL, []),
+              avl_testclause(AVL, F2, TestB, TestL),
+              setup_call_cleanup(
+                  assertz(M:TestB),
+                  call_time(M:TestL, T2),
+                  abolish(M:F2/A)),
+              variant_sha1_nat(M:Head, Key),
+              InfCurrent = T1.inferences,
+              InfOptimal = T2.inferences
+            ), InfCurrentU),
+    keysort(InfCurrentU, InfCurrentL),
+    group_pairs_by_key(InfCurrentL, InfCurrentG),
+    maplist(sumarize_1, InfCurrentG, InfCurrentS),
+    include(performance_issue, InfCurrentS, Issues).
 
 do_call_checks(true, File, Line, Call) :- call_checkct(Call, File, Line, []).
 do_call_checks(fail, _,    _,    Call) :- call(Call).
@@ -228,6 +272,7 @@ term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
     % the code to prevent this warning --EMM
     % ; memberchk(Neck, [necks, necks(_, _), neckis, neckis(_, _)])
     % ->true
+    /*
     ; ClausePIL = [t(_, MHead)],
       strip_module(Head,  _, Head1),
       compound(Head1),
@@ -237,19 +282,15 @@ term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
       var(Arg1),
       nonvar(Arg2)
     ->true
-    ; ClausePIL = [t(ClausePI, _)],
-      % Compare performance with simple unification via =/2 to see if neck is
-      % improving the performance or not. But note that this will compare
-      % interpreted prolog, not optimized/compiled code:
-      findall(T1, call_time(Expanded, T1), [T1]),
-      InfCurrent = T1.inferences,
-      copy_term(Pattern-AssignedL, ClausePI-ValuesL),
-      foldl(assign_value, AssignedL, ValuesL, AVL, []),
-      list_sequence(AVL, Sequence),
-      findall(T2, call_time(Sequence, T2), [T2]),
-      InfOptimal = T2.inferences,
-      InfOptimal >= InfCurrent
-    ->warning_nocp(File, Line, M, Head, InfOptimal >= InfCurrent),
+    */
+    ; % Compare performance with simple unification via a fact to see if neck is
+      % improving the performance or not, it works with non deterministic
+      % predicates assuming the worst case scenario (upper bound). But note that
+      % this will compare interpreted prolog, not optimized/compiled code or
+      % indexing effects:
+      profile_expander(M, Head, AssignedL, Expanded, Issues),
+      Issues \= []
+    ->maplist(warning_nocp(File, Line, M, Head), Issues),
       erase(Ref),
       fail
     ; true
@@ -275,12 +316,13 @@ st_body(Head, M, RTHead, ClausePIL, Clause) :-
                     %(:- multifile RTM:RTF/RTA) % silent audit warnings
                    ]).
 
-warning_nocp(File, Line, M, H, Term) :-
+warning_nocp(File, Line, M, H, _-[InfCurrent, InfOptimal]) :-
     print_message(
         warning,
         at_location(
             file(File, Line, -1, _),
-            format("Ignored neck on ~w, since it could cause performance degradation (~w)", [M:H, Term]))).
+            format("Ignored neck on ~w, since it could cause performance degradation (~w)",
+                   [M:H, InfCurrent =< InfOptimal]))).
 
 term_expansion((Head :- Body), ClauseL) :-
     term_expansion_hb(Head, Body, NB, (Head :- NB), ClauseL).

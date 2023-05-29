@@ -5,10 +5,26 @@
           ]).
 
 :- use_module(library(neck)).
+:- use_module(library(lists)).
+:- init_expansors.
 
 q1(1, a).
 q1(2, b).
 q1(3, c).
+
+a1(H) :-
+    functor(H, f, 2),
+    arg(1, H, g(A)),
+    arg(2, H, h(A)),
+    A is sqrt(2),
+    neck.
+
+a2(H) :-
+    member(X, [1,2,3]),
+    neck,
+    a3(X, H).
+
+a3(_, _).
 
 e1(A, F) :-
     q1(A, B),
@@ -49,6 +65,7 @@ e3(A, B) :-
     q1(A, B),
     neck.
 
+% Next clause must trigger a performance warning, but not an error:
 e4(A, A) :-
     neck.
 
