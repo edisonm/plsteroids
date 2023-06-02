@@ -161,7 +161,7 @@ variant_sha1_nat(Term, Hash) :-
     copy_term_nat(Term, Tnat),
     variant_sha1(Tnat, Hash).
 
-performance_issue(_-[InfCurrent, InfOptimal]) :- InfCurrent =< InfOptimal.
+performance_issue(_-[InfCurrent, InfOptimal]) :- InfCurrent < InfOptimal.
 
 profile_expander(M, Head, AssignedL, Expanded, Issues) :-
     findall(Key-[InfCurrent, InfOptimal],
@@ -322,7 +322,7 @@ warning_nocp(File, Line, M, H, _-[InfCurrent, InfOptimal]) :-
         at_location(
             file(File, Line, -1, _),
             format("Ignored neck on ~w, since it could cause performance degradation (~w)",
-                   [M:H, InfCurrent =< InfOptimal]))).
+                   [M:H, InfCurrent < InfOptimal]))).
 
 term_expansion((Head :- Body), ClauseL) :-
     term_expansion_hb(Head, Body, NB, (Head :- NB), ClauseL).
