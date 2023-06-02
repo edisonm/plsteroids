@@ -35,6 +35,7 @@
 :- module(cdbid, []).
 
 :- use_module(library(bid_eval)).
+:- use_module(library(neck)).
 :- init_expansors.
 
 cd_type(cddd, bid64 ).

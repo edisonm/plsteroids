@@ -36,7 +36,9 @@
 
 :- license(gpl_swipl, 'CLP(FLOATN)').
 :- use_module(library(floatn_eval)).
+:- use_module(library(neck)).
 :- reexport(library(clpcd)).
+:- init_expansors.
 
 clpcd_domain_ops:clpcd_module(cdfloatn(_), cdfloatn).
 

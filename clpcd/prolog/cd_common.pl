@@ -32,9 +32,7 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- use_module(library(neck)).
 :- use_module(library(clpcd/domain_ops)).
-:- init_expansors.
 
 :- public cd_type/2.
 :- public cd_text/2.
