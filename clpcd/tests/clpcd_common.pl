@@ -1,7 +1,5 @@
 :- begin_tests(clpcd).
 
-:- init_expansors.
-
 :- [mip].
 
 test(entailed) :-

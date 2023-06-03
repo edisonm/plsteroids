@@ -52,12 +52,15 @@ pack_set_local_path(Pack) :-
 pack_load_files(Options, Loader, Pack) :-
     option(exclude(ExFiles), Options, []),
     directory_source_files(plroot(Pack/prolog), Files, [recursive(true), if(true)]),
+    atom_concat('_aux', Pack, AuxModule),
     forall(( member(File, Files),
              % \+ module_property(_, file(File)),
              \+ ( member(ExFile, ExFiles),
                   absolute_file_name(ExFile, File, [file_type(prolog), file_errors(fail)])
                 )
-           ), call(Loader, File)).
+           ), call(Loader, AuxModule:File)).
+
+:- meta_predicate pack_load_local(+,1,+).
 
 pack_load_local(Options, Loader, Pack) :-
     pack_set_local_path(Pack),

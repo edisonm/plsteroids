@@ -3,11 +3,8 @@
 % load tools
 :- use_module(library(comment_data)).
 :- use_module(library(prolog_xref)). % Be careful: this after comment_data
-:- use_module(library(assertions)).
 :- use_module(library(metaprops)).
 :- use_module(library(refactor)).
-:- use_module(library(rtchecks)).
-:- use_module(library(assertions)).
 :- use_module(library(assrt_meta)).
 :- use_module(library(stchecks)).
 % :- use_module(library(ws_cover)).

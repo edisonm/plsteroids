@@ -11,6 +11,7 @@
 :- use_module(library(rtchecks_utils)).
 :- use_module(library(intercept)).
 :- use_module(library(libprops)).
+:- use_module(library(rtchecks)).
 
 user:message_property(_, location_prefix(_, '', 'ERROR: ')).
 user:message_property(_, stream(current_output)) :- user:error_on_co.

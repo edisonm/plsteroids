@@ -34,8 +34,10 @@
 
 :- module(floatn_eval, [int/3]).
 
-:- use_module(library(lists)).
 :- use_module(library(neck)).
+:- use_module(library(assertions)).
+:- use_module(library(plprops)).
+:- use_module(library(lists)).
 :- use_module(library(libfloatn)).
 :- use_module(library(compare_eq)).
 :- use_module(library(list_sequence)).
@@ -44,12 +46,14 @@
 
 :- include(library(floatn_reserve_eps)).
 
+/*
 :- pred [ [ e/2, epsilon/2, cputime/2 ] :: (int * -floatn_t),
           [ eval/3, (+)/3, (-)/3, lgamma/3
           ] :: (+floatn_t * int * -floatn_t),
           [ (/)/4, (+)/4, (*)/4, (-)/4, (**)/4, (^)/4, atan/4, root/4
           ] :: (+floatn_t * +floatn_t * int * -floatn_t)
         ].
+*/
 
 cd_prefix(floatn(P), floatn, [P]).
 

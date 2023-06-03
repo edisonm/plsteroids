@@ -9,9 +9,15 @@
 :- use_module(library(bid_eval), []).
 
 :- set_prolog_flag(autoload, false).
+
 use_module_ne(Lib) :- use_module(Lib, []).
+
 :- loadpacks(use_module_ne).
+
 :- set_prolog_flag(autoload, true).
 
 :- [library(stchecks)].
 :- [library(ws_source)].
+
+% Check that we don't load the compound expand operator in the user's space     
+:- \+ current_op(1, fx, user:'$compound_expand').
