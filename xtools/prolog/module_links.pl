@@ -1,4 +1,4 @@
-/*  Part of Static Checks
+/*  Part of Extended Tools for SWI-Prolog
 
     Author:        Edison Mera
     E-mail:        efmera@gmail.com
