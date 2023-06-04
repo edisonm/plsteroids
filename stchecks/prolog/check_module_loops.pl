@@ -36,6 +36,7 @@
 
 :- use_module(library(lists)).
 :- use_module(library(calls_to)).
+:- use_module(library(mark_preds)).
 :- use_module(library(checker)).
 :- use_module(library(module_loops)).
 :- use_module(library(module_links)).
@@ -90,6 +91,7 @@ ml_msg_path(P) -->
 
 checker:check(module_loops, Pairs, Options) :-
     collect_calls_to(Options, _),
+    mark_compile_time_called,
     update_depends_of,
     module_loops(Loops, Options),
     findall(Pair, loops_pairs(Loops, Pair), Pairs).

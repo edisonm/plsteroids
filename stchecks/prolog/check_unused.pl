@@ -41,7 +41,6 @@
 :- use_module(library(clambda)).
 :- use_module(library(compilation_module)).
 :- use_module(library(commited_retract)).
-:- use_module(library(qualify_meta_goal)).
 :- use_module(library(checkable_predicate)).
 :- use_module(library(current_defined_predicate)).
 :- use_module(library(extra_location)).
@@ -52,6 +51,8 @@
 :- use_module(library(ungroup_keys_values)).
 :- use_module(library(condconc)).
 :- use_module(library(calls_to)).
+:- use_module(library(mark_preds)).
+
 :- init_expansors.
 
 /** <module> Check unused predicates
@@ -65,12 +66,6 @@
     prolog:message//1.
 
 :- dynamic
-    marked_assertion/2,
-    marked_predid/2,
-    marked_clause/1,
-    marked_initialization/0,
-    marked_declaration/0,
-    marked_exported/2,
     edge/5.
 
 checker:check(unused, Result, Options) :-
@@ -80,35 +75,15 @@ checker:check(unused, Result, Options) :-
 
 check_unused(Options, Pairs) :-
     collect_calls_to(Options, MFileD),
+    mark_compile_time_called,
     option_files([module_files(MFileD)], FileD),
     option(concurrent(Concurrent), Options, true),
     mark(Concurrent),
     sweep(FileD, Pairs).
 
 cleanup_unused :-
-    retractall(marked_clause(_)),
-    retractall(marked_assertion(_, _)),
-    retractall(marked_predid(_, _)),
-    retractall(marked_initialization),
-    retractall(marked_declaration),
-    retractall(marked_exported(_, _)),
+    cleanup_marked,
     retractall(edge(_, _, _, _, _)).
-
-marked('<assertion>'(M:H)) :- marked_assertion(H, M).
-marked('<public>'(M:H))    :- marked_predid(H, M).
-marked(M:H)                :- marked_predid(H, M).
-marked(clause(Ref))        :- marked_clause(Ref).
-marked('<initialization>') :- marked_initialization.
-marked('<declaration>')    :- marked_declaration.
-marked('<exported>'(M:H))  :- marked_exported(H, M).
-
-record_marked('<assertion>'(M:H)) :- assertz(marked_assertion(H, M)).
-record_marked('<public>'(M:H))    :- assertz(marked_predid(H, M)).
-record_marked(M:H)                :- assertz(marked_predid(H, M)).
-record_marked(clause(Ref))        :- assertz(marked_clause(Ref)).
-record_marked('<initialization>') :- assertz(marked_initialization).
-record_marked('<declaration>'   ) :- assertz(marked_declaration).
-record_marked('<exported>'(M:H) ) :- assertz(marked_exported(H, M)).
 
 is_entry_caller('<assertion>'(M:H)) :- entry_caller(M, H).
 is_entry_caller('<initialization>').
@@ -134,57 +109,6 @@ entry_point(Caller) :-
 mark(Concurrent) :-
     cond_forall(Concurrent, entry_point(Caller), put_mark(Caller)).
 
-resolve_meta_goal(H, M, G) :-
-    ( ( predicate_property(M:H, meta_predicate(Meta))
-                                % don`t use inferred_meta_predicate(M:H, Meta)
-                                % since actually it is not being used by the
-                                % compiler and would lead to incorrect results
-      )
-    ->qualify_meta_goal(M:H, Meta, G)
-    ; G = H
-    ).
-
-is_marked(CRef) :-
-    copy_term(CRef, Term),
-    marked(Term),
-    subsumes_term(Term, CRef).
-
-put_mark(CRef) :-
-    ( \+ is_marked(CRef)
-    ->record_marked(CRef),
-      forall(( calls_to(CRef, w, CM, Callee),
-               predicate_property(CM:Callee, implementation_module(M))
-             ),
-             mark_rec(Callee, M))
-    ; true
-    ).
-
-mark_rec(H, M) :-
-    resolve_meta_goal(H, M, G),
-    forall(gen_lit_marks(M:G, CRef), % Widening
-           put_mark(CRef)).
-
-%% gen_lit_marks(:Goal, Ref)
-%
-% Generalization step, we lose precision but avoid loops --EMM
-%
-% The order of this clauses matters, because we record as marked from the most
-% specific to the most generic one !!!
-%
-% The logic is: a call to a predicate will potentially use:
-%
-% (1) all the assertions
-% (2) the clauses that match, and
-% (3) the dynamic calls that match
-%
-gen_lit_marks(M:G, '<assertion>'(M:P)) :-
-    functor(G, F, A),
-    functor(P, F, A).          % Build a fresh head without undesirable bindings
-gen_lit_marks(MG, clause(Clause)) :-
-    match_head_clause(MG, Clause),
-    clause_property(Clause, file(_)).    % Static clauses only
-gen_lit_marks(G, P) :- copy_term(G, P). % copy term to avoid undesirable bindings
-
 gen_marks(Ref, Ref).
 gen_marks('<assertion>'(M:H), clause(Clause)) :-
     match_head_clause(M:H, Clause),
@@ -199,10 +123,6 @@ not_marked(H, M) :-
     \+ ( gen_lit_marks(M:H, Mark),
          marked(Mark)
        ).
-
-:- meta_predicate match_head_clause(0, -).
-match_head_clause(MH, Clause) :-
-    catch(clause(MH, _, Clause), _, fail).
 
 current_edge(X, Y) :-
     PI = M:F/A,
