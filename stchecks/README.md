@@ -113,13 +113,12 @@ at runtime using assert/1, use :- dynamic Name/Arity.
 unused:
 Unused Predicates
 -----------------
-The predicates has been implemented, however they are
-never referenced in the code nor exported.  Probably are
-dead-code, part of an incomplete implementation, or called
-indirectly by some meta predicate without or with incorrect
-meta_predicate declaration.  In any case this represents a
-bad design and must be fixed, either completing the program
-or removing the unreferenced predicates.
+The predicates has been implemented, however they are never
+referenced in the code nor exported.  Probably are dead-code, part
+of an incomplete implementation, or called indirectly by some meta
+predicate without or with incorrect meta_predicate declaration.
+In any case this represents a bad design and must be fixed, either
+completing the program or removing the unreferenced predicates.
 
 wrong_dynamic:
 Wrong Dynamic Declarations
@@ -134,7 +133,16 @@ difficult to analyze.
 module_loops:
 Module loops
 ------------
-Module loops could potentially lead to Demeter's law violations
+Module loops could potentially lead to Demeter's law violations.
+To help mitigate the problem, this analysis reports the predicates
+that can be reorganized in order to break the loop, as suggestion,
+focus first on the predicates reported as `used by`.  If is not
+possible to decouple the module without changing the predicates,
+it is reported as a strong module loop and will require further
+refactoring or module merge to decouple the involved code.  If the
+list of strongly connected predicates is empty, it is possible to
+resolve the loop involving more than 2 modules and it is reported
+as a complex module loop.
 
 
 [//]: # (prolog_end)
