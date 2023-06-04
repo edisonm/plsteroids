@@ -10,8 +10,6 @@
 
 :- set_prolog_flag(autoload, false).
 
-use_module_ne(Lib) :- use_module(Lib, []).
-
 :- loadpacks(use_module_ne).
 
 :- set_prolog_flag(autoload, true).

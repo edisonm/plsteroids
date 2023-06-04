@@ -22,4 +22,6 @@ package(mpc).
 package(andorra).
 package(stchecks).
 
+packages(Packages) :- findall(Package, package(Package), Packages).
+
 :- assertz(ref_msgtype:rstats_db).

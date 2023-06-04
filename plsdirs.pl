@@ -3,7 +3,7 @@
 :- use_module(library(apply)).
 
 :- [plsconfig].
-:- [plsloader].
+:- [xlibrary/prolog/packloader].
 
 :- packages(Packs),
    maplist(pack_set_path, Packs).

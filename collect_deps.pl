@@ -35,7 +35,7 @@
 :- module(collect_deps, [packs_trees/1]).
 
 :- use_module(plsconfig).
-:- use_module(plsloader).
+:- use_module(library(packloader)).
 :- use_module(library(packs_trees)).
 
 packs_trees(TreeL) :-

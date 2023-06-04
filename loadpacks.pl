@@ -1,4 +1,4 @@
-:- [plsloader].
+:- use_module(library(packloader)).
 :- use_module(library(thread)).
 :- use_module(library(apply)).
 % :- use_module(library(pldoc/doc_htmlsrc)).
@@ -6,7 +6,9 @@
 :- meta_predicate loadpacks(1).
 
 loadpacks(Loader) :-
+    packages(PackL),
     scanpacks(
+        PackL,
         pack_load_local(
             [exclude(
                  [clpcd/prolog/cd_common,
