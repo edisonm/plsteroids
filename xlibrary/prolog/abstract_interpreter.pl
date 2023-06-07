@@ -554,8 +554,11 @@ get_body_replacement(G, M, EvalL, MR) :-
     ; replace_goal_hook(G, IM, R),
       MR = M:R
     ; copy_term(EvalL, EvalC),
-      memberchk((IM:G as R), EvalC),
-      MR = @(R, M)
+      memberchk((IM:G as I:R), EvalC),
+      % This weird code is used because we can not use @/2 here
+      qualify_meta_goal(M:R, MQ),
+      strip_module(MQ, _, Q),
+      MR = I:Q
     ).
 
 is_bottom(State, State) :-
