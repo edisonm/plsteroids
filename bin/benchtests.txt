@@ -87,12 +87,12 @@ refactor/tests/add_ini_end.plt
 refactor/tests/max_changes.plt
 refactor/tests/add_to_empty_file.plt
 refactor/tests/move_empty_list.plt
-refactor/tests/operator_to_pred.plt
 refactor/tests/collapse_bindings.plt
+refactor/tests/operator_to_pred.plt
 refactor/tests/substitute_list.plt
-refactor/tests/operator_to_operator.plt
 refactor/tests/successive_operators.plt
 refactor/tests/keep_layout.plt
+refactor/tests/operator_to_operator.plt
 refactor/tests/change_arithmetic.plt
 refactor/tests/subst_modq_term.plt
 refactor/tests/del_literal.plt

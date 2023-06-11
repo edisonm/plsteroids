@@ -55,15 +55,28 @@
 
    Note:  Use  reexport(library(compound_expand))  in  order for  this  to  work
    efficiently, otherwise you will have to import compound_expand on each of the
-   dependent expansions, but also avoid to do it in the user module.
+   dependent expansions,  but also you should  avoid to import this  in the user
+   module.
 
 @author Edison Mera
 */
 
+:- use_module(library(def_modules), [type_expansors/2]).
+
+% The most  efficient way  to implement  the compound  expansions library  is to
+% redefine the  predicate '$def_modules'/2, which  is only called  in expand.pl,
+% but for some  reason I don't know why  we can not redefine it,  so instead the
+% next lines are in place:
+
+% :- redefine_system_predicate('$def_modules'(_,_)). % This does not work
+:- abolish('$expand':'$def_modules'/2),
+   use_module('$expand':library(def_modules), ['$def_modules'/2]).
+
 :- use_module(library(expansion_module)).
-:- use_module(library(lists)).
-:- use_module(library(option)).
 :- use_module(library(partsort)).
+:- use_module(library(lists)).
+:- use_module(library(apply)).
+:- use_module(library(option)).
 
 :- multifile
     system:term_expansion/4,
@@ -116,54 +129,19 @@ expansion_order_gt(M, M2) :-
     expansion_order_gt(M, M1),
     !.
 
-collect_expansors(ExpansorName, M, ML) :-
-    findall(EM-PI,
+collect_expansor(EM, ExpansorName) -->
+    ( {implemented_pi(EM:ExpansorName)}
+    ->[ExpansorName]
+    ; []
+    ).
+
+collect_expansors(ExpansorNameL, M, ML) :-
+    findall(EM-PIL,
             ( expansion_module(M, EM),
-              phrase(( ( {implemented_pi(EM:ExpansorName/4)}
-                       ->[ExpansorName/4]
-                       ; []
-                       ),
-                       ( {implemented_pi(EM:ExpansorName/2)}
-                       ->[ExpansorName/2]
-                       ; []
-                       )
-                     ), PI),
-              PI \= []
+              foldl(collect_expansor(EM), ExpansorNameL, PIL, []),
+              PIL \= []
             ), MU),
     partsort(expansion_order, MU, ML).
-
-type_expansors(term, term_expansion, call_term_expansion).
-type_expansors(goal, goal_expansion, call_goal_expansion).
-
-:- multifile init_expansors_decl_optional/0.
-
-% init_expansors_decl_optional.
-
-module_expansors(M, Type, ML) :-
-    '$defined_predicate'(M:'$module_expansors'(_, _)),
-    M:'$module_expansors'(Type, ML).
-:- if(init_expansors_decl_optional).
-module_expansors(M, Type, ML) :-
-    type_expansors(Type, Expansor, _),
-    collect_expansors(Expansor, M, ML).
-:- endif.
-
-do_compound_expansion(M, Type, Term1, Pos1, Term, Pos) :-
-    \+ current_prolog_flag(xref, true),
-    type_expansors(Type, _, Closure),
-    once(module_expansors(M, Type, ML)),
-    call('$expand':Closure, ML, Term1, Pos1, Term, Pos),
-    !.
-
-do_compound_expansion(Type, Term1, Pos1, Term, Pos) :-
-    '$current_source_module'(M),
-    M \= user, % Compound expansions not supported in user module
-    do_compound_expansion(M, Type, Term1, Pos1, Term, Pos).
-
-system:goal_expansion(Goal1, Pos1, Goal, Pos) :-
-    do_compound_expansion(goal, Goal1, Pos1, Goal, Pos).
-
-:- thread_local lock_compound/0.
 
 %!  init_expansors is det.
 %
@@ -179,28 +157,9 @@ stop_expansors :-
     '$current_source_module'(Source),
     abolish(Source:'$module_expansors'/2).
 
-compound_term_expansion(:- before(B), _, compound_expand:before(A, B), _) :-
-    '$current_source_module'(A).
-compound_term_expansion(:- after(B), _, compound_expand:before(B, A), _) :-
-    '$current_source_module'(A).
-compound_term_expansion(Term1, Pos1, Term, Pos) :-
-    do_compound_expansion(term, Term1, Pos1, Term2, Pos2),
-    \+ (Term1 =@= Term2),
-    % continue with other expansions:
-    ( setup_call_cleanup(assertz(lock_compound),
-                         '$expand':expand_terms(call_term_expansion([system-[term_expansion/4],
-                                                                     system-[term_expansion/2]]),
-                                                Term2, Pos2, Term, Pos),
-                         retractall(lock_compound))
-    ->true
-    ; Term = Term2,
-      Pos  = Pos2
-    ).
-
-:- if(\+ init_expansors_decl_optional).
 no_more_expansions_after_init(Source) :-
-    type_expansors(Type, Expansor, _),
-    collect_expansors(Expansor, Source, TN),
+    type_expansors(Type, Expansors),
+    collect_expansors(Expansors, Source, TN),
     ( '$defined_predicate'(Source:'$module_expansors'(_, _))
     ->Source:'$module_expansors'(Type, TL),
       TL \= TN,
@@ -215,24 +174,24 @@ system:term_expansion(end_of_file, _) :-
     prolog_load_context(source, File),
     no_more_expansions_after_init(Source),
     fail.
-:- endif.
 system:term_expansion(end_of_file, _) :-
     '$current_source_module'(Source),
     module_property(Source, file(File)),
     prolog_load_context(source, File),
     stop_expansors,
     fail.
-system:term_expansion((:- init_expansors), Pos1, Term, Pos) :-
+system:term_expansion(:- before(B), compound_expand:before(A, B)) :-
+    '$current_source_module'(A).
+system:term_expansion(:- after( B), compound_expand:before(B, A)) :-
+    '$current_source_module'(A).
+system:term_expansion((:- init_expansors), []) :-
     '$current_source_module'(Source),
-    collect_expansors(term_expansion, Source, TL),
-    collect_expansors(goal_expansion, Source, GL),
+    type_expansors(term, TermExpansors),
+    collect_expansors(TermExpansors, Source, TL),
+    type_expansors(goal, GoalExpansors),
+    collect_expansors(GoalExpansors, Source, GL),
     dynamic(Source:'$module_expansors'/2),
     public(Source:'$module_expansors'/2),
     retractall(Source:'$module_expansors'(_, _)),
     assertz(Source:'$module_expansors'(term, TL)),
-    assertz(Source:'$module_expansors'(goal, GL)),
-    % this allows to use (:- init_expansors) as a hook for other expansors:
-    do_compound_expansion(term, (:- init_expansors), Pos1, Term, Pos).
-system:term_expansion(Term1, Pos1, Term, Pos) :-
-    \+ lock_compound,
-    compound_term_expansion(Term1, Pos1, Term, Pos).
+    assertz(Source:'$module_expansors'(goal, GL)).

@@ -33,6 +33,7 @@
 
 :- use_module(library(i18n/i18n_expansion)).
 :- use_module(library(i18n/i18n_support)).
+:- use_module(library(filesex)).
 :- init_expansors.
 
 :- retractall(i18n_support:language(_)). % overriding language
@@ -40,7 +41,7 @@
 
 i18n_support:i18n_resource_dir(Dir) :-
     context_module(M),
-    current_module(M, F),
+    module_property(M, file(F)),
     directory_file_path(Dir, _, F).
 
 i18n_support:language(es).      % Spanish
