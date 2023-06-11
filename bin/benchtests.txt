@@ -4,8 +4,8 @@ idfpml/tests/cdqd.plt
 idfpml/tests/cddd.plt
 mpfr/tests/mpfr.plt
 andorra/tests/money.plt
-refactor/tests/refspeed.plt
 stchecks/tests/stchecks_5.plt
+refactor/tests/refspeed.plt
 unused.stest
 clpcd/tests/cdr.plt
 clpcd/tests/cdq.plt

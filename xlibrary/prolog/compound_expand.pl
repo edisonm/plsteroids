@@ -53,15 +53,21 @@
    SWI-Prolog  can be  achieved smoothly  and such  modules can  be used  in SWI
    Programs that do not require the Ciao dialect.
 
-   Note:  Use  reexport(library(compound_expand))  in  order for  this  to  work
-   efficiently, otherwise you will have to import compound_expand on each of the
-   dependent expansions,  but also you should  avoid to import this  in the user
-   module.
+   Notes:
+
+   - Use   reexport(library(compound_expand))  in   order  for   this  to   work
+     efficiently, otherwise you  will have to import compound_expand  on each of
+     the dependent expansions,  but also you should avoid to  import this in the
+     user module.
+
+   - Expansions are not applied to the module where they are implemented, but to
+     the modules that import them.  This  is a bit different from how expansions
+     work in SWI-Prolog, but it has a more clear behavior.
 
 @author Edison Mera
 */
 
-:- use_module(library(def_modules), [type_expansors/2]).
+:- use_module(library(def_modules), []).
 
 % The most  efficient way  to implement  the compound  expansions library  is to
 % redefine the  predicate '$def_modules'/2, which  is only called  in expand.pl,
@@ -141,7 +147,9 @@ collect_expansors(ExpansorNameL, M, ML) :-
               foldl(collect_expansor(EM), ExpansorNameL, PIL, []),
               PIL \= []
             ), MU),
-    partsort(expansion_order, MU, ML).
+    partsort(expansion_order, MU, MO),
+    system:'$def_modules'(M:ExpansorNameL, MT),
+    append(MO, MT, ML).
 
 %!  init_expansors is det.
 %
@@ -158,10 +166,15 @@ stop_expansors :-
     abolish(Source:'$module_expansors'/2).
 
 no_more_expansions_after_init(Source) :-
-    type_expansors(Type, Expansors),
-    collect_expansors(Expansors, Source, TN),
+    member(Expansors,
+           [[term_expansion/4, term_expansion/2],
+            [goal_expansion/4, goal_expansion/2]]),
+    collect_expansors(Expansors, Source, TN1),
+    system:'$def_modules'(Source:Expansors, DN),
+    subtract(TN1, DN, TN),
     ( '$defined_predicate'(Source:'$module_expansors'(_, _))
-    ->Source:'$module_expansors'(Type, TL),
+    ->Source:'$module_expansors'(Expansors, TL1),
+      subtract(TL1, DN, TL),
       TL \= TN,
       subtract(TN, TL, EL),
       print_message(warning, format("More expansors added after :- init_expansors declaration: ~w", [EL]))
@@ -186,12 +199,12 @@ system:term_expansion(:- after( B), compound_expand:before(B, A)) :-
     '$current_source_module'(A).
 system:term_expansion((:- init_expansors), []) :-
     '$current_source_module'(Source),
-    type_expansors(term, TermExpansors),
-    collect_expansors(TermExpansors, Source, TL),
-    type_expansors(goal, GoalExpansors),
-    collect_expansors(GoalExpansors, Source, GL),
     dynamic(Source:'$module_expansors'/2),
     public(Source:'$module_expansors'/2),
     retractall(Source:'$module_expansors'(_, _)),
-    assertz(Source:'$module_expansors'(term, TL)),
-    assertz(Source:'$module_expansors'(goal, GL)).
+    forall(member(Expansors,
+                  [[term_expansion/4, term_expansion/2],
+                   [goal_expansion/4, goal_expansion/2]]),
+           ( collect_expansors(Expansors, Source, TL),
+             assertz(Source:'$module_expansors'(Expansors, TL))
+           )).
