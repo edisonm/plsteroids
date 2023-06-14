@@ -92,13 +92,16 @@ with_context_value(Goal, Name, OldValue, NewValue) :-
 with_value(Goal, Name, OldValue1, NewValue) :-
     ( nb_current(Name, OldValue)
     ->OldValue1 = OldValue,
-      b_setval(Name, NewValue),
-      Goal,
-      b_setval(Name, OldValue)
-    ; b_setval(Name, NewValue),
-      Goal,
-      nb_delete(Name)
+      do_with_value(Goal, Name, OldValue, NewValue)
+    ; call_cleanup(
+          do_with_value(Goal, Name, [], NewValue),
+          nb_delete(Name))
     ).
+
+do_with_value(Goal, Name, OldValue, NewValue) :-
+    b_setval(Name, NewValue),
+    Goal,
+    b_setval(Name, OldValue).
 
 :- meta_predicate without_context_value(0, :).
 without_context_value(Goal, Name) :-
