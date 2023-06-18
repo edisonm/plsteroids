@@ -91,8 +91,8 @@ refactor/tests/collapse_bindings.plt
 refactor/tests/operator_to_pred.plt
 refactor/tests/substitute_list.plt
 refactor/tests/successive_operators.plt
-refactor/tests/keep_layout.plt
 refactor/tests/operator_to_operator.plt
+refactor/tests/keep_layout.plt
 refactor/tests/change_arithmetic.plt
 refactor/tests/subst_modq_term.plt
 refactor/tests/del_literal.plt
