@@ -102,11 +102,11 @@ term_expansion(end_of_file, Clauses) :-
     include(direct_interface(Interface), PIL, DIL),
     phrase(end_interface(Interface, DIL), Clauses, [end_of_file]).
 
-prolog:called_by(Pred, Interface, _, PredL) :-
+prolog:called_by(Pred, Interface, Context, PredL) :-
     '$interface'(Interface, DIL),
     member(F/A, DIL),
     functor(Pred, F, A),
-    findall(Implementation:Pred,
+    findall(@(Implementation:Pred, Context),
             interface:'$implementation'(Implementation, Interface),
             PredL),
     PredL \= [].
