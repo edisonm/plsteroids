@@ -104,6 +104,7 @@ evaluable_body_hook(atomic_list_concat(A, B, C), _,
                     ( ground(A), ground(B)
                     ; ground(B), ground(C)
                     )).
+evaluable_body_hook(thread_self(_), _, true).
 evaluable_body_hook(atom_length(A, _), _, ground(A)).
 evaluable_body_hook(upcase_atom(A, _), _, ground(A)).
 evaluable_body_hook(downcase_atom(A, _), _, ground(A)).
