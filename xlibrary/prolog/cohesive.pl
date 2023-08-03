@@ -94,10 +94,10 @@ cohesive_module_rt(_, user, _, _, _, _) :- !.
 cohesive_module_rt(_, _, _, _, spublic, _).
 cohesive_module_rt(H, Context, M, CohM, sexport, CheckCohM) :-
     ( % First, try with fast precompiled checker
-      predicate_property(Context:CheckCohM, defined)
+      '$defined_predicate'(Context:CheckCohM)
     ->Context:CheckCohM
     ; % Second, use the slower alternative, it works at compile time
-      predicate_property(Context:H, defined),
+      '$defined_predicate'(Context:H),
       cohesive_module(H, Context, M, CohM)
     ).
 cohesive_module_rt(_, C, _, C, sprivat, _).
