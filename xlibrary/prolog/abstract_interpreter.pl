@@ -135,8 +135,10 @@ evaluable_body_hook(is_list(A), _, (ground(A);is_list(A))).
 evaluable_body_hook(number(A),  _, nonvar(A)).
 evaluable_body_hook(float(A),   _, nonvar(A)).
 evaluable_body_hook(integer(A), _, nonvar(A)).
+evaluable_body_hook(strip_module(A, _, _), _, nonvar(A)).
 evaluable_body_hook(clause(A, _),    _, (strip_module(A, M, B), atom(M), callable(B))).
 evaluable_body_hook(clause(A, _, _), _, (strip_module(A, M, B), atom(M), callable(B))).
+evaluable_body_hook(nth_clause(H, _, R), _, (ground(R);strip_module(H, _, P), nonvar(P))).
 evaluable_body_hook(format(Out, Format, Args), _,
                     (compound(Out), nonvar(Format), ground(Args))).
 evaluable_body_hook(sort(A, _), _, (is_list(A), maplist(nonvar, A))).
