@@ -45,7 +45,6 @@
 
 :- use_module(library(lists)).
 :- use_module(library(neck)).
-:- use_module(library(extend_args)).
 :- init_expansors.
 
 :- meta_predicate mapnlist(1, ?).
@@ -102,7 +101,3 @@ Head :-
     ),
     necki,
     Body.
-
-call(M:Call8, A1, A2, A3, A4, A5, A6, A7, A8) :-
-    extend_args(M:Call8, [A1, A2, A3, A4, A5, A6, A7, A8], Call),
-    call(Call).
