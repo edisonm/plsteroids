@@ -36,6 +36,6 @@
 
 nmember(E, L) :- nmember(E, L, []).
 
-nmember(E, E, _) :- E \= [].
+nmember(E, E, _) :- \+ is_list(E).
 nmember(E, [L|T], _) :- nmember(E, L, T).
 nmember(E, _, [L|T]) :- nmember(E, L, T).
