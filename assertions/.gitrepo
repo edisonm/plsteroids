@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:edisonm/assertions.git
 	branch = master
-	commit = d9ffea2b260562ff05ec7de04a979f1b029d87ff
-	parent = 8014e73ed4ade10c584f307d4aea76574cc0f048
-	cmdver = 0.4.5
+	commit = 04198dc16668f609f9ecab471d8ed0ba9948f020
+	parent = 16535477443ae0afdff9dc3b9a64b980c495db32
+	cmdver = 0.4.3
 	method = merge
