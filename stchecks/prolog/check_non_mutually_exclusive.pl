@@ -52,10 +52,14 @@
 :- multifile
     prolog:message//1,
     mutually_exclusive_predicate/2,
-    mutually_exclusive_predicate_key/3.
+    mutually_exclusive_predicate_key/3,
+    mutually_exclusive_predicate_key/4.
 
 mutually_exclusive_predicate(MH) :-
-    strip_module(MH, M, H),
+    ( var(MH)
+    ->MH = M:H
+    ; strip_module(MH, M, H)
+    ),
     mutually_exclusive_predicate(H, M).
 
 mutually_exclusive_predicate(check(_, _, _), checker).
@@ -94,12 +98,14 @@ collect_non_mutually_exclusive(MFileD, MH, LocPL) :-
     strip_module(MH, M, H),
     get_dict(M, MFileD, FileD),
     findall(I-(Key-Clause),
-            ( clause(MH, _, Clause),
+            ( clause(MH, B, Clause),
               nth_clause(MH, I, Clause),
               From = clause(Clause),
               from_to_file(From, File),
               get_dict(File, FileD, _),
               ( mutually_exclusive_predicate_key(H, M, Key)
+              ->true
+              ; mutually_exclusive_predicate_key(H, M, B, Key)
               ->true
               ; Key = MH
               )
@@ -143,7 +149,7 @@ prolog:message(acheck(non_mutually_exclusive, PI-LocCIs)) -->
 
 locindex_index(_-I/_, I).
 
-locindex_loccl(Loc-I/K, Loc/[' clause ~w'-[I, K]]).
+locindex_loccl(Loc-I/K, Loc/[' clause ~w/~w'-[I, K]]).
 
 group_non_mut_ex((Loc-Idx/Key)/LocIdxL) -->
     {maplist(locindex_index, LocIdxL, Idxs)},
