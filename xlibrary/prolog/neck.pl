@@ -45,7 +45,6 @@
 :- use_module(library(pairs)).
 :- use_module(library(apply)).
 :- use_module(library(transpose)).
-:- use_module(library(list_sequence)).
 :- use_module(library(choicepoints)).
 :- use_module(library(statistics)).
 :- use_module(library(ordsets)).
