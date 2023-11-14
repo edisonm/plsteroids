@@ -36,7 +36,6 @@
           [ before/1,
             after/1,
             init_expansors/0,
-            stop_expansors/0,
             op(1, fx, '$compound_expand') % Used to detect expansion modules
           ]).
 
@@ -161,10 +160,6 @@ collect_expansors(ExpansorNameL, M, ML) :-
 
 init_expansors.
 
-stop_expansors :-
-    '$current_source_module'(Source),
-    abolish(Source:'$module_expansors'/2).
-
 no_more_expansions_after_init(Source) :-
     member(Expansors,
            [[term_expansion/4, term_expansion/2],
@@ -187,12 +182,20 @@ system:term_expansion(end_of_file, _) :-
     prolog_load_context(source, File),
     no_more_expansions_after_init(Source),
     fail.
+/* NOTE: this is commented out to let expansions in module qualified literals
+ * work, since you need to keep the expansions available --EMM
+
+stop_expansors :-
+    '$current_source_module'(Source),
+    abolish(Source:'$module_expansors'/2).
+
 system:term_expansion(end_of_file, _) :-
     '$current_source_module'(Source),
     module_property(Source, file(File)),
     prolog_load_context(source, File),
     stop_expansors,
     fail.
+*/
 system:term_expansion(:- before(B), compound_expand:before(A, B)) :-
     '$current_source_module'(A).
 system:term_expansion(:- after( B), compound_expand:before(B, A)) :-
