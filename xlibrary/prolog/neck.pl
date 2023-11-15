@@ -194,7 +194,14 @@ profile_expander(M, Head, AssignedL, Expanded, Issues) :-
 do_call_checks(true, File, Line, Call) :- call_checkct(Call, File, Line, []).
 do_call_checks(fail, _,    _,    Call) :- call(Call).
 
-term_expansion_hb(File, Line, M, Head, Neck, Static, Right, NeckBody, Pattern, ClauseL) :-
+track_deps(File, Line, M, Head, Body) :-
+    strip_module(M:Head, MH, Pred),
+    % Help static analysis to keep track of dependencies. TBD: find a
+    % way to store this out of the executable, for instance, in an asr file
+    freeze(Pred, assertz(head_calls_hook_db(Pred, MH, M:Body, File, Line))).
+
+
+term_expansion_hb(File, Line, M, Head, Neck, Static, Right, NeckHead, NeckBody, Pattern, ClauseL) :-
     once(( current_seq_lit(Right, !, LRight, SepBody),
            \+ current_seq_lit(SepBody, !, _, _)
            % We can not move the part above a cut to a separate clause
@@ -204,6 +211,7 @@ term_expansion_hb(File, Line, M, Head, Neck, Static, Right, NeckBody, Pattern, C
     term_variables(Head, HVars),
     '$expand':mark_vars_non_fresh(HVars),
     expand_goal(M:Static, Expanded),
+    freeze(NeckHead, track_deps(File, Line, M, NeckHead, Expanded)),
     HasCP = hascp(yes),
     term_variables(Head-Right, HNVarU),
     term_variables(Expanded, ExVarU),
@@ -293,10 +301,10 @@ term_expansion_hb(File, Line, M, Head, Neck, Static, Right, NeckBody, Pattern, C
                      ))
            ), ClauseL, ClauseL1).
 
-term_expansion_hb(Head, Neck, Static, Right, NeckBody, Pattern, ClauseL) :-
+term_expansion_hb(Head, Neck, Static, Right, NeckHead, NeckBody, Pattern, ClauseL) :-
     source_location(File, Line),
     '$current_source_module'(M),
-    term_expansion_hb(File, Line, M, Head, Neck, Static, Right, NeckBody, Pattern, ClauseL).
+    term_expansion_hb(File, Line, M, Head, Neck, Static, Right, NeckHead, NeckBody, Pattern, ClauseL).
 
 st_body(Head, M, RTHead, ClausePIL, Clause) :-
     member(t(_, Head), ClausePIL),
@@ -315,14 +323,6 @@ warning_nocp(File, Line, M, H, _-[InfCurrent, InfOptimal]) :-
             format("Ignored neck on ~w, since it could cause performance degradation (~w)",
                    [M:H, InfCurrent < InfOptimal]))).
 
-track_deps(Head, Body) :-
-    source_location(File, Line),
-    '$current_source_module'(M),
-    strip_module(M:Head, MH, Pred),
-    % Help static analysis to keep track of dependencies. TBD: find a
-    % way to store this out of the executable, for instance, in an asr file
-    freeze(Pred, assertz(head_calls_hook_db(Pred, MH, M:Body, File, Line))).
-
 check_has_neck(Body, Neck, Static, Right) :-
     once(( current_seq_lit(Body, Neck, Static, Right),
            memberchk(Neck, [neck, neck(X, X), necki, necki(X, X),
@@ -331,8 +331,7 @@ check_has_neck(Body, Neck, Static, Right) :-
 
 term_expansion((Head :- Body), ClauseL) :-
     check_has_neck(Body, Neck, Static, Right),
-    freeze(Head, track_deps(Head, Body)),
-    term_expansion_hb(Head, Neck, Static, Right, NB, (Head :- NB), ClauseL).
+    term_expansion_hb(Head, Neck, Static, Right, Head, NB, (Head :- NB), ClauseL).
 term_expansion((Head --> Body), ClauseL) :-
     current_seq_lit(Body, Neck1, _, _),
     memberchk(Neck1, [neck, necki, necks, neckis]),
@@ -343,11 +342,10 @@ term_expansion((Head --> Body), ClauseL) :-
       H1 = H
     ),
     check_has_neck(B, Neck, Static, Right),
-    freeze(H, track_deps(H, B)),
-    term_expansion_hb(H1, Neck, Static, Right, NB, (H :- NB), ClauseL).
+    term_expansion_hb(H1, Neck, Static, Right, H, NB, (H :- NB), ClauseL).
 term_expansion((:- Body), ClauseL) :-
     check_has_neck(Body, Neck, Static, Right),
-    term_expansion_hb('<declaration>', Neck, Static, Right, NB, (:- NB), ClauseL).
+    term_expansion_hb('<declaration>', Neck, Static, Right, '<declaration>', NB, (:- NB), ClauseL).
 term_expansion(end_of_file, ClauseL) :-
     in_module_file,
     findall(file_clause:head_calls_hook(Head, M, Body, File, Line),
