@@ -321,7 +321,7 @@ track_deps(Head, Body) :-
     strip_module(M:Head, MH, Pred),
     % Help static analysis to keep track of dependencies. TBD: find a
     % way to store this out of the executable, for instance, in an asr file
-    freeze(Pred, assertz(head_calls_hook_db(Pred, MH, Body, File, Line))).
+    freeze(Pred, assertz(head_calls_hook_db(Pred, MH, M:Body, File, Line))).
 
 check_has_neck(Body, Neck, Static, Right) :-
     once(( current_seq_lit(Body, Neck, Static, Right),
