@@ -32,18 +32,21 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(neck, [neck/0,
-                 neck/2,
-                 necki/0,
-                 necki/2,
-                 necks/0,
-                 necks/2,
-                 neckis/0,
-                 neckis/2]).
+:- module(neck,
+          [ neck/0,
+            neck/2,
+            necki/0,
+            necki/2,
+            necks/0,
+            necks/2,
+            neckis/0,
+            neckis/2
+          ]).
 
 :- use_module(library(lists)).
 :- use_module(library(pairs)).
 :- use_module(library(apply)).
+:- use_module(library(resolve_calln)).
 :- use_module(library(transpose)).
 :- use_module(library(choicepoints)).
 :- use_module(library(statistics)).
@@ -191,15 +194,7 @@ profile_expander(M, Head, AssignedL, Expanded, Issues) :-
 do_call_checks(true, File, Line, Call) :- call_checkct(Call, File, Line, []).
 do_call_checks(fail, _,    _,    Call) :- call(Call).
 
-term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
-    \+ ( nonvar(Head),
-         current_prolog_flag(xref, true)
-       ),
-    '$current_source_module'(M),
-    once(( current_seq_lit(Body1, Neck, Static, Right),
-           memberchk(Neck, [neck, neck(X, X), necki, necki(X, X),
-                            necks, necks(X, X), neckis, neckis(X, X)])
-         )),
+term_expansion_hb(File, Line, M, Head, Neck, Static, Right, NeckBody, Pattern, ClauseL) :-
     once(( current_seq_lit(Right, !, LRight, SepBody),
            \+ current_seq_lit(SepBody, !, _, _)
            % We can not move the part above a cut to a separate clause
@@ -232,8 +227,6 @@ term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
       format(atom(FNB), '~w~w:~w', [NeckPrefix, M, Hash]),
       SepHead =.. [FNB|ArgNB],
       conj(LRight, SepHead, NeckBody),
-      strip_module(M:Head, MH, Pred),
-      freeze(Pred, assertz(head_calls_hook_db(Pred, MH, Expanded, File, Line), Ref)),
       findall(t(Pattern, Head), call_checks(Neck, File, Line, Expanded, HasCP), ClausePIL),
       ( '$get_predicate_attribute'(M:SepHead, defined, 1),
         '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
@@ -256,8 +249,6 @@ term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
                )
              ), ClauseL1)
     ; expand_goal(M:Right, M:NeckBody),
-      strip_module(M:Head, MH, Pred),
-      freeze(Pred, assertz(head_calls_hook_db(Pred, MH, Expanded, File, Line), Ref)),
       findall(t(Pattern, Head), call_checks(Neck, File, Line, Expanded, HasCP), ClausePIL),
       RTHead = Head,
       ClauseL1 = []
@@ -290,7 +281,6 @@ term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
       profile_expander(M, Head, AssignedL, Expanded, Issues),
       Issues \= []
     ->maplist(warning_nocp(File, Line, M, Head), Issues),
-      erase(Ref),
       fail
     ; true
     ),
@@ -303,13 +293,15 @@ term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL) :-
                      ))
            ), ClauseL, ClauseL1).
 
-term_expansion_hb(Head, Body1, NeckBody, Pattern, ClauseL) :-
+term_expansion_hb(Head, Neck, Static, Right, NeckBody, Pattern, ClauseL) :-
     source_location(File, Line),
-    term_expansion_hb(File, Line, Head, Body1, NeckBody, Pattern, ClauseL).
+    '$current_source_module'(M),
+    term_expansion_hb(File, Line, M, Head, Neck, Static, Right, NeckBody, Pattern, ClauseL).
 
 st_body(Head, M, RTHead, ClausePIL, Clause) :-
     member(t(_, Head), ClausePIL),
-    strip_module(M:RTHead, RTM, RTPred),
+    resolve_calln(RTHead, RTHeadN),
+    strip_module(M:RTHeadN, RTM, RTPred),
     functor(RTPred, RTF, RTA),
     member(Clause, [(:- discontiguous RTM:RTF/RTA) % silent random warnings
                     %(:- multifile RTM:RTF/RTA) % silent audit warnings
@@ -323,17 +315,47 @@ warning_nocp(File, Line, M, H, _-[InfCurrent, InfOptimal]) :-
             format("Ignored neck on ~w, since it could cause performance degradation (~w)",
                    [M:H, InfCurrent < InfOptimal]))).
 
+track_deps(Head, Body) :-
+    source_location(File, Line),
+    '$current_source_module'(M),
+    strip_module(M:Head, MH, Pred),
+    % Help static analysis to keep track of dependencies. TBD: find a
+    % way to store this out of the executable, for instance, in an asr file
+    freeze(Pred, assertz(head_calls_hook_db(Pred, MH, Body, File, Line))).
+
+check_has_neck(Body, Neck, Static, Right) :-
+    once(( current_seq_lit(Body, Neck, Static, Right),
+           memberchk(Neck, [neck, neck(X, X), necki, necki(X, X),
+                            necks, necks(X, X), neckis, neckis(X, X)])
+         )).
+
 term_expansion((Head :- Body), ClauseL) :-
-    term_expansion_hb(Head, Body, NB, (Head :- NB), ClauseL).
+    check_has_neck(Body, Neck, Static, Right),
+    freeze(Head, track_deps(Head, Body)),
+    term_expansion_hb(Head, Neck, Static, Right, NB, (Head :- NB), ClauseL).
 term_expansion((Head --> Body), ClauseL) :-
-    current_seq_lit(Body, Neck, _, _),
-    memberchk(Neck, [neck, necki, necks, neckis]),
-    dcg_translate_rule((Head --> Body), _, (H :- B), _),
-    term_expansion_hb(H, B, NB, (H :- NB), ClauseL).
+    current_seq_lit(Body, Neck1, _, _),
+    memberchk(Neck1, [neck, necki, necks, neckis]),
+    ( var(Head)
+    ->dcg_translate_rule((call(Head) --> Body), _, (H1 :- B), _),
+      freeze(Head, resolve_calln(H1, H))
+    ; dcg_translate_rule((Head --> Body), _, (H :- B), _),
+      H1 = H
+    ),
+    check_has_neck(B, Neck, Static, Right),
+    freeze(H, track_deps(H, B)),
+    term_expansion_hb(H1, Neck, Static, Right, NB, (H :- NB), ClauseL).
 term_expansion((:- Body), ClauseL) :-
-    term_expansion_hb('<declaration>', Body, NB, (:- NB), ClauseL).
+    check_has_neck(Body, Neck, Static, Right),
+    term_expansion_hb('<declaration>', Neck, Static, Right, NB, (:- NB), ClauseL).
 term_expansion(end_of_file, ClauseL) :-
     in_module_file,
     findall(file_clause:head_calls_hook(Head, M, Body, File, Line),
             retract(head_calls_hook_db(Head, M, Body, File, Line)),
             ClauseL, [end_of_file]).
+
+% Trick to continue translation: expand phrase/3 once the goal is instantiated
+goal_expansion(phrase(Body, L, T), Expanded) :-
+    nonvar(Body),
+    % '$sink' is a kludge to avoid T be instantiated to [end_of_file] (?) --EMM
+    dcg_translate_rule(('$head$' --> Body, '$sink$'), _, ('$head$'(L, _) :- Expanded, '$sink$'(T, _)), _).
