@@ -33,11 +33,13 @@
 */
 
 :- module(rtchecks_utils,
-          [handle_rtcheck/1,
-           call_rtc/1,
-           save_rtchecks/1,
-           load_rtchecks/1,
-           assrchk_error/1]).
+          [ handle_rtcheck/1,
+            intercept_rtc/1,
+            call_rtc/1,
+            save_rtchecks/1,
+            load_rtchecks/1,
+            assrchk_error/1
+          ]).
 
 :- use_module(library(assertions)).
 :- use_module(library(plprops)).
