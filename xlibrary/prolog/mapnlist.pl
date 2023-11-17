@@ -44,6 +44,7 @@
             mapnlist/10
           ]).
 
+:- use_module(library(apply)).
 :- use_module(library(lists)).
 :- use_module(library(neck)).
 :- init_expansors.
