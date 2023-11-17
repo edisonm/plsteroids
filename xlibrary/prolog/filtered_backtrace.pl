@@ -33,13 +33,18 @@
 */
 
 :- module(filtered_backtrace,
-          [filtered_backtrace/1]).
+          [ filtered_backtrace/1,
+            filtered_backtrace/2
+          ]).
 
 :- use_module(library(prolog_stack)).
 
-filtered_backtrace(Max) :-
+filtered_backtrace(Max, Filtered) :-
     get_prolog_backtrace(Max, Stack, []),
-    include(no_backtrace_entry, Stack, Filtered),
+    include(no_backtrace_entry, Stack, Filtered).
+
+filtered_backtrace(Max) :-
+    filtered_backtrace(Max, Filtered),
     print_prolog_backtrace(user_error, Filtered).
 
 :- multifile no_backtrace_clause_hook/2.
