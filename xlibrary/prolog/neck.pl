@@ -52,55 +52,66 @@
 :- use_module(library(statistics)).
 :- use_module(library(ordsets)).
 :- use_module(library(solution_sequences)).
+:- use_module(library(in_module_file)).
+:- use_module(library(checkct)).
 :- reexport(library(compound_expand)).
-:- reexport(library(checkct)).
 
 :- init_expansors.
 
 :- multifile file_clause:head_calls_hook/5.
 
-%!  neck        is det.
-%!  necki       is det.
-%!  necks       is det.
-%!  neckis      is det.
-%!  neck( L, L) is det.
-%!  necki(L, L) is det.
-%!  necks(L, L) is det.
-%!  neckis(L, L) is det.
-%
-%   Establish that everything  above it should be evaluated at  compile time, be
-%   careful since  such part  can only contain  predicates already  defined.  In
-%   case  of non-determinism,  several clauses  would be  generated.  This  is a
-%   practical way to  generate automatic clauses with a  proper instantiation of
-%   the head. If neck can not be expanded, it will succeed without side effects.
+/** <module> Neck, a Compile-Time Evaluator
 
+Implements several  predicates to establish  that everything above it  should be
+evaluated  at  compile  time,  be  careful since  such  part  can  only  contain
+predicates already defined.   In case of non-determinism,  several clauses would
+be generated.   This is  a practical  way to generate  automatic clauses  with a
+proper instantiation  of the  head. If  the code  can not  be expanded,  it will
+succeed without side effects.
+
+these predicates  can also be  used in declarations,  although in that  case, no
+warnings will be  shown about run-time parts being  executed, since declarations
+are executed at compile-time.
+
+*/
+
+
+%!  neck        is det.
+%!  neck( L, L) is det.
+%
 %   neck is  used if  you want  to put the  body in  a separated  predicate, and
 %   consider it the  run-time only part of  it, meaning that you can  not use it
 %   until the compilation of the module has finished.
-
-%   necki (i=inlined) is  used if you don't want to  create ancillary predicates
-%   for the body, but rather have the body inlined.
-
-%   necks (s=silent) will not warn you if the non-expandable parts are called at
-%   compile-time.
-
-%   neckis is a combination of inlined and silent.
-
-%   these predicates can also be used in declarations, although in that case, no
-%   warnings  will  be   shown  about  run-time  parts   being  executed,  since
-%   declarations are executed at compile-time.
 
 neck.
 
 neck --> [].
 
+
+%!  necki       is det.
+%!  necki(L, L) is det.
+%
+%   necki (i=inlined) is  used if you don't want to  create ancillary predicates
+%   for the body, but rather have the body inlined.
+
 necki.
 
 necki --> [].
 
+%!  necks       is det.
+%!  necks(L, L) is det.
+%
+%   necks (s=silent) will not warn you if the non-expandable parts are called at
+%   compile-time.
+
 necks.
 
 necks --> [].
+
+%!  neckis      is det.
+%!  neckis(L, L) is det.
+%
+%   neckis is a combination of inlined and silent.
 
 neckis.
 

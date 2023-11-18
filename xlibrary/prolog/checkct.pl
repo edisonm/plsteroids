@@ -33,8 +33,7 @@
 */
 
 :- module(checkct,
-          [ call_checkct/4,
-            in_module_file/0
+          [ call_checkct/4
           ]).
 
 :- use_module(library(lists)).
@@ -42,6 +41,7 @@
 :- use_module(library(ontrace)).
 :- use_module(library(option)).
 :- use_module(library(solution_sequences)).
+:- use_module(library(in_module_file)).
 :- init_expansors.
 
 :- thread_local
@@ -64,11 +64,6 @@ clause_pc_location(clause_pc(Clause, PC), Loc) :-
     clause_pc_location(Clause, PC, Loc),
     !.
 clause_pc_location(Loc, Loc).
-
-in_module_file :-
-    '$current_source_module'(M),
-    module_property(M, file(File)),
-    prolog_load_context(source, File).
 
 term_expansion(end_of_file, _) :-
     in_module_file,
