@@ -37,6 +37,7 @@
             filtered_backtrace/2
           ]).
 
+:- use_module(library(apply)).
 :- use_module(library(prolog_stack)).
 
 filtered_backtrace(Max, Filtered) :-
