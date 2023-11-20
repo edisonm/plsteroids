@@ -84,6 +84,13 @@ is_pure_body((A;B), M, Stack) :-
 is_pure_body(CallN, M, Stack) :-
     do_resolve_calln(CallN, Call),
     is_pure_body(Call, M, Stack).
+is_pure_body(phrase(DCG, L, T), M, Stack) :-
+    !,
+    dcg_translate_rule(('$head$' --> DCG, '$sink$'), _, ('$head$'(L, _) :- Lits, '$sink$'(T, _)), _),
+    is_pure_body(Lits, M, Stack).
+is_pure_body(phrase(DCG, L), M, Stack) :-
+    !,
+    is_pure_body(phrase(DCG, L, []), M, Stack).
 is_pure_body(H, M, Stack) :-
     ( predicate_property(M:H, meta_predicate(Meta))
     ->qualify_meta_goal(M:H, Meta, Goal)
