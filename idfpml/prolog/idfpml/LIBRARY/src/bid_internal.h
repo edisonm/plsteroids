@@ -35,6 +35,7 @@
 #   pragma warning( disable: 4996 )
 #endif
 
+#include <stdlib.h>
 #include "bid_conf.h"
 #include "bid_functions.h"
 

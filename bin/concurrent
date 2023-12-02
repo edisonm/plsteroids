@@ -54,7 +54,9 @@ scan_line () {
 }
 
 show_procs () {
-    cat /proc/cpuinfo|grep 'cpu cores'|sort -u|awk '{print $4}'
+    # cat /proc/cpuinfo|grep 'cpu cores'|sort -u|awk '{print $4}'
+    # next line is more hardware-independent (works on arm)
+    cat /proc/cpuinfo|grep 'processor'|wc -l
 }
 
 show_master () {
@@ -203,7 +205,7 @@ run_base () {
             worker=${workerjobs%:*}
             jobs=${workerjobs##*:}
             # echo worker=$worker jobs=$jobs
-            for ((job=0;$job<$jobs;job++)) ; do
+            for ((job=0;${job}<${jobs};job++)) ; do
                 LOCK=$LOCKDIR$round.$worker.$job.lck
                 # echo Trying $LOCK
                 if (
