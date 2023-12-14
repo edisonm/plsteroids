@@ -43,9 +43,7 @@
 
 :- use_module(library(lists)).
 :- use_module(library(option)).
-:- use_module(library(pairs)).
 :- use_module(library(prolog_source)).
-:- use_module(library(sort)).
 :- use_module(read_file).
 :- use_module(conc_forall).
 
