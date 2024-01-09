@@ -46,6 +46,7 @@
 :- use_module(library(option_utils)).
 :- use_module(library(location_utils)).
 :- use_module(library(module_files)).
+:- use_module(library(cohesive)).
 :- init_expansors.
 
 :- multifile
@@ -99,9 +100,11 @@ head_used_usemod(Head, From) :-
     fail.
 
 mark_used_usemod(CM, M) :-
-    M \= CM,
-    \+ used_usemod(CM, M),
-    assertz(used_usemod(CM, M)).
+    ( M \= CM,
+      \+ used_usemod(CM, M)
+    ->assertz(used_usemod(CM, M))
+    ; true
+    ).
 
 record_multifile_deps(Head, From) :-
     caller_module(Head, From, M),
@@ -115,12 +118,24 @@ record_head_deps(Head, From) :-
     mark_used_usemod(CM, IM).
 
 :- public collect_imports_wc/3.
+:- meta_predicate collect_imports_wc(0,+,+).
 
 collect_imports_wc(M:Goal, Caller, From) :-
     record_location_meta(M:Goal, _, From, all_call_refs, mark_import),
     nonvar(Caller),
     caller_module(Caller, From, CM),
-    mark_used_usemod(CM, M).
+    mark_used_usemod(CM, M),
+    predicate_property(M:Goal, implementation_module(IM)),
+    ( '$cohesive'(Goal, IM)
+    ->functor(Goal, F, A),
+      cohesive:( aux_cohesive_pred(Goal, CohM, Scope, HExt),
+                 aux_cohesive_module(M, F, A, CohM, CheckCohM)
+               ),
+      freeze_cohesive_module_rt(Goal, M, IM, CohM, Scope, CheckCohM),
+      forall(clause(IM:HExt, _, _),
+             mark_used_usemod(CM, CohM))
+    ; true
+    ).
 
 caller_module(M:_,                _, M) :- !.
 caller_module('<assertion>'(M:_), _, M) :- !.
@@ -134,6 +149,7 @@ collect_imports(MFileD, Pairs, Tail) :-
 current_unused_import(MFileD, U, Loc, F, A) :-
     get_dict(M, MFileD, FileD),
     clause(loc_declaration(Head, M, import(U), From), _, CRef),
+    \+ used_import(CRef),
     M \= user,
     from_to_file(From, File),
     get_dict(File, FileD, _),
@@ -143,7 +159,6 @@ current_unused_import(MFileD, U, Loc, F, A) :-
                         goal_expansion(_,_,_,_),
                         except(_)
                        ]),
-    \+ used_import(CRef),
     \+ loc_declaration(Head, M, goal, _),
     module_property(M, class(Class)),
     memberchk(Class, [user]),
@@ -153,7 +168,12 @@ current_unused_import(MFileD, U, Loc, F, A) :-
 :- multifile ignore_import/2.
 
 ignore_import(_, rtchecks_rt).
-ignore_import(_, IM) :- is_expansion_module(IM).
+ignore_import(_, IM) :-
+    is_expansion_module(IM),
+    % assume discontiguous declaration for goal expansion means it was generated
+    % automatically and therefore, check of imports should not be ignored --EMM
+    \+ predicate_property(IM:goal_expansion(_, _), discontiguous),
+    \+ predicate_property(IM:goal_expansion(_, _, _, _), discontiguous).
 ignore_import(_, IM) :-
     '$def_modules'([goal_expansion/4,
                     goal_expansion/2,
@@ -201,14 +221,18 @@ current_used_use_module(MFileD, UE, M, From) :-
     module_property(UM, exports(EL)),
     EL \= [],
     subtract(EL, ExL, PIL),
-    \+ ( module_property(UM, exported_operators(OL)),
+    \+ ( module_property(UM, exported_operators(OL1)),
+         % ignore kludgy compound_expand operator:
+         subtract(OL1, [op(1, fx, '$compound_expand')], OL),
          OL \= []
        ),
     \+ ( MHead = UM:Head,
          ( member(F/A, PIL),
            functor(Head, F, A),
            predicate_property(MHead, implementation_module(IM)),
-           used_usemod(M, IM)                        % is used
+           used_usemod(M, IM),
+           % Ignore if reexported from compound_expand:
+           IM \= compound_expand
          )
        ).
 
@@ -219,14 +243,16 @@ mark_import(Head, CM, _, _, _, _) :-
     mark_import(Head, M, CM).
 
 mark_import(Head, M, CM) :-
-    forall(( clause(loc_declaration(Head, CM, import(_), _), _, CRef),
-             \+ used_import(CRef)),
-           assertz(used_import(CRef))),
-    ( M \= CM,
-      \+used_usemod(CM, M)
-    ->assertz(used_usemod(CM, M))
-    ; true
-    ).
+    with_mutex(used_import,
+               forall(( clause(loc_declaration(Head, CM, import(_), _), _, CRef),
+                        \+ used_import(CRef)),
+                      assertz(used_import(CRef)))),
+    with_mutex(used_usemod,
+               ( M \= CM,
+                 \+used_usemod(CM, M)
+               ->assertz(used_usemod(CM, M))
+               ; true
+               )).
 
 cleanup_imports :-
     retractall(used_import(_)),

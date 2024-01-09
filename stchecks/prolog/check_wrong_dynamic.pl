@@ -77,6 +77,7 @@ hide_var_dynamic(Call1, M) :-
 hide_var_dynamic_hook(match_clause(_, _, _, _, _, _, _), ontrace).
 hide_var_dynamic_hook(collect_non_mutually_exclusive(_, _, _, _), check_non_mutually_exclusive).
 hide_var_dynamic_hook(ignore_import(_, _), check_imports).
+hide_var_dynamic_hook(collect_imports_wc(_, _, _), check_imports).
 hide_var_dynamic_hook(current_head_body(_, _, _, _), codewalk_clause).
 hide_var_dynamic_hook(walk_from_assertion(_, _, _), codewalk_prolog).
 hide_var_dynamic_hook(current_head_ctcheck(_, _), check_assertions).
