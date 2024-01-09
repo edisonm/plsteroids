@@ -35,9 +35,11 @@
 :- module(cohesive,
           [ cohesive_module/4,
             cohesive_module_rt/6,
+            freeze_cohesive_module_rt/6,
             scope_t/1,
             call_cm/3,
-            call_cm/5
+            call_cm/5,
+            '$cohesive'/2
           ]).
 
 :- use_module(library(apply)).
@@ -55,10 +57,9 @@
    multifiles, but in order to use them, we need to import the predicates that
    define their clauses.  If two or more modules are imported, they are added
    up.  This provides certain level of encapsulation, but at the same time
-   allows extensibility.  It also pay attention to reexported modules so that
+   allows extensibility.  It also pays attention to reexported modules so that
    clauses in reexported modules of cohesive predicates become available in the
-   importing module.  TBD: this is very experimental, it should be tested in the
-   battlefield to see if is usable --EMM
+   importing module.
 
 @author Edison Mera
 
@@ -122,15 +123,18 @@ cohesive_pred_pi(CM, PI) -->
              call(CM:HWrp)
       ),
       ( HWrp :-
-            ignore(( Context \= user,
-                     % if called in the user context, asume all (equivalent to multifile)
-                     freeze(CohM, freeze(Scope, once(cohesive_module_rt(H, Context, M, CohM, Scope, CheckCohM))))
-                   )),
+            freeze_cohesive_module_rt(H, Context, M, CohM, Scope, CheckCohM),
             HExt
       )
     ].
 
-%!  call_cm(:Goal, -CohesiveModule) is multi.
+freeze_cohesive_module_rt(H, Context, M, CohM, Scope, CheckCohM) :-
+    ignore(( Context \= user,
+             % if called in the user context, asume all (equivalent to multifile)
+             freeze(CohM, freeze(Scope, once(cohesive_module_rt(H, Context, M, CohM, Scope, CheckCohM))))
+           )).
+
+%!  call_cm(:Goal, +Context, -CohesiveModule) is multi.
 
 %   Calls Goal and returns the module where the current clause was implemented from.
 
