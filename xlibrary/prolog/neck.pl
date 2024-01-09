@@ -52,13 +52,10 @@
 :- use_module(library(statistics)).
 :- use_module(library(ordsets)).
 :- use_module(library(solution_sequences)).
-:- use_module(library(in_module_file)).
 :- use_module(library(checkct)).
+:- reexport(library(track_deps)).
 :- reexport(library(compound_expand)).
-
 :- init_expansors.
-
-:- multifile file_clause:head_calls_hook/5.
 
 /** <module> Neck, a Compile-Time Evaluator
 
@@ -118,9 +115,6 @@ necks --> [].
 neckis.
 
 neckis --> [].
-
-:- thread_local
-    head_calls_hook_db/5.
 
 current_seq_lit(Seq, Lit, Left, Right) :-
     current_seq_lit(Seq, Lit, true, Left, true, Right).
@@ -206,13 +200,6 @@ profile_expander(M, Head, AssignedL, Expanded, Issues) :-
 
 do_call_checks(true, File, Line, Call) :- call_checkct(Call, File, Line, []).
 do_call_checks(fail, _,    _,    Call) :- call(Call).
-
-track_deps(File, Line, M, Head, Body) :-
-    strip_module(M:Head, MH, Pred),
-    % Help static analysis to keep track of dependencies. TBD: find a
-    % way to store this out of the executable, for instance, in an asr file
-    freeze(Pred, assertz(head_calls_hook_db(Pred, MH, M:Body, File, Line))).
-
 
 term_expansion_hb(File, Line, M, Head, Neck, Static, Right, NeckHead, NeckBody, Pattern, ClauseL) :-
     once(( current_seq_lit(Right, !, LRight, SepBody),
@@ -359,11 +346,6 @@ term_expansion((Head --> Body), ClauseL) :-
 term_expansion((:- Body), ClauseL) :-
     check_has_neck(Body, Neck, Static, Right),
     term_expansion_hb('<declaration>', Neck, Static, Right, '<declaration>', NB, (:- NB), ClauseL).
-term_expansion(end_of_file, ClauseL) :-
-    in_module_file,
-    findall(file_clause:head_calls_hook(Head, M, Body, File, Line),
-            retract(head_calls_hook_db(Head, M, Body, File, Line)),
-            ClauseL, [end_of_file]).
 
 % Trick to continue translation: expand phrase/3 once the goal is instantiated
 goal_expansion(phrase(Body, L, T), Expanded) :-
