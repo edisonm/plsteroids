@@ -146,9 +146,7 @@ collect_expansors(ExpansorNameL, M, ML) :-
               foldl(collect_expansor(EM), ExpansorNameL, PIL, []),
               PIL \= []
             ), MU),
-    partsort(expansion_order, MU, MO),
-    system:'$def_modules'(M:ExpansorNameL, MT),
-    append(MO, MT, ML).
+    partsort(expansion_order, MU, ML).
 
 %!  init_expansors is det.
 %
@@ -164,14 +162,11 @@ no_more_expansions_after_init(Source) :-
     member(Expansors,
            [[term_expansion/4, term_expansion/2],
             [goal_expansion/4, goal_expansion/2]]),
-    collect_expansors(Expansors, Source, TN1),
-    system:'$def_modules'(Source:Expansors, DN),
-    subtract(TN1, DN, TN),
-    ( '$defined_predicate'(Source:'$module_expansors'(_, _))
-    ->Source:'$module_expansors'(Expansors, TL1),
-      subtract(TL1, DN, TL),
-      TL \= TN,
+    collect_expansors(Expansors, Source, TN),
+    ( '$defined_predicate'(Source:'$module_expansors'(_, _, _))
+    ->Source:'$module_expansors'(Expansors, TL, []),
       subtract(TN, TL, EL),
+      EL \= [],
       print_message(warning, format("More expansors added after :- init_expansors declaration: ~w", [EL]))
     ; TN \= []
     ->print_message(warning, format("Missing :- init_expansors declaration, but expansors present: ~w", [TN]))
@@ -187,7 +182,7 @@ system:term_expansion(end_of_file, _) :-
 
 stop_expansors :-
     '$current_source_module'(Source),
-    abolish(Source:'$module_expansors'/2).
+    abolish(Source:'$module_expansors'/3).
 
 system:term_expansion(end_of_file, _) :-
     '$current_source_module'(Source),
@@ -202,12 +197,13 @@ system:term_expansion(:- after( B), compound_expand:before(B, A)) :-
     '$current_source_module'(A).
 system:term_expansion((:- init_expansors), []) :-
     '$current_source_module'(Source),
-    dynamic(Source:'$module_expansors'/2),
-    public(Source:'$module_expansors'/2),
-    retractall(Source:'$module_expansors'(_, _)),
+    dynamic(Source:'$module_expansors'/3),
+    public(Source:'$module_expansors'/3),
+    retractall(Source:'$module_expansors'(_, _, _)),
     forall(member(Expansors,
                   [[term_expansion/4, term_expansion/2],
                    [goal_expansion/4, goal_expansion/2]]),
-           ( collect_expansors(Expansors, Source, TL),
-             assertz(Source:'$module_expansors'(Expansors, TL))
+           ( collect_expansors(Expansors, Source, TH),
+             '$append'(TH, TT, TL),
+             assertz(Source:'$module_expansors'(Expansors, TL, TT))
            )).

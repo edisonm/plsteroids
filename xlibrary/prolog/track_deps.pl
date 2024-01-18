@@ -39,6 +39,7 @@
           ]).
 
 :- use_module(library(in_module_file)).
+:- use_module(library(static_strip_module)).
 :- reexport(library(compound_expand)).
 :- init_expansors.
 
@@ -55,7 +56,7 @@
 :- multifile head_calls_hook/5.
 
 track_deps(File, Line, M, Head, Body) :-
-    strip_module(M:Head, MH, Pred),
+    static_strip_module(Head, M, Pred, MH),
     % Help static analysis to keep track of dependencies. TBD: find a
     % way to store this out of the executable, for instance, in an asr file
     freeze(Pred, assertz(head_calls_hook_db(Pred, MH, Body, File, Line))).
