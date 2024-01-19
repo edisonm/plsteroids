@@ -6,7 +6,7 @@
 q(X) :-
     p1(X).
 
-p1(d).
+::p1(d).
 
 % before static optimization:
 % time(q(x)).

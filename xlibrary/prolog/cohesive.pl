@@ -204,9 +204,9 @@ term_expansion((::Head :- Body), (HeadExt :- Body)) :-
 term_expansion(::Head, HeadExt) :-
     coh_head_expansion(sexport, Head, HeadExt).
 term_expansion((Head :- Body), (HeadExt :- Body)) :-
-    coh_head_expansion(sexport, Head, HeadExt).
+    coh_head_expansion(sprivat, Head, HeadExt).
 term_expansion(Head, HeadExt) :-
-    coh_head_expansion(sexport, Head, HeadExt).
+    coh_head_expansion(sprivat, Head, HeadExt).
 
 :- thread_local
     cm_db/2.

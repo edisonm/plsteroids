@@ -4,5 +4,5 @@
 :- reexport(c3).
 :- init_expansors.
 
-p1(a).
-p1(b).
+::p1(a).
+::p1(b).
