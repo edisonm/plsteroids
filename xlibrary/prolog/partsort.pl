@@ -61,4 +61,7 @@ partsort(Pred, List1, Sorted1) :-
     ),
     !,
     partsort(Pred, List, Sorted).
-partsort(_, List, List).
+partsort(Pred, [E|List], [E|Sorted]) :-
+    partsort(Pred, List, Sorted),
+    !.
+partsort(_, [], []).

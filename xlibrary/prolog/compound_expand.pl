@@ -121,6 +121,10 @@ expansion_order_gt(M1, M2) :-
     before(M2, M1), % let programmers decide
     !.
 expansion_order_gt(M1, M2) :-
+    before(M1, M2), % overrule reexport
+    !,
+    fail.
+expansion_order_gt(M1, M2) :-
     module_property(M1, file(File)),
     current_op(1, fx, M1:'$compound_expand'),
     '$load_context_module'(File, M2, Options),
