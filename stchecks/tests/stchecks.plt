@@ -58,13 +58,13 @@ Warning:
 ctcex.pl:xx: In the body of ctcex:q/0:
 Assertion failure for ctcex:a(1,b).
 ctcex.pl:xx:     In *calls*, unsatisfied properties: 
-        ctcex.pl:xx: compat(ctcex:list(b)), because: [(nonvar(A):-nonvar(A)=list(b),var(A))].
+        ctcex.pl:xx: compat(ctcex:list(b)).
 
 ctcex.pl:16: In the head of ctcex:a/2:
 Assertion failure for ctcex:a(a,b).
 ctcex.pl:xx:     In *calls*, unsatisfied properties: 
-        ctcex.pl:xx: compat(ctcex:int(a)), because: [(nonvar(A):-nonvar(A)=int(B),B=a,var(A),\+integer(B))].
-        ctcex.pl:xx: compat(ctcex:list(b)), because: [(nonvar(C):-nonvar(C)=list(b),var(C))].
+        ctcex.pl:xx: compat(ctcex:int(a)).
+        ctcex.pl:xx: compat(ctcex:list(b)).
 
 ctcex.pl:xx: In assertions of [ctcex:b/2]:
     ctcex.pl:xx: ctcex:is_3/1 is not a property
@@ -74,12 +74,12 @@ ctcex.pl:xx: In assertions of [ctcex:b/2]:
     ctcex.pl:xx: In call to ctcex:is_num/2:
 Assertion failure for ctcex:is_num(a,A).
 ctcex.pl:xx:     In *calls*, unsatisfied properties: 
-        ctcex.pl:xx: compat(ctcex:int(a)), because: [(nonvar(C):-nonvar(C)=int(D),D=a,var(C),\+integer(D))].
+        ctcex.pl:xx: compat(ctcex:int(a)).
 
     ctcex.pl:xx: In call to ctcex:is_num/2:
 Assertion failure for ctcex:is_num(b,A).
 ctcex.pl:xx:     In *calls*, unsatisfied properties: 
-        ctcex.pl:xx: compat(ctcex:int(b)), because: [(nonvar(C):-nonvar(C)=int(D),D=b,var(C),\+integer(D))].
+        ctcex.pl:xx: compat(ctcex:int(b)).
 
 */
 
@@ -97,7 +97,7 @@ Warning:
 p1.pl:17:4: In the body of p1:p0/0:
 Assertion failure for p1:p1(p1:q2).
 p1.pl:10:8:     In *calls*, unsatisfied properties: 
-        p1.pl:10:11: compat(typeprops:goal(0,p1:q2)), because: [(nonvar(A):-nonvar(A)=goal(0,p1:q2),var(A))].
+        p1.pl:10:11: compat(typeprops:goal(0,p1:q2)).
 
 p1.pl:23:4: In the body of p1:p2/1:
 Assertion failure for p1:q(A,B,C).
@@ -130,7 +130,7 @@ Warning:
 p1.pl:15: In the body of p1:p0/0:
 Assertion failure for p1:p1(p1:q2).
 p1.pl:10:8:     In *calls*, unsatisfied properties: 
-        p1.pl:10:11: compat(typeprops:goal(0,p1:q2)), because: [(nonvar(A):-nonvar(A)=goal(0,p1:q2),var(A))].
+        p1.pl:10:11: compat(typeprops:goal(0,p1:q2)).
 
 p1.pl:22: In the body of p1:p2/1:
 Assertion failure for p1:q(A,B,C).
