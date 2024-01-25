@@ -107,7 +107,7 @@ mark_used_usemod(CM, M) :-
     ).
 
 record_multifile_deps(Head, From) :-
-    caller_module(Head, From, M),
+    caller_impl_module(Head, M),
     from_to_file(From, File),
     module_property(CM, file(File)),
     mark_used_usemod(CM, M).
@@ -123,7 +123,12 @@ record_head_deps(Head, From) :-
 collect_imports_wc(M:Goal, Caller, From) :-
     record_location_meta(M:Goal, _, From, all_call_refs, mark_import),
     nonvar(Caller),
-    caller_module(Caller, From, CM),
+    from_to_module(From, CM),
+    ( caller_impl_module(Caller, CI),
+      atom(CI)
+    ->mark_used_usemod(CM, CI)
+    ; true
+    ),
     mark_used_usemod(CM, M),
     predicate_property(M:Goal, implementation_module(IM)),
     ( '$cohesive'(Goal, IM)
@@ -137,9 +142,8 @@ collect_imports_wc(M:Goal, Caller, From) :-
     ; true
     ).
 
-caller_module(M:_,                _, M) :- !.
-caller_module('<assertion>'(M:_), _, M) :- !.
-caller_module(_,                  F, M) :- from_to_module(F, M).
+caller_impl_module(M:_, M).
+caller_impl_module('<assertion>'(M:_), M).
 
 collect_imports(MFileD, Pairs, Tail) :-
     findall(warning-(c(use_module, import, U)-(Loc/(F/A))),
