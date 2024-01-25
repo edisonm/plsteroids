@@ -83,31 +83,20 @@ term_expansion(end_of_file, _) :-
 % Note: this is not called by make/0, since it is wrapped by notrace/1, you
 % should use make:make_no_trace/0 instead --EMM
 
-handle_port(File, Line, IgnoreL, call, Frame, _, _, Loc, continue) :-
+handle_port(File, Line, IgnoreL, call, Frame, _, _, Loc, Action) :-
     prolog_frame_attribute(Frame, goal, Goal),
-    ( findall(Issue,
-              ( member(Issue, [multifile, dynamic]),
-                predicate_property(Goal, Issue)
-              ), IssueL),
+    strip_module(Goal, M, Call),
+    functor(Call, F, A),
+    PI = M:F/A,
+    ( memberchk(PI, IgnoreL)
+    ->Action = skip
+    ; findall(Issue,
+            ( member(Issue, [multifile, dynamic]),
+              predicate_property(Goal, Issue)
+            ), IssueL),
       IssueL \= [],
       atomic_list_concat(IssueL, ',', Issues),
-      strip_module(Goal, M, Call),
-      functor(Call, F, A),
-      PI = M:F/A,
-      \+ memberchk(PI, IgnoreL)
-    /* NOTE: commented out code to detect neck over neck (which is a bad smel
-     * about neck usage), but may be is not needed anymore --EMM:
-    ; strip_module(Goal, _, Call),
-      functor(Call, F, _),
-      neck_prefix(NeckPrefix),
-      atom_concat(NeckPrefix, _, F),
-      Issues = 'already necked',
-      once(( prolog_frame_attribute(Frame, parent, Parent),
-             prolog_frame_attribute(Parent, predicate_indicator, PI)
-           ; prolog_frame_attribute(Frame, predicate_indicator, PI)
-           ))
-    */
-    ),
-    retractall(issue_found(File, Line, Issues, PI, Loc)),
-    assertz(issue_found(File, Line, Issues, PI, Loc)),
-    fail.
+      retractall(issue_found(File, Line, Issues, PI, Loc)),
+      assertz(issue_found(File, Line, Issues, PI, Loc)),
+      Action = continue
+    ).
