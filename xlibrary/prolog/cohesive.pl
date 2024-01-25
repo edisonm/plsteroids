@@ -91,9 +91,7 @@ aux_cohesive_wrap(H, CM, CohM, HWrp) :-
  * need to implement a run-time check here, just let the predicate fail --EMM
 */
 
-cohesive_module_rt(_, user, _, _, _, _) :- !.
-cohesive_module_rt(_, _, _, _, spublic, _).
-cohesive_module_rt(H, Context, M, CohM, sexport, CheckCohM) :-
+call_check_cohesive_module(H, Context, M, CohM, CheckCohM) :-
     ( % First, try with fast precompiled checker
       '$defined_predicate'(Context:CheckCohM)
     ->Context:CheckCohM
@@ -101,6 +99,11 @@ cohesive_module_rt(H, Context, M, CohM, sexport, CheckCohM) :-
       '$defined_predicate'(Context:H),
       cohesive_module(H, Context, M, CohM)
     ).
+
+cohesive_module_rt(_, user, _, _, _, _) :- !.
+cohesive_module_rt(_, _, _, _, spublic, _).
+cohesive_module_rt(H, Context, M, CohM, sexport, CheckCohM) :-
+    call_check_cohesive_module(H, Context, M, CohM, CheckCohM).
 cohesive_module_rt(_, C, _, C, sprivat, _).
 
 cohesive_pred_pi(CM, PI) -->
