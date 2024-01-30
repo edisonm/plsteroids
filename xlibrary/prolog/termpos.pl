@@ -39,6 +39,7 @@
 :- use_module(library(lists)).
 :- use_module(library(transpose)).
 :- use_module(library(sequence_list)).
+:- use_module(library(list_sequence)).
 :- init_expansors.
 
 :- multifile '$add_termpos'/4.
@@ -75,7 +76,7 @@ var_location(Term, Pos, Var, Loc) :-
     ; true
     ).
 
-collect_argpos([_, InL, InPosL, OutL, OutPosL], ArgPosLL) :-
+collect_argpos(InL, InPosL, OutL, OutPosL, ArgPosLL) :-
     maplist(transpose, [[InL, InPosL], [OutL, OutPosL]], ArgPosLLL),
     append(ArgPosLLL, ArgPosLL).
 
@@ -106,6 +107,12 @@ expand_pi(_, M:F1/A1, M:F/A) :-
     ; F1/A1 = F/A
     ).
 
+set_inpos(A, B) -->
+    ( {var(B)}
+    ->{A = B}
+    ; [ignore(A=B)]
+    ).
+
 term_expansion((:- add_termpos Spec),
                termpos:'$add_termpos'(M, Head, NewHead, InOutArgPosLL)) :-
     '$current_source_module'(M),
@@ -117,16 +124,19 @@ term_expansion((:- add_termpos Spec),
     transpose(InOutArgPosLLL, InOutArgPosLLT),
     maplist(append, InOutArgPosLLT, InOutArgPosLL),
     NewHead =.. [F|NewArgL].
-term_expansion((Head :- Body), (NewHead :- NewBody)) :-
+term_expansion((Head :- Body), (NewHead :- Seq)) :-
     nonvar(Head),
     '$current_source_module'(M),
     '$add_termpos'(M, Head, NewHead, LL),
-    LL = [_, InL, InPosL, OutL, OutPosL],
-    maplist(var_location(InL, list_position(_, _, InPosL, _)), OutL, OutPosL),
-    collect_argpos(LL, APL),
-    b_setval('$termpos', LL),
+    LL = [IOL, InL, InPosL, OutL, OutPosL],
+    same_length(InPosL, InPos),
+    maplist(var_location(InL, list_position(_, _, InPos, _)), OutL, OutPosL),
+    collect_argpos(InL, InPos, OutL, OutPosL, APL),
+    b_setval('$termpos', [IOL, InL, InPos, OutL, OutPosL]),
     b_setval('$argpos', APL),
     expand_goal(Body, NewBody),
+    foldl(set_inpos, InPosL, InPos, List, [NewBody]),
+    list_sequence(List, Seq),
     nb_delete('$termpos'),
     nb_delete('$argpos').
 term_expansion((:- Decl1), (:- Decl2)) :-
@@ -138,10 +148,12 @@ term_expansion((:- Decl1), (:- Decl2)) :-
     maplist(normalize_pi(M), PIL1, PIL),
     maplist(expand_pi(F), PIL, PIL2),
     PIL \= PIL2.
-term_expansion(Head, NewHead) :-
+term_expansion(Head, (NewHead :- Seq)) :-
     '$current_source_module'(M),
     '$add_termpos'(M, Head, NewHead, [_, InL, InPosL, OutL, OutPosL]),
-    maplist(var_location(InL, list_position(_, _, InPosL, _)), OutL, OutPosL).
+    maplist(var_location(InL, list_position(_, _, InPos, _)), OutL, OutPosL),
+    foldl(set_inpos, InPosL, InPos, List, []),
+    list_sequence(List, Seq).
 
 goal_expansion(Goal, NewGoal) :-
     '$current_source_module'(M),
@@ -152,6 +164,6 @@ goal_expansion(Goal, NewGoal) :-
     maplist(var_location(HInL, list_position(_, _, HInPosL, _)), OutL, OutPosL),
     maplist(var_location(InL,  list_position(_, _, InPosL, _)), OutL, OutPosL),
     maplist(var_location(InL,  list_position(_, _, InPosL, _)), HInL, HInPosL),
-    collect_argpos(GLL, GAPL),
+    collect_argpos(InL, InPosL, OutL, OutPosL, GAPL),
     nb_current('$argpos', HAPL),
     link_headpos(GAPL, HAPL).
