@@ -1,7 +1,7 @@
 # PACKS=assertions rtchecks refactor xlibrary xtools
 SHELL=/bin/bash
 MAKEFLAGS += --silent --no-print-directory
-# JOBS?=$(shell nproc)
+JOBS?=$(shell nproc)
 
 PLSTEROIDS=target/bin/plsteroids
 
@@ -15,6 +15,9 @@ bid:
 
 build: bid
 	$(MAKE) $(PLSTEROIDS)
+
+all: swipl plclean build
+	$(MAKE) tests -j$(JOBS)
 
 compile:
 	for i in `find . -name pack.pl`; do \
