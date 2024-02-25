@@ -46,13 +46,13 @@ checkc:
 	swipl -q -s loadall.pl -g 'checkallc([dir(pltool(prolog))])'
 
 check:
-	swipl -tty -q -s loadall.pl -g 'time(checkall([dir(pltool(prolog))]))'
+	swipl --no-tty -q -s loadall.pl -g 'time(checkall([dir(pltool(prolog))]))'
 
 %.checkc:
 	swipl -q -s loadall.pl -g "showcheck($*,[dir(pltool(prolog))])"
 
 %.check:
-	swipl -tty -q -s loadall.pl -g "time(showcheck($*,[dir(pltool(prolog))]))"
+	swipl --no-tty -q -s loadall.pl -g "time(showcheck($*,[dir(pltool(prolog))]))"
 
 $(PLSTEROIDS):
 	mkdir -p `dirname $@`
@@ -136,14 +136,14 @@ updatedoc:
               -g "updatedoc('stchecks/README.md'),halt"
 
 checkload:
-	for i in `find . -name pack.pl`; do \
-	    pack=`basename $${i%/pack.pl}` \
-		echo "checking stand alone load of $pack" \
-		swipl -q -s plsconfig.pl -g "assertz(package($${pack})),[checkload],halt" \
+	for i in `find . -name ".git" -prune -false -o -name pack.pl`; do \
+	    pack=`basename $${i%/pack.pl}` ; \
+		echo "checking stand alone load of $${pack}" ; \
+		swipl -q -s plsconfig.pl -g "assertz(package($${pack})),[checkload],halt" ; \
 	    done
 
 %.checkload:
-	swipl -tty -q -s plsconfig.pl -g "assertz(package($*)),[checkload],halt"
+	swipl --no-tty -q -s plsconfig.pl -g "assertz(package($*)),[checkload],halt"
 
 loadall:
 	swipl -q -s loadall.pl

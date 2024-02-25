@@ -5,5 +5,4 @@
 :- [plsconfig].
 :- [xlibrary/prolog/packloader].
 
-:- packages(Packs),
-   maplist(pack_set_path, Packs).
+:- forall(package(Pack), pack_set_path(Pack)).

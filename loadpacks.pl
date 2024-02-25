@@ -1,4 +1,4 @@
-:- use_module(library(packloader)).
+:- use_module(xlibrary/prolog/packloader).
 :- use_module(library(thread)).
 :- use_module(library(apply)).
 % :- use_module(library(pldoc/doc_htmlsrc)).
@@ -6,7 +6,7 @@
 :- meta_predicate loadpacks(1).
 
 loadpacks(Loader) :-
-    packages(PackL),
+    findall(Pack, package(Pack), PackL),
     scanpacks(
         PackL,
         pack_load_local(
@@ -21,7 +21,7 @@ loadpacks(Loader) :-
                   refactor/prolog/ref_expand,
                   refactor/prolog/ref_replace,
                   refactor/prolog/ref_replacers,
-                  % library(compound_expand),
+                  xlibrary/prolog/compound_expand,
                   refactor/prolog/ref_scenarios,
                   stchecks/prolog/stchecks
                  ])
