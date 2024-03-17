@@ -1,10 +1,18 @@
-:- module(broker_example_client, [init/0, test/1]).
+:- module(broker_example_client,
+          [ init_client/0,
+            bect/1
+          ]).
 
-:- use_module(library(broker)).
-:- broker_client(mylists, plbin(mylists)).
+:- use_module(library(broker_rt)).
+:- use_module(plbin(mylists_intf)).
+:- use_module(plbin(mylists_locl), []). % load this only once per project
+:- use_module(plbin(mylists_remt), []). % load this only once per project
+:- use_module(plbin(mylists_prxy), []). % load this only once per project
+:- init_expansors.
 
-init :-
-    add_server(mylists, 'ws://localhost:3333/broker').
+init_client :-
+    add_server(mylists, 'ws://localhost:3333/broker'),
+    bind_client(mylists).
 
-test(X) :-
+bect(X) :-
     myappend([1,2,3],[4,5], X).

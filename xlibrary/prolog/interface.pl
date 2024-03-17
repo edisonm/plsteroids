@@ -33,7 +33,8 @@
 */
 
 :- module(interface,
-          [ bind_interface/2
+          [ bind_interface/2,
+            end_interface/4
           ]).
 
 :- use_module(library(lists)).
@@ -56,7 +57,7 @@ direct_interface(M, F/A) :-
 
 end_interface(Interface, DIL) -->
     [interface:'$interface'(Interface, DIL)],
-    findall((:- dynamic Interface:F/A),
+    findall((:- dynamic F/A),
             member(F/A, DIL)).
 
 term_expansion_decl(implements(Alias), Clauses) :-
@@ -69,12 +70,12 @@ term_expansion_decl(implements_mod(Interface), Clauses) :-
     '$current_source_module'(Implementation),
     '$interface'(Interface, PIL),
     phrase(( [interface:'$implementation'(Implementation, Interface)],
-              findall((:- meta_predicate Implementation:Spec),
-                      ( member(F/A, PIL),
-                        functor(Pred, F, A),
-                        predicate_property(Interface:Pred, meta_predicate(Spec))
-                      )),
-              findall((:- export(PI)), member(PI, PIL))
+             findall((:- meta_predicate Implementation:Spec),
+                     ( member(F/A, PIL),
+                       functor(Pred, F, A),
+                       predicate_property(Interface:Pred, meta_predicate(Spec))
+                     )),
+             findall((:- export(PI)), member(PI, PIL))
            ), Clauses).
 term_expansion_decl(interfaces(Alias), Clauses) :-
     '$current_source_module'(Interface),
@@ -84,12 +85,14 @@ term_expansion_decl(interfaces(Alias), Clauses) :-
     term_expansion_decl(interfaces_mod(Implementation), Clauses).
 term_expansion_decl(interfaces_mod(Implementation), Clauses) :-
     '$current_source_module'(Interface),
-    module_property(Implementation, exports(PIL)),
-    phrase(( findall((:- export(PI)), member(PI, PIL)),
-             end_interface(Interface, PIL)
-           ), Clauses).
-term_expansion_decl(interface, interface:'$interface'(Interface)) :-
+    phrase(interfaces_mod_clauses(Interface, Implementation), Clauses).
+term_expansion_decl(interface, interface:'$interface'(Interface)) :- 
     '$current_source_module'(Interface).
+
+interfaces_mod_clauses(Interface, Implementation) -->
+    {module_property(Implementation, exports(PIL))},
+    findall((:- export(PI)), member(PI, PIL)),
+    end_interface(Interface, PIL).
 
 term_expansion((:- Decl), Clauses) :-
     term_expansion_decl(Decl, Clauses).

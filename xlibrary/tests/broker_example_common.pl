@@ -1,6 +1,7 @@
 :- module(broker_example_common,
           [ start_wsbroker/1
           ]).
+
 :- use_module(library(main)).
 :- use_module(library(option)).
 :- use_module(library(http/thread_httpd)).

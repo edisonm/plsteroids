@@ -32,17 +32,13 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(broker,
-          [ add_server/2,
-            del_server/1,
-            module_server/2
-          ]).
+:- module(broker, []).
 
 :- use_module(library(lists)).
 :- use_module(library(neck)).
 :- use_module(library(codegen)).
-:- reexport(library(compound_expand)).
 :- use_module(library(change_alias)).
+:- reexport(library(compound_expand)).
 :- reexport(library(interface)).
 :- init_expansors.
 
@@ -60,97 +56,79 @@ balancing
 
 */
 
-:- dynamic
-    module_server/2.
-
-:- multifile
-    '$broker'/1.
-
 alias_file(RelTo, Alias, File) :-
     absolute_file_name(Alias, File, [file_type(prolog), relative_to(RelTo)]).
 
-add_server(Module, URL) :-
-    '$broker'(Module),
-    assertz(module_server(Module, URL)).
-
-del_server(Module) :-
-    '$broker'(Module),
-    retractall(module_server(Module, _)).
-
-generate_broker(Target, File, Module, AliasTo) -->
+generate_server(File, Alias, Module, AliasTo) -->
     { prolog_load_context(source, RelTo),
       atom_concat(Module, '_intf', Interface),
       atom_concat(Module, '_remt', ImplRemote),
-      atom_concat(Module, '_locl', ImplLocal)
+      atom_concat(Module, '_locl', ImplLocal),
+      generate_intf(File, RelTo, Module, Interface,  AliasTo, AliasIntf),
+      generate_locl(File, RelTo, Alias,  ImplLocal,  AliasTo, AliasIntf),
+      generate_remt('_remt', File, RelTo, Module, ImplRemote, AliasTo, AliasIntf),
+      generate_serv(File, RelTo, Module, AliasTo, AliasServ)
     },
-    [broker:'$broker'(Module)],
-    generate_interface(     File, RelTo, Module, Interface,  AliasTo, AliasIntf),
-    generate_local( Target, File, RelTo, Module, ImplLocal,  AliasTo, AliasIntf),
-    generate_remote(Target, File, RelTo, Module, ImplRemote, AliasTo, AliasIntf),
-    generate_server(Target, File, RelTo, Module, Interface,  AliasTo),
-    {bind_implementation(Target, ImplLocal, ImplRemote, BindModule)},
-    [(:- initialization(bind_interface(Interface, BindModule)))].
+    [(:- use_module(AliasServ, []))].
 
-bind_implementation(client, _, M, M).
-bind_implementation(server, M, _, M).
-bind_implementation(proxy,  _, M, M).
-bind_implementation(A,B,C,D) :- writeln(user_error, bind_implementation(A,B,C,D)),fail.
+generate_proxy(ImplProxy, File, Module, AliasIntf, AliasTo) -->
+    { prolog_load_context(source, RelTo),
+      generate_remt('', File, RelTo, Module, ImplProxy, AliasTo, AliasIntf),
+      generate_prxy(File, RelTo, Module, ImplProxy, AliasTo, AliasSuff)
+    },
+    [(:- use_module(AliasSuff, []))].
 
-generate_interface(File, RelTo, Module, Interface, AliasTo, AliasIntf) -->
-    {generate_file('_intf', File, RelTo, AliasTo, AliasIntf, dump_interface(Module, Interface))},
-    [(:- use_module(AliasIntf))].
+generate_intf(File, RelTo, Module, Interface, AliasTo, AliasIntf) :-
+    generate_file('_intf', File, RelTo, AliasTo, AliasIntf, dump_interface(Module, Interface)).
 
-generate_local(Target, _, _, _, _, _, _) -->
-    {member(Target, [client, proxy])},
-    neck.
-generate_local(server, File, RelTo, Module, ImplLocal, AliasTo, AliasIntf) -->
-    generate_file('_locl', File, RelTo, AliasTo, _, dump_local(Module, ImplLocal, AliasIntf)).
+generate_locl(File, RelTo, Alias, ImplLocal, AliasTo, AliasIntf) :-
+    generate_file('_locl', File, RelTo, AliasTo, _, dump_local(Alias, ImplLocal, AliasIntf)).
 
-generate_remote(server, _, _, _, _, _, _) --> [].
-generate_remote(Target, File, RelTo, Module, ImplRemote, AliasTo, AliasIntf) -->
-    {member(Target, [client, proxy])},
-    neck,
-    generate_file('_remt', File, RelTo, AliasTo, _, dump_remote(Module, ImplRemote, AliasIntf)).
+generate_remt(Suff, File, RelTo, Module, ImplRemote, AliasTo, AliasIntf) :-
+    generate_file(Suff, File, RelTo, AliasTo, _, dump_remote(Module, ImplRemote, AliasIntf)).
 
-generate_server(client, _, _, _, _, _) --> [].
-generate_server(Target, File, RelTo, Module, Interface, AliasTo) -->
-    {member(Target, [server, proxy])},
-    neck,
-    generate_file('_serv', File, RelTo, AliasTo, _, dump_server(Module, Interface)).
+generate_prxy(File, RelTo, Module, ImplRemote, AliasTo, AliasSuff) :-
+    atom_concat(ImplRemote, '_serv', ModuleServ),
+    generate_file('_serv', File, RelTo, AliasTo, AliasSuff, dump_server(Module, ModuleServ)).
+
+generate_serv(File, RelTo, Module, AliasTo, AliasSuff) :-
+    atom_concat(Module, '_serv', ModuleServ),
+    generate_file('_serv', File, RelTo, AliasTo, AliasSuff, dump_server(Module, ModuleServ)).
 
 :- meta_predicate
-    generate_file(+,+,+,+,+,2),
-    generate_file(+,+,+,+,+,2,?,?).
+    generate_file(+,+,+,+,+,2).
 
 generate_file(Suffix, File, RelTo, AliasIntf, AliasSuff, Dump) :-
     change_alias(add_suffix(Suffix), AliasIntf, AliasSuff),
     alias_file(RelTo, AliasSuff, FileSuff),
     ( is_newer(FileSuff, File)
     ->true
-    ; save_to_file(FileSuff, Dump)
+    ; term_to_file(FileSuff, Dump)
     ).
 
-generate_file(Suffix, File, RelTo, AliasIntf, AliasSuff, Dump) -->
-    {generate_file(Suffix, File, RelTo, AliasIntf, AliasSuff, Dump)},
-    [(:- use_module(AliasSuff, []))].
-
 dump_interface(Module, Interface) -->
-    [(:- module(Interface, [])),
-     (:- use_module(library(interface))),
-     (:- interfaces_mod(Module))].
+    {module_property(Module, exports(PIL))},
+    [ (:- module(Interface, PIL)),
+      (:- use_module(library(interface))),
+      (:- init_expansors)
+    ],
+    end_interface(Interface, PIL).
 
-dump_local(Module, ImplLocal, AliasIntf) -->
-    [(:- module(ImplLocal, [])),
-     (:- use_module(library(interface))),
-     (:- implements(AliasIntf)),
-     (:- module_property(Module, file(File)),
-         reexport(File))].
+dump_local(Alias, ImplLocal, AliasIntf) -->
+    [ (:- module(ImplLocal, [])),
+      (:- use_module(library(interface))),
+      (:- reexport(Alias)),
+      (:- init_expansors),
+      (:- implements(AliasIntf))
+    ].
 
 dump_remote(Module, ImplRemote, AliasIntf) -->
-    [(:- module(ImplRemote, [])),
-     (:- use_module(library(interface))),
-     (:- use_module(library(broker_rt))),
-     (:- implements(AliasIntf))
+    [ (:- module(ImplRemote, [])),
+      (:- use_module(library(interface))),
+      (:- use_module(library(broker_rt))),
+      (:- init_expansors),
+      (:- implements(AliasIntf)),
+      broker_rt:'$broker'(Module)
     ],
     findall((H :- remote_call(H, Module)),
             ( module_property(Module, exports(PIL)),
@@ -158,27 +136,34 @@ dump_remote(Module, ImplRemote, AliasIntf) -->
               functor(H, F, A)
             )).
 
-dump_server(Module, Interface) -->
-    {atom_concat(Module, '_serv', ImplService)},
-    [(:- module(ImplService, [])),
-     (:- use_module(library(http/http_dispatch))),
-     (:- use_module(library(http/websocket))),
-     (:- use_module(library(interface))),
-     (:- use_module(library(broker_ws))),
-     (:- http_handler(root(broker/Module),
-                      http_upgrade_to_websocket(broker_ws(Interface), []),
-                      [spawn([])]))].
+dump_server(Module, ImplService) -->
+    [ (:- module(ImplService, [])),
+      (:- use_module(library(http/http_dispatch))),
+      (:- use_module(library(http/websocket))),
+      (:- use_module(library(broker_ws))),
+      (:- init_expansors),
+      (:- http_handler(root(broker/Module),
+                       http_upgrade_to_websocket(broker_ws(Module), []),
+                       [spawn([])]))
+    ].
 
-term_expansion_broker(Target, Alias, AliasIntf) -->
-    { use_module(Alias, []), % Ensure that the module is loaded
-      absolute_file_name(Alias, File, [file_type(prolog), access(read)]),
+term_expansion_proxy(ImplRemote, AliasIntf, AliasImpl, AliasPrxy) -->
+    { prolog_load_context(source, RelTo),
+      absolute_file_name(AliasImpl, File, [file_type(prolog), access(read), relative_to(RelTo)]),
+      use_module(AliasImpl, []), % Ensure that the module is loaded
       module_property(Module, file(File))
     },
-    generate_broker(Target, File, Module, AliasIntf).
+    generate_proxy(ImplRemote, File, Module, AliasIntf, AliasPrxy).
 
-term_expansion((:- broker_client(Alias, AliasIntf)), Clauses) :-
-    phrase(term_expansion_broker(client, Alias, AliasIntf), Clauses).
+term_expansion_server(Alias, AliasIntf) -->
+    { prolog_load_context(source, RelTo),
+      absolute_file_name(Alias, File, [file_type(prolog), access(read), relative_to(RelTo)]),
+      use_module(Alias, []), % Ensure that the module is loaded
+      module_property(Module, file(File))
+    },
+    generate_server(File, Alias, Module, AliasIntf).
+
 term_expansion((:- broker_server(Alias, AliasIntf)), Clauses) :-
-    phrase(term_expansion_broker(server, Alias, AliasIntf), Clauses).
-term_expansion((:- broker_proxy( Alias, AliasIntf)), Clauses) :-
-    phrase(term_expansion_broker(proxy,  Alias, AliasIntf), Clauses).
+    phrase(term_expansion_server(Alias, AliasIntf), Clauses).
+term_expansion((:- broker_proxy(ImplRemote, AliasIntf, AliasImpl, AliasPrxy)), Clauses) :-
+    phrase(term_expansion_proxy(ImplRemote, AliasIntf, AliasImpl, AliasPrxy), Clauses).

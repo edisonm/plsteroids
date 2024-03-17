@@ -37,6 +37,7 @@
             is_newer/2,
             line_atom/2,
             save_to_file/2,
+            term_to_file/2,
             with_output_to_file/2
           ]).
 
@@ -64,6 +65,12 @@ with_output_to_file(File, Goal) :-
 save_to_file(File, Goal) :-
     call(Goal, Lines, []),
     with_output_to_file(File, write_lines(Lines)).
+
+:- meta_predicate term_to_file(+,2).
+
+term_to_file(File, Goal) :-
+    call(Goal, Terms, []),
+    with_output_to_file(File, maplist(portray_clause, Terms)).
 
 write_lines([]) :- !.
 write_lines([E|L]) :- !,

@@ -32,13 +32,19 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(broker_rt, [remote_call/2]).
+:- module(broker_rt,
+          [ add_server/2,
+            del_server/1,
+            bind_client/1,
+            bind_proxy/1,
+            remote_call/2
+          ]).
 
 :- use_module(library(http/websocket)).
-:- use_module(library(broker)).
+:- use_module(library(interface)).
 :- init_expansors.
 
-%  Note: remote call of meta predicates can not be supported, because the client
+%  Note: remote call of meta predicate should be banned, because the client
 %  context module could be inexistent in the server.
 
 /*
@@ -50,6 +56,30 @@ remote_call(MCall) :-
     remote_call(Call, M).
 */
 
+:- multifile
+    '$broker'/1.
+
+:- dynamic
+    module_server/2.
+
+add_server(Module, URL) :-
+    '$broker'(Module),
+    assertz(module_server(Module, URL)).
+
+del_server(Module) :-
+    '$broker'(Module),
+    retractall(module_server(Module, _)).
+
+bind_client(Module) :-
+    atom_concat(Module, '_intf', ModuleIntf),
+    atom_concat(Module, '_remt', ModuleRemt),
+    bind_interface(ModuleIntf, ModuleRemt).
+
+bind_proxy(Module) :-
+    atom_concat(Module, '_intf', ModuleIntf),
+    atom_concat(Module, '_prxy', ModuleRemt),
+    bind_interface(ModuleIntf, ModuleRemt).
+
 remote_call(Call, M) :-
     term_variables(Call, Vars),
     remote_call(Call, M, Vars).
@@ -57,14 +87,20 @@ remote_call(Call, M) :-
 remote_call(Call, Module, Vars) :-
     ( module_server(Module, URL),
       directory_file_path(URL, Module, Path),
-      catch(http_open_websocket(Path, WS, []),
+      http_open_websocket(Path, WS, [])
+      /* let this fail
+      catch(...
             error(socket_error(_, _), _),
             fail)
+      */
     ->setup_call_cleanup(
           ws_send(WS, prolog(b(Call, Vars))),
           remote_call_loop(WS, Vars),
           ws_close(WS, 1000, "bye"))
-    ; Module:Call % fallback to local call
+    /* % fallback to local call (if available)
+    ; predicate_property(Module:Call, defined),
+      Module:Call
+    */
     ).
 
 remote_call_loop(WS, Vars) :-

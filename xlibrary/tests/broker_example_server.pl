@@ -1,9 +1,6 @@
-:- module(broker_example_server,
-          [ start_wsbroker/0
-          ]).
+:- module(broker_example_server, []).
 
 :- use_module(library(broker)).
-:- use_module(broker_example_common).
-:- broker_server(mylists, plbin(mylists)).
+:- init_expansors.
 
-start_wsbroker :- start_wsbroker(4444).
+:- broker_server(library('../tests/mylists'), plbin(mylists)).
