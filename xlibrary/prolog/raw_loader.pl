@@ -34,11 +34,17 @@
 
 :- module(raw_loader,
           [ raw_load/1,
-            raw_load/2]).
+            raw_load/2
+          ]).
+
+:- use_module(library(lists)).
 
 :- meta_predicate
         raw_load(:),
         raw_load(:,:).
+
+abolish_predicates(M:L) :-
+    forall(member(PI, L), abolish(M:PI)).
 
 %!  raw_load(:Alias, :PredicateIndicators) is det.
 %
@@ -46,6 +52,7 @@
 %   predicates into static predicates.
 
 raw_load(Alias, PI) :-
+    abolish_predicates(PI),
     raw_load(Alias),
     compile_predicates(PI).
 
