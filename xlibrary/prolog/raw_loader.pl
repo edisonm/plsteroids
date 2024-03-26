@@ -53,7 +53,7 @@ abolish_predicates(M:L) :-
 
 raw_load(Alias, PI) :-
     abolish_predicates(PI),
-    raw_load(Alias),
+    do_raw_load(Alias),
     compile_predicates(PI).
 
 %!  raw_load(:Alias) is det.
@@ -64,6 +64,15 @@ raw_load(Alias, PI) :-
 %   it loads faster that qlf files (the first time).
 
 raw_load(M:Alias) :-
+    forall(( current_predicate(M:F/A),
+             functor(H, F, A),
+             predicate_property(M:H, dynamic),
+             \+ predicate_property(M:H, imported_from(_))
+           ),
+           abolish(M:H)),
+    do_raw_load(M:Alias).
+
+do_raw_load(M:Alias) :-
     prolog_load_context(source, Source),
     absolute_file_name(Alias, File,
                        [extensions([raw, '']), access(exist), relative_to(Source)]),
