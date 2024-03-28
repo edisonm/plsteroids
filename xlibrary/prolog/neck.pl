@@ -211,7 +211,11 @@ term_expansion_hb(File, Line, M, Head, Neck, Static, Right, NeckHead, NeckBody, 
     term_variables(Head, HVars),
     '$expand':mark_vars_non_fresh(HVars),
     expand_goal(M:Static, Expanded),
-    freeze(NeckHead, track_deps(File, Line, M, NeckHead, Expanded)),
+    freeze(NeckHead,
+           ( NeckHead = A:B
+           ->freeze(A, freeze(B, track_deps(File, Line, M, NeckHead, Expanded)))
+           ; track_deps(File, Line, M, NeckHead, Expanded)
+           )),
     HasCP = hascp(yes),
     term_variables(Head-Right, HNVarU),
     term_variables(Expanded, ExVarU),
