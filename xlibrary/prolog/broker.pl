@@ -110,9 +110,9 @@ dump_interface(Module, Interface) -->
     {module_property(Module, exports(PIL))},
     [ (:- module(Interface, PIL)),
       (:- use_module(library(interface))),
-      (:- init_expansors)
-    ],
-    end_interface(Interface, PIL).
+      (:- init_expansors),
+      (:- interface)
+    ].
 
 dump_local(Alias, ImplLocal, AliasIntf) -->
     [ (:- module(ImplLocal, [])),
@@ -127,8 +127,7 @@ dump_remote(Module, ImplRemote, AliasIntf) -->
       (:- use_module(library(interface))),
       (:- use_module(library(broker_rt))),
       (:- init_expansors),
-      (:- implements(AliasIntf)),
-      broker_rt:'$broker'(Module)
+      (:- implements(AliasIntf))
     ],
     findall((H :- remote_call(H, Module)),
             ( module_property(Module, exports(PIL)),

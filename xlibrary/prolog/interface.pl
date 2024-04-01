@@ -55,10 +55,16 @@ direct_interface(M, F/A) :-
          \+ predicate_property(M:H, imported_from(_))
        ).
 
-end_interface(Interface, DIL) -->
-    [interface:'$interface'(Interface, DIL)],
+this_interface(Interface, DIL) -->
+    [interface:'$interface'(Interface, DIL)].
+
+decl_dynbridge(DIL) -->
     findall((:- dynamic F/A),
             member(F/A, DIL)).
+
+end_interface(Interface, DIL) -->
+    this_interface(Interface, DIL),
+    decl_dynbridge(DIL).
 
 term_expansion_decl(implements(Alias), Clauses) :-
     '$current_source_module'(Implementation),

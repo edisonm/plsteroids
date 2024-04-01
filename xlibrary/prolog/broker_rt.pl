@@ -56,18 +56,13 @@ remote_call(MCall) :-
     remote_call(Call, M).
 */
 
-:- multifile
-    '$broker'/1.
-
 :- dynamic
     module_server/2.
 
 add_server(Module, URL) :-
-    '$broker'(Module),
     assertz(module_server(Module, URL)).
 
 del_server(Module) :-
-    '$broker'(Module),
     retractall(module_server(Module, _)).
 
 bind_client(Module) :-
