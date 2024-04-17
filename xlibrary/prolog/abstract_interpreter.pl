@@ -49,9 +49,13 @@
             match_noloops/4
           ]).
 
+:- use_module(library(apply)).
 :- use_module(library(lists)).
+:- use_module(library(option)).
+:- use_module(library(prolog_stack)).
 :- use_module(library(qualify_meta_goal)).
 :- use_module(library(resolve_calln)).
+:- use_module(library(solution_sequences)).
 :- use_module(library(term_size)).
 :- use_module(library(terms_share)).
 :- use_module(library(neck)).

@@ -72,6 +72,7 @@
         call_cm(0, +, -),
         call_cm(0, +, ?, -, -).
 
+:- public freeze_cohesive_module_rt/6.
 
 aux_cohesive_module(M, F, A, CohM, CohesiveModule) :-
     format(atom(CT), '__aux_cohm_~w:~w/~w', [M, F, A]),

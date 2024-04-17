@@ -48,6 +48,8 @@
            without_context_value/3
           ]).
 
+:- use_module(library(apply)).
+
 context_name(M:Name, ContextName) :-
     context_name(M, Name, ContextName).
 

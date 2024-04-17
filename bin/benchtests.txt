@@ -58,7 +58,6 @@ refactor/tests/comments_ex.plt
 refactor/tests/seekn_parenthesis_right.plt
 refactor/tests/goal_loaded.plt
 refactor/tests/preserve_comments.plt
-assertions/tests/foreign/foreign.plt
 refactor/tests/sentence_list.plt
 refactor/tests/del_elem_list.plt
 refactor/tests/remove_literal.plt
@@ -66,11 +65,11 @@ refactor/tests/conj_width.plt
 refactor/tests/linearize.plt
 refactor/tests/change_operator.plt
 refactor/tests/keep_list_layout.plt
-refactor/tests/term_with_op.plt
 refactor/tests/add_literal.plt
+refactor/tests/term_with_op.plt
 refactor/tests/add_element_list.plt
-refactor/tests/dict_subst.plt
 refactor/tests/add_string.plt
+refactor/tests/dict_subst.plt
 refactor/tests/repl_operator.plt
 refactor/tests/listb.plt
 refactor/tests/decrease_head_rec.plt
@@ -114,3 +113,4 @@ andorra/tests/dia_sums.plt
 xlibrary/tests/interface.plt
 xlibrary/tests/i18n/i18n.plt
 assertions/tests/metaprops.plt
+assertions/tests/foreign/foreign.plt

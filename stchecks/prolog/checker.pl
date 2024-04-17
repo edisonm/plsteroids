@@ -39,6 +39,7 @@
            head_report/1, report_record_message/3
           ]).
 
+:- use_module(library(apply)).
 :- use_module(library(lists)).
 :- use_module(library(atomics_atom)).
 :- use_module(library(thread)).
