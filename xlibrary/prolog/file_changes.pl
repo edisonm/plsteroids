@@ -34,6 +34,9 @@
 
 :- module(file_changes, [do_file_change/4]).
 
+:- use_module(library(process)).
+:- use_module(library(readutil)).
+
 do_file_change(save, File, _, Changes) :-
     ( \+ exists_file(File),
       (Changes==[] ; Changes=="")

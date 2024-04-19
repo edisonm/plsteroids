@@ -34,7 +34,9 @@
 
 :- module(check_module_loops, []).
 
+:- use_module(library(apply)).
 :- use_module(library(lists)).
+:- use_module(library(pairs)).
 :- use_module(library(calls_to)).
 :- use_module(library(mark_preds)).
 :- use_module(library(checker)).

@@ -33,8 +33,11 @@
 */
 
 :- module(terms_share,
-          [terms_share/2,
-           terms_share/3]).
+          [ terms_share/2,
+            terms_share/3
+          ]).
+
+:- use_module(library(lists)).
 
 terms_share(A, VarsR, B) :-
     term_variables(A, VarsA),

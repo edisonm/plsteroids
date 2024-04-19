@@ -44,6 +44,7 @@
            repsilon/1,
            repsilon/2]).
 
+:- use_module(library(apply)).
 :- use_module(library(mapargs)).
 :- use_module(library(compare_eq)).
 

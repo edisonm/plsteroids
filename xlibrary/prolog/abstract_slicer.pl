@@ -38,9 +38,11 @@
            apply_mode/5,
            slicer_abstraction/7]).
 
+:- use_module(library(apply)).
+:- use_module(library(option)).
+:- use_module(library(pure)).
 :- use_module(library(abstract_interpreter)).
 :- use_module(library(terms_share)).
-:- use_module(library(pure)).
 
 :- meta_predicate
     abstract_slice(0,+,?),

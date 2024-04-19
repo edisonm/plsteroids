@@ -32,9 +32,13 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(list_intervals, [list_intervals/2,
-                           compact_intervals/2,
-                           repack_list/2]).
+:- module(list_intervals,
+          [ list_intervals/2,
+            compact_intervals/2,
+            repack_list/2
+          ]).
+
+:- use_module(library(apply)).
 
 %!  list_intervals(+From:list,-Pairs:list(pair)) is det.
 %!  list_intervals(-From:list,+Pairs:list(pair)) is det.

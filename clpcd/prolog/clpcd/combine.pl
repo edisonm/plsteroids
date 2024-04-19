@@ -43,6 +43,8 @@
             normalize/2
         ]).
 
+:- use_module(library(ugraphs)).
+
 % combine(Ga,Gb,Gc)
 %
 % Combines the vertices of Ga and Gb into Gc.

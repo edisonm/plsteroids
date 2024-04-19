@@ -40,6 +40,8 @@
            is_subterm/2]).
 
 :- use_module(library(apply)).
+:- use_module(library(occurs)).
+:- use_module(library(option)).
 
 :- meta_predicate substitute(2, ?, ?).
 substitute(Comp, Term1, Term) :-

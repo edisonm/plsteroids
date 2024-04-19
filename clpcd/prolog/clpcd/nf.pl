@@ -49,6 +49,7 @@
 	    nf2term/3
 	]).
 
+:- use_module(library(apply)).
 :- use_module(library(clpcd/geler)).
 :- use_module(library(clpcd/ineq)).
 :- use_module(library(clpcd/domain_ops)).

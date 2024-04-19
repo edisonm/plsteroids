@@ -34,6 +34,7 @@
 
 :- module(linearize, [linearize/5]).
 
+:- use_module(library(apply)).
 :- use_module(library(lists)).
 :- use_module(library(occurs)).
 

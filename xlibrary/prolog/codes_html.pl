@@ -38,6 +38,8 @@
            codes_html/3         % +Codes, ?Html, ?Tail
           ]).
 
+:- use_module(library(apply)).
+
 codes_html(Codes, Html) :-
     codes_html(Codes, Html, []).
 

@@ -34,6 +34,7 @@
 
 :- module(check_useless_cuts, []).
 
+:- use_module(library(error)).
 :- use_module(library(lists)).
 :- use_module(library(solution_sequences)).
 % :- use_module(library(sequence_list)).

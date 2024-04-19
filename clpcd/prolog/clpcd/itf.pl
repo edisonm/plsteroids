@@ -47,6 +47,7 @@
 	    dump_nonzero/3
 	]).
 
+:- use_module(library(apply)).
 :- use_module(library(neck)).
 :- use_module(library(clpcd/class)).
 :- use_module(library(clpcd/domain_ops)).
@@ -56,6 +57,8 @@
 :- use_module(library(clpcd/store)).
 :- use_module(library(clpcd/solve)).
 :- init_expansors.
+
+:- multifile attribute_goals//1.
 
 % ----------------------------------- dump ------------------------------------
 
