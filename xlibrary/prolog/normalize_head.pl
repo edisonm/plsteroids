@@ -34,6 +34,8 @@
 
 :- module(normalize_head, [normalize_head/2]).
 
+:- use_module(library(lists)).
+
 current_predicate_ext(M:F/A) :-
     ( nonvar(M) ->
       findall(M:F/A, current_predicate(M:F/A), PIL1)

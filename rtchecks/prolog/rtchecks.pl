@@ -42,6 +42,7 @@
 
 :- discontiguous '$exported_op'/3.
 :- use_module(library(apply)).
+:- use_module(library(lists)).
 :- reexport(library(compound_expand)).
 :- use_module(library(error)).
 :- use_module(library(neck)).

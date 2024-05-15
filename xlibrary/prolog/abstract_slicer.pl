@@ -39,6 +39,7 @@
            slicer_abstraction/7]).
 
 :- use_module(library(apply)).
+:- use_module(library(lists)).
 :- use_module(library(option)).
 :- use_module(library(pure)).
 :- use_module(library(abstract_interpreter)).

@@ -36,6 +36,8 @@
                         remove_dups_reversed/2,
                         remove_dups/4]).
 
+:- use_module(library(lists)).
+
 remove_dups(L, U) :-
     remove_dups(L, [], U, []).
 

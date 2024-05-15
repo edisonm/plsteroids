@@ -43,6 +43,7 @@
             normalize/2
         ]).
 
+:- use_module(library(lists)).
 :- use_module(library(ugraphs)).
 
 % combine(Ga,Gb,Gc)

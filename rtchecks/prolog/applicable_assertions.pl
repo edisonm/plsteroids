@@ -36,6 +36,7 @@
           [applicable_prop_check/3,
            applicable_assertions/3]).
 
+:- use_module(library(lists)).
 :- use_module(library(assertions)).
 :- use_module(library(ctrtchecks)).
 :- use_module(library(intercept)).
