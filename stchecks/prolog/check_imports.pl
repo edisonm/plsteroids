@@ -199,11 +199,11 @@ ignore_import(M, IM) :-
 
 collect_usemods(MFileD, Pairs, Tail) :-
     findall(warning-(c(module, use_module, M)-(Loc/U)),
-            ( current_used_use_module(MFileD, U, M, From),
+            ( current_unused_use_module(MFileD, U, M, From),
               from_location(From, Loc)
             ), Pairs, Tail).
 
-current_used_use_module(MFileD, UE, M, From) :-
+current_unused_use_module(MFileD, UE, M, From) :-
     get_dict(M, MFileD, FileD),
     M \= user,
     module_property(M, class(Class)),
@@ -234,9 +234,11 @@ current_used_use_module(MFileD, UE, M, From) :-
          ( member(F/A, PIL),
            functor(Head, F, A),
            predicate_property(MHead, implementation_module(IM)),
-           used_usemod(M, IM),
            % Ignore if reexported from compound_expand:
-           IM \= compound_expand
+           IM \= compound_expand,
+           once(( used_usemod(M, IM)
+                ; loc_declaration(Head, M, goal, _)
+                ))
          )
        ).
 
