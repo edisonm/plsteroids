@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:edisonm/stchecks.git
 	branch = main
-	commit = 0fd5cffc5df6737f58ef2eee74664268725c5919
-	parent = a6814326647115dc7544dcd05fd77f382e67a7ba
+	commit = 97baddf057712c77bb6662494b46049e79784243
+	parent = 9ef4593d535bade0973453eaed1e4d5b24a34bf8
 	method = merge
 	cmdver = 0.4.5
