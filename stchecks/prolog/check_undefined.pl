@@ -94,36 +94,40 @@ alternative_decl(PIL, A-EM/EL, Decl/FL) :-
 
 hide_undef(M:H) :- hide_undef(H, M).
 
-find_alternatives(M:F/A, AL) :-
+curr_alternative(M, F, A, AA, EL) :-
     functor(H, F, A),
-    findall(AA-EL, ( current_predicate(AM:F/A),
-                     AM \= M,
-                     \+ predicate_property(AM:H, imported_from(_)),
-                     ( module_property(AM, file(AF))
-                     ->
-                       \+ ( member(Decl, [multifile, discontiguous, dynamic]),
-                            loc_declaration(H, AM, Decl, From),
-                            from_to_file(From, File),
-                            File \= AF
-                          ),
-                       ( library_alias(AF, AA)
-                       ->true
-                       ; AA = AF
-                       )
-                     ; AA=AM
-                     ),
-                     exclude_list(M, AM, EL)
-                   ), AU),
+    current_predicate(AM:F/A),
+    AM \= M,
+    \+ predicate_property(AM:H, imported_from(_)),
+    ( module_property(AM, file(AF))
+    ->
+      \+ ( member(Decl, [multifile, discontiguous, dynamic]),
+           loc_declaration(H, AM, Decl, From),
+           from_to_file(From, File),
+           File \= AF
+         ),
+      ( library_alias(AF, AA)
+      ->true
+      ; AA = AF
+      )
+    ; AA=AM
+    ),
+    exclude_list(M, AM, EL).
+
+find_alternatives(M:F/A, AL) :-
+    findall(AA-EL, curr_alternative(M, F, A, AA, EL), AU),
     sort(AU, AL).
 
-exclude_list(M, AM, ML/EL) :-
+exclude_list(CM, AM, ML/EL) :-
     module_property(AM, exports(MU)),
     sort(MU, ML),
     findall(F/A,
             ( member(F/A, ML),
               functor(H, F, A),
-              predicate_property(M:H, defined),
-              \+ predicate_property(M:H, imported_from(AM))
+              predicate_property(CM:H, defined),
+              predicate_property(AM:H, implementation_module(IM1)),
+              predicate_property(CM:H, implementation_module(IM2)),
+              IM1 \= IM2
             ), EU),
     sort(EU, EL).
 
