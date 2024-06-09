@@ -23,11 +23,11 @@ stchecks/tests/stchecks.plt
 wrong_dynamic.stest
 refactor/tests/self_refactor.plt
 andorra/tests/qu_evan.plt
-undefined.stest
 stchecks/tests/stchecks_2.plt
-stchecks/tests/stchecks_1.plt
 stchecks/tests/stchecks_3.plt
 stchecks/tests/stchecks_4.plt
+undefined.stest
+stchecks/tests/stchecks_1.plt
 stchecks/tests/stchecks_6.plt
 xtools/tests/assrt_meta.plt
 andorra/tests/fib.plt
@@ -58,6 +58,7 @@ refactor/tests/comments_ex.plt
 refactor/tests/seekn_parenthesis_right.plt
 refactor/tests/goal_loaded.plt
 refactor/tests/preserve_comments.plt
+assertions/tests/foreign/foreign.plt
 refactor/tests/sentence_list.plt
 refactor/tests/del_elem_list.plt
 refactor/tests/remove_literal.plt
@@ -113,4 +114,4 @@ andorra/tests/dia_sums.plt
 xlibrary/tests/interface.plt
 xlibrary/tests/i18n/i18n.plt
 assertions/tests/metaprops.plt
-assertions/tests/foreign/foreign.plt
+xlibrary/tests/shrink.plt
