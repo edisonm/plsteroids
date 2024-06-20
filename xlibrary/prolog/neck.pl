@@ -201,9 +201,12 @@ profile_expander(M, Head, AssignedL, Expanded, Issues) :-
 do_call_checks(true, File, Line, Call) :- call_checkct(Call, File, Line, []).
 do_call_checks(fail, _,    _,    Call) :- call(Call).
 
+link_neck_body(t(Pattern, NeckBody, NeckBody, Head), t(Pattern, Head)).
+
 term_expansion_hb(File, Line, M, Head, Neck, Static, Right, NeckHead, NeckBody, Pattern, ClauseL) :-
-    once(( current_seq_lit(Right, !, LRight, SepBody),
-           \+ current_seq_lit(SepBody, !, _, _)
+    once(( current_seq_lit(Right, !, Left, SepBody),
+           \+ current_seq_lit(SepBody, !, _, _),
+           LRight = (Left, !)
            % We can not move the part above a cut to a separate clause
          ; LRight = true,
            SepBody = Right
@@ -226,40 +229,53 @@ term_expansion_hb(File, Line, M, Head, Neck, Static, Right, NeckHead, NeckBody, 
       Head \== '<declaration>',
       nonvar(SepBody),
       member(SepBody, [(_, _), (_;_), (_->_), \+ _]),
-      expand_goal(M:SepBody, M:ExpBody),
-      ExpBody \= true,
-      term_variables(t(Head, Expanded, LRight), VarHU),
-      '$expand':remove_var_attr(VarHU, '$var_info'),
-      sort(VarHU, VarHL),
-      term_variables(ExpBody, VarBU),
-      sort(VarBU, VarBL),
-      ord_intersection(VarHL, VarBL, ArgNB),
-      variant_sha1(ArgNB-ExpBody, Hash),
-      neck_prefix(NeckPrefix),
-      format(atom(FNB), '~w~w:~w', [NeckPrefix, M, Hash]),
-      SepHead =.. [FNB|ArgNB],
-      conj(LRight, SepHead, NeckBody),
-      findall(t(Pattern, Head), call_checks(Neck, File, Line, Expanded, HasCP), ClausePIL),
-      ( '$get_predicate_attribute'(M:SepHead, defined, 1),
-        '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
-      ->true
-      ; ClausePIL \= [_]
+      expand_goal(M:SepBody, M:ExpBody)
+    ->( ExpBody = true
+      ->expand_goal(M:LRight, M:NeckBody),
+        findall(t(Pattern, Head), call_checks(Neck, File, Line, Expanded, HasCP), ClausePIL),
+        RTHead = Head,
+        ClauseL1 = []
+      ; term_variables(t(Head, Expanded, LRight), VarHU),
+        '$expand':remove_var_attr(VarHU, '$var_info'),
+        sort(VarHU, VarHL),
+        term_variables(ExpBody, VarBU),
+        sort(VarBU, VarBL),
+        ord_intersection(VarHL, VarBL, ArgNB),
+        variant_sha1(ArgNB-ExpBody, Hash),
+        neck_prefix(NeckPrefix),
+        format(atom(FNB), '~w~w:~w', [NeckPrefix, M, Hash]),
+        SepHead =.. [FNB|ArgNB],
+        once(conj(LRight, SepHead, NeckBody1)),
+        findall(t(Pattern, NeckBody, NeckBody1, Head),
+                ( call_checks(Neck, File, Line, Expanded, HasCP)
+                ), ClausePIL1)
+      ->( ClausePIL1 = [t(Pattern, NeckBody, NeckBody1, Head)]
+        ->once(conj(LRight, ExpBody, NeckBody)),
+          ClausePIL = [t(Pattern, Head)],
+          RTHead = Head,
+          ClauseL1 = []
+        ; RTHead = SepHead,
+          maplist(link_neck_body, ClausePIL1, ClausePIL),
+          ( '$get_predicate_attribute'(M:SepHead, defined, 1),
+            '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
+          ->ClauseL1 = []
+          ; phrase(( findall((:- discontiguous IM:F/A),
+                             distinct(IM:F/A,
+                                      ( member(t(_, H), ClausePIL),
+                                        H \== '<declaration>',
+                                        strip_module(M:H, IM, P),
+                                        functor(P, F, A)
+                                      ))),
+                     ( { '$get_predicate_attribute'(M:SepHead, defined, 1),
+                         '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
+                       }
+                     ->[]
+                     ; [(SepHead :- ExpBody)]
+                     )
+                   ), ClauseL1)
+          )
+        )
       )
-    ->RTHead = SepHead,
-      phrase(( findall((:- discontiguous IM:F/A),
-                       distinct(IM:F/A,
-                                ( member(t(_, H), ClausePIL),
-                                  H \== '<declaration>',
-                                  strip_module(M:H, IM, P),
-                                  functor(P, F, A)
-                                ))),
-               ( { '$get_predicate_attribute'(M:SepHead, defined, 1),
-                   '$get_predicate_attribute'(M:SepHead, number_of_clauses, _)
-                 }
-               ->[]
-               ; [(SepHead :- ExpBody)]
-               )
-             ), ClauseL1)
     ; expand_goal(M:Right, M:NeckBody),
       findall(t(Pattern, Head), call_checks(Neck, File, Line, Expanded, HasCP), ClausePIL),
       RTHead = Head,
