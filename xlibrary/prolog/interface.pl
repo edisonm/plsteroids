@@ -48,12 +48,14 @@
     '$interface'/2,
     '$implementation'/2.
 
-direct_interface(M, F/A) :-
-    \+ ( current_predicate(M:F/A),
-         functor(H, F, A),
-         predicate_property(M:H, defined),
-         \+ predicate_property(M:H, imported_from(_))
-       ).
+% Warning: an interface module can not contain dynamic predicates, since dynamic
+% predicates are generated automatically to perform the binding
+
+not_interface(M, F/A) :-
+    current_predicate(M:F/A),
+    functor(H, F, A),
+    \+ predicate_property(M:H, dynamic),
+    \+ predicate_property(M:H, imported_from(_)).
 
 this_interface(Interface, DIL) -->
     [interface:'$interface'(Interface, DIL)].
@@ -108,7 +110,7 @@ term_expansion(end_of_file, Clauses) :-
     module_property(Interface, file(File)),
     prolog_load_context(source, File),
     module_property(Interface, exports(PIL)),
-    include(direct_interface(Interface), PIL, DIL),
+    exclude(not_interface(Interface), PIL, DIL),
     phrase(end_interface(Interface, DIL), Clauses, [end_of_file]).
 
 prolog:called_by(Pred, Interface, Context, PredL) :-
