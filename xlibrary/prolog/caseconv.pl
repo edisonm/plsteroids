@@ -32,32 +32,65 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(camel_snake, [camel_snake/2]).
+:- module(caseconv,
+          [ camel_kebab/2,
+            camel_snake/2,
+            kebab_snake/2,
+            pascal_kebab/2,
+            pascal_snake/2
+          ]).
 
 :- use_module(library(ctypes)).
 
-camel_snake(Camel, Snake) :-
-    atom(Camel), !,
-    atom_codes(Camel, CamelS),
-    camel_snake_s(CamelS, SnakeS),
-    atom_codes(Snake, SnakeS).
-camel_snake(Camel, Snake) :-
+charsep_case(Char, UCFirst, CharSep, Snake) :-
+    atom(CharSep),
+    !,
+    atom_codes(CharSep, CharSepC),
+    charsep_case_c(CharSepC, Char, UCFirst, SnakeC),
+    atom_codes(Snake, SnakeC).
+charsep_case(Char, UCFirst, CharSep, Snake) :-
     atom(Snake),
-    atom_codes(Snake, SnakeS),
-    camel_snake_s(CamelS, SnakeS),
-    atom_codes(Camel, CamelS).
+    atom_codes(Snake, SnakeC),
+    charsep_case_c(CharSepC, Char, UCFirst, SnakeC),
+    atom_codes(CharSep, CharSepC).
 
-camel_snake_s([U|CL], [L|SL]) :-
-    ( upper_lower(U, L)
+case_first(u, U, S) :-
+    ( upper_lower(U, S)
     ->true
-    ; U = L
-    ),
-    camel_snake_(CL, SL).
-camel_snake_s([], []).
+    ; U = S
+    ).
 
-camel_snake_([U|CL], [0'_, L|SL]) :-
-    upper_lower(U, L), !,
-    camel_snake_(CL, SL).
-camel_snake_([C|CL], [C|SL]) :-
-    camel_snake_(CL, SL).
-camel_snake_([], []).
+case_first(l, L, S) :-
+    ( upper_lower(S, L)
+    ->true
+    ; L = S
+    ).
+
+charsep_case_c([U|CL], C, F, [S|SL]) :-
+    case_first(F, U, S),
+    charsep_case_2(CL, C, SL).
+charsep_case_c([], _, _, []).
+
+charsep_case_2([U|CL], Char, [Char, L|SL]) :-
+    upper_lower(U, L),
+    !,
+    charsep_case_2(CL, Char, SL).
+charsep_case_2([C|CL], Char, [C|SL]) :-
+    charsep_case_2(CL, Char, SL).
+charsep_case_2([], _, []).
+
+kebab_snake(Kebab, Snake) :-
+    atom(Kebab),
+    !,
+    atomic_list_concat(List, '-', Kebab),
+    atomic_list_concat(List, '_', Snake).
+kebab_snake(Kebab, Snake) :-
+    atom(Snake),
+    !,
+    atomic_list_concat(List, '_', Snake),
+    atomic_list_concat(List, '-', Kebab).
+
+pascal_snake(Pascal, Snake) :- charsep_case(0'_, u, Pascal, Snake).
+camel_snake( Camel,  Snake) :- charsep_case(0'_, l, Camel,  Snake).
+pascal_kebab(Pascal, Kebab) :- charsep_case(0'-, u, Pascal, Kebab).
+camel_kebab( Camel,  Kebab) :- charsep_case(0'-, l, Camel,  Kebab).

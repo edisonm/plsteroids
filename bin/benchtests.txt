@@ -1,7 +1,5 @@
 assertions.stest
 andorra/tests/mqu.plt
-idfpml/tests/cdqd.plt
-idfpml/tests/cddd.plt
 mpfr/tests/mpfr.plt
 andorra/tests/money.plt
 unused.stest
@@ -10,8 +8,8 @@ stchecks/tests/stchecks_5.plt
 refactor/tests/refspeed.plt
 xlibrary/tests/shrink.plt
 clpcd/tests/cdr.plt
-clpcd/tests/cdq.plt
 dupcode.stest
+clpcd/tests/cdq.plt
 stchecks/tests/stchecks_unused.plt
 useless_cuts.stest
 module_loops.stest
@@ -33,6 +31,8 @@ stchecks/tests/stchecks_6.plt
 xtools/tests/assrt_meta.plt
 andorra/tests/fib.plt
 refactor/tests/conjunction_unfold.plt
+idfpml/tests/cdqd.plt
+idfpml/tests/cddd.plt
 refactor/tests/append_list.plt
 assertions/tests/assertions.plt
 meta_decls.stest
