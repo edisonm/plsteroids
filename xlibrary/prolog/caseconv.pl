@@ -42,6 +42,9 @@
 
 :- use_module(library(ctypes)).
 
+% Reference:
+% https://www.freecodecamp.org/news/snake-case-vs-camel-case-vs-pascal-case-vs-kebab-case-whats-the-difference/
+
 charsep_case(Char, UCFirst, CharSep, Snake) :-
     atom(CharSep),
     !,
