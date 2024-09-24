@@ -553,13 +553,13 @@ abstract_interpreter_body(H, M, Abs) -->
 
 get_body_replacement(G, M, EvalL, MR) :-
     predicate_property(M:G, implementation_module(IM)),
-    ( ( evaluable_goal_hook(G, IM)
+    ( replace_goal_hook(G, IM, R),
+      MR = M:R
+    ; ( evaluable_goal_hook(G, IM)
       ; functor(G, F, A),
         memberchk(IM:F/A, EvalL)
       ),
       MR = M:G
-    ; replace_goal_hook(G, IM, R),
-      MR = M:R
     ; copy_term(EvalL, EvalC),
       memberchk((IM:G as I:R), EvalC),
       % This weird code is used because we can not use @/2 here
