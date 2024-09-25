@@ -44,6 +44,11 @@
            string_trim/2
            ]).
 
+sub_atomic(atom,   T, B, L, A, S) :- sub_atom(  T, B, L, A, S).
+sub_atomic(string, T, B, L, A, S) :- sub_string(T, B, L, A, S).
+
+/* % Avoiding usage of pcre due to crashes in big repositories:
+
 :- use_module(library(pcre)).
 
 left_trim(Type, Atomic, LeftTrim) :-
@@ -52,6 +57,29 @@ left_trim(Type, Atomic, LeftTrim) :-
 
 right_trim(Type, Atomic, RightTrim) :-
     re_replace("[ \t\n\v\f\r]+$", "", Atomic, RightTrim, [capture_type(Type)]).
+*/
+
+left_trim(Type, Atomic, LeftTrim) :-
+    ( sub_atomic(Type, Atomic, B, 1, _, C),
+      \+ char_type(C, space)
+    ->true
+    ; string_length(Atomic, B)
+    ),
+    sub_atomic(Type, Atomic, B, _, 0, LeftTrim).
+
+right_trim(Type, Atomic, RightTrim) :-
+    ( string_length(Atomic, N),
+      between(0, N, X),
+      sub_atomic(Type, Atomic, B, 1, X, C),
+      ( \+ char_type(C, space)
+      ->succ(B, E)
+      ; B = 0,
+        E = 0
+      )
+    ->true
+    ; E = 0
+    ),
+    sub_atomic(Type, Atomic, 0, E, _, RightTrim).
 
 trim(Type, Atomic, Trim) :-
     left_trim(Type, Atomic, LTrim),
