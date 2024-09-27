@@ -47,6 +47,7 @@
 :- use_module(library(current_defined_predicate)).
 :- use_module(library(database_fact)).
 :- use_module(library(codewalk)).
+:- use_module(library(clause_indicator)).
 :- use_module(library(location_utils)).
 :- use_module(library(predicate_from)).
 :- use_module(library(option_utils)).
@@ -102,7 +103,7 @@ hide_var_dynamic_hook(compat_body(_, _, _, _, _, _), metaprops).
 
 :- dynamic
     wrong_dynamic_db/4,
-    var_dynamic_db/2.
+    var_dynamic_db/3.
 
 hide_wrong_dynamic(prolog_trace_interception(_, _, _, _), user).
 hide_wrong_dynamic(Call, _) :-
@@ -113,7 +114,7 @@ hide_wrong_dynamic(Call, _) :-
 
 cleanup_dynamic_db :-
     retractall(wrong_dynamic_db(_, _, _, _)),
-    retractall(var_dynamic_db(_, _)).
+    retractall(var_dynamic_db(_, _, _)).
 
 checker:check(wrong_dynamic, Result, Options) :-
     check_wrong_dynamic(Options, Result).
@@ -141,8 +142,8 @@ collect_result(MFileD, Pairs) :-
     findall(warning-(unmodified_dynamic-(Loc-PI)),
             current_unmodified_dynamic(MFileD, Loc, PI), Pairs1, Pairs2),
     findall(warning-(var_as_dynamic-(PI-(Loc/CI))),
-            ( retract(var_dynamic_db(PI, From)),
-              check:predicate_indicator(From, CI, []),
+            ( retract(var_dynamic_db(PI, Caller, From)),
+              clause_indicator(From, Caller, CI, []),
               from_location(From, Loc)), Pairs2, []).
 
 current_modified_nondynamic(Type, DType, Loc, PI, MFrom, MPI) :-
@@ -247,6 +248,6 @@ record_location_wd(Caller, Fact, CM, Type, MGoal, _, From) :-
       \+ ( get_attr(Fact, meta_args, Spec),
            prolog_metainference:is_meta(Spec)
          ),
-      update_fact_from(var_dynamic_db(MPI), From)
+      update_fact_from(var_dynamic_db(MPI, Caller), From)
     ; true
     ).

@@ -43,11 +43,12 @@
 :- use_module(library(referenced_by)).
 :- use_module(library(assertions)).
 :- use_module(library(codewalk)).
+:- use_module(library(clause_indicator)).
 :- use_module(library(from_utils)).
 :- init_expansors.
 
 :- dynamic
-    deprecated_db/6.
+    deprecated_db/7.
 
 :- multifile
     prolog:message//1,
@@ -79,13 +80,13 @@ check_deprecated(Options1, Pairs) :-
                   Options),
     walk_code(Options),
     findall(information-((DLoc/(IM:F/A))-((CLoc/Comment)-(Loc/CI))),
-            ( retract(deprecated_db(Call, M, Comment, DFrom, CFrom, From)),
+            ( retract(deprecated_db(Call, M, Caller, Comment, DFrom, CFrom, From)),
               predicate_property(M:Call, implementation_module(IM)),
               functor(Call, F, A),
               from_location(DFrom, DLoc),
               from_location(CFrom, CLoc),
               from_location(From, Loc),
-              check:predicate_indicator(From, CI, [])
+              clause_indicator(From, Caller, CI, [])
             ), Pairs).
 
 prolog:message(acheck(deprecated)) -->
@@ -104,8 +105,8 @@ comment_referenced_by((Loc/Comment)-LocCIL) -->
 
 :- public collect_deprecated/3.
 :- meta_predicate collect_deprecated(0,?,?).
-collect_deprecated(M:Goal, _, From) :-
+collect_deprecated(M:Goal, Caller, From) :-
     deprecated_predicate(M:Goal, Comment, DFrom, CFrom),
     % counter intuitive optimization: we save M (context module) instead of
     % implementation module since M is more discriminative
-    update_fact_from(deprecated_db(Goal, M, Comment, DFrom, CFrom), From).
+    update_fact_from(deprecated_db(Goal, M, Caller, Comment, DFrom, CFrom), From).
