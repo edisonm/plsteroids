@@ -156,16 +156,21 @@ slicer_abstraction(Spec, VarsR, Scope, MGoal, Body) -->
       )
     ; % check if the body trivially fails:
       ( Scope = body
-      ->once(( match_head_body(M:Goal, Body1, Loc),
-               % if no side effects, increase precision executing the body:
-               ( is_pure_body(Body1)
-               ->call(Body1)
-               ; true
-               )
-             ))
-      ; Loc = Loc1
-      ),
-      Body = M:true
+      ->( % if no side effects, increase precision executing the body:
+          ( match_head_body(M:Goal, Body1, Loc),
+            is_pure_body(Body1, requires_subst(EvalL))
+          ->call(Body1),
+            Body = M:true
+          ; match_head_body(M:Goal, Body1, Loc),
+            ( is_pure_body(Body1)
+            ->Body = Body1
+            ; Body = M:true
+            )
+          )
+        )
+      ; Loc = Loc1,
+        Body = M:true
+      )
     },
     { Scope = head
     ->Result = bottom % Kludge to avoid cut remove solutions
@@ -179,6 +184,16 @@ slicer_abstraction(_, _, _, MGoal, M:true) -->
       strip_module(MGoal, M, _)
     },
     bottom.
+
+pattern_eval(H, I, _ +\ (I:H as _)).
+pattern_eval(H, I, _ +\ (I:H :- _)).
+pattern_eval(H, I, I:F/A) :- functor(H, F, A).
+
+requires_subst(EvalL, M:H) :-
+    predicate_property(M:H, implementation_module(I)),
+    pattern_eval(H, I, Pattern),
+    memberchk(Pattern, EvalL),
+    !.
 
 prolog:message(call_stack(CallL)) --> foldl(call_at, CallL).
 

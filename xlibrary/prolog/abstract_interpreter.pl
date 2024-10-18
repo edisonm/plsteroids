@@ -46,7 +46,8 @@
             eval_ai/1,
             skip_ai/1,
             intr_ai/1,
-            match_noloops/4
+            match_noloops/4,
+            op(201,xfx,+\)
           ]).
 
 :- use_module(library(apply)).
@@ -208,15 +209,25 @@ skip_ai(G) :- call(G).
 
 intr_ai(_).
 
-mod_qual(M, G as R, I:H as B:C) :- !,
+norm_eval(M, G as R, [] +\ (I:H as B:C)) :-
+    !,
     strip_module(M:G, N, H),
     predicate_property(N:H, implementation_module(I)),
     strip_module(M:R, A, C),
     predicate_property(A:C, implementation_module(B)).
-mod_qual(M, G :- B, I:H :- B) :-
+norm_eval(M, V +\ (G as R), V +\ (I:H as B:C)) :-
+    !,
+    strip_module(M:G, N, H),
+    predicate_property(N:H, implementation_module(I)),
+    strip_module(M:R, A, C),
+    predicate_property(A:C, implementation_module(B)).
+norm_eval(M, G :- B, [] +\ (I:H :- B)) :-
     strip_module(M:G, N, H),
     predicate_property(N:H, implementation_module(I)).
-mod_qual(M, G, I:F/A) :-
+norm_eval(M, A +\ (G :- B), A +\ (I:H :- B)) :-
+    strip_module(M:G, N, H),
+    predicate_property(N:H, implementation_module(I)).
+norm_eval(M, G, I:F/A) :-
     strip_module(M:G, N, F/A),
     functor(H, F, A),
     predicate_property(N:H, implementation_module(I)).
@@ -263,7 +274,7 @@ abstract_interpreter(M:Goal, Abstraction, Options, State) :-
     option(evaluable(Eval), Options, []),
     option(on_error(OnErr), Options, abstract_interpreter:default_on_error),
     flatten(Eval, EvalL), % make it easy
-    maplist(mod_qual(M), EvalL, MEvalL),
+    maplist(norm_eval(M), EvalL, MEvalL),
     abstract_interpreter_body(Goal, M, Abstraction,
                               state(Loc, MEvalL, M:OnErr, [], [], [], []),
                               State).
@@ -553,19 +564,22 @@ abstract_interpreter_body(H, M, Abs) -->
 
 get_body_replacement(G, M, EvalL, MR) :-
     predicate_property(M:G, implementation_module(IM)),
-    ( replace_goal_hook(G, IM, R),
-      MR = M:R
-    ; ( evaluable_goal_hook(G, IM)
-      ; functor(G, F, A),
-        memberchk(IM:F/A, EvalL)
-      ),
-      MR = M:G
-    ; copy_term(EvalL, EvalC),
-      memberchk((IM:G as I:R), EvalC),
+    ( functor(G, F, A),
+      functor(P, F, A),
+      memberchk(LArgs +\ (IM:P as I:T), EvalL)
+    ->copy_term(LArgs +\ (IM:P as I:T), (LArgs +\ (IM:G as I:R))),
       % This weird code is used because we can not use @/2 here
       qualify_meta_goal(M:R, MQ),
       strip_module(MQ, _, Q),
       MR = I:Q
+    ; ( replace_goal_hook(G, IM, R),
+        MR = M:R
+      ; ( evaluable_goal_hook(G, IM)
+        ; functor(G, F, A),
+          memberchk(IM:F/A, EvalL)
+        ),
+        MR = M:G
+      )
     ).
 
 is_bottom(State, State) :-
@@ -603,8 +617,11 @@ abstract_interpreter_lit(H, M, CM, Abs) -->
     ->bottom
     ; {copy_term(IM:Goal, MCall)},
       put_state(state(Loc, EvalL, OnError, [MCall-Loc|CallL], Data, Cont, Result)),
-      ( { copy_term(EvalL, EvalC), % avoid undesirable unifications
-          memberchk((IM:Goal :- Body), EvalC)
+      ( { functor(Goal, F, A),
+          functor(Pred, F, A),
+          memberchk((LArgs +\ (IM:Pred :- Patt)), EvalL),
+          % Using copy_term to avoid undesirable unifications:
+          copy_term((LArgs +\ (IM:Pred :- Patt)), (LArgs +\ (IM:Goal :- Body)))
         ; replace_body_hook(Goal, IM, Body)
         }
       ->cut_to(abstract_interpreter_body(Body, M, Abs))
