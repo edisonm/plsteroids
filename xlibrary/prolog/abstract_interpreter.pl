@@ -505,6 +505,14 @@ abstract_interpreter_body(A\=B, _, _) -->
     ->{fail}
     ; bottom
     ).
+abstract_interpreter_body(subtract(A, B, C), _, _) -->
+    !,
+    ( { is_list(A),
+        is_list(B)
+      }
+    ->{subtract(A, B, C)}
+    ; bottom
+    ).
 abstract_interpreter_body(BinExpr, _, _) -->
     { member(BinExpr, [A=\=B,
                        A=:=B,
