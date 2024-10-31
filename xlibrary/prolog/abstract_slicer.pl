@@ -33,10 +33,11 @@
 */
 
 :- module(abstract_slicer,
-          [abstract_slice/3,
-           abstract_slice/4,
-           apply_mode/5,
-           slicer_abstraction/7]).
+          [ abstract_slice/3,
+            abstract_slice/4,
+            apply_mode/5,
+            slicer_abstraction/7
+          ]).
 
 :- use_module(library(apply)).
 :- use_module(library(lists)).
@@ -158,13 +159,13 @@ slicer_abstraction(Spec, VarsR, Scope, MGoal, Body) -->
       ( Scope = body
       ->( % if no side effects, increase precision executing the body:
           ( match_head_body(M:Goal, Body1, Loc),
-            is_pure_body(Body1, requires_subst(EvalL))
-          ->call(Body1),
+            is_pure_body(Body1, is_impure_or_requires_subst(EvalL))
+          ->catch(call(Body1), _, true), % catch in case of not enough instantiation
             Body = M:true
           ; match_head_body(M:Goal, Body1, Loc),
-            ( is_pure_body(Body1)
-            ->Body = Body1
-            ; Body = M:true
+            ( is_pure_body(Body1, requires_subst(EvalL))
+            ->Body = M:true
+            ; Body = Body1
             )
           )
         )
@@ -184,6 +185,9 @@ slicer_abstraction(_, _, _, MGoal, M:true) -->
       strip_module(MGoal, M, _)
     },
     bottom.
+
+is_impure_or_requires_subst(_,     Pred) :- is_impure(Pred).
+is_impure_or_requires_subst(EvalL, Pred) :- requires_subst(EvalL, Pred).
 
 pattern_eval(H, I, _ +\ (I:H as _)).
 pattern_eval(H, I, _ +\ (I:H :- _)).

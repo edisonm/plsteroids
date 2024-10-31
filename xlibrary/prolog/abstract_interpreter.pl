@@ -111,11 +111,14 @@ evaluable_body_hook(atomic_list_concat(A, B, C), _,
                     )).
 evaluable_body_hook(thread_self(_), _, true).
 evaluable_body_hook(atom_length(A, _), _, ground(A)).
+evaluable_body_hook(length(A, B), _, (is_list(A);ground(B))).
 evaluable_body_hook(upcase_atom(A, _), _, ground(A)).
 evaluable_body_hook(downcase_atom(A, _), _, ground(A)).
 evaluable_body_hook(string_lower(A, _), _, ground(A)).
 evaluable_body_hook(string_upper(A, _), _, ground(A)).
 evaluable_body_hook(nb_current(A, _), _, ground(A)).
+evaluable_body_hook(subtract(A, B, _), _, (is_list(A),is_list(B))).
+evaluable_body_hook(intersection(A, B, _), _, (is_list(A),is_list(B))).
 evaluable_body_hook(_ is A, _, ground(A)).
 evaluable_body_hook(A > B, _, (ground(A),ground(B))).
 evaluable_body_hook(A >= B, _, (ground(A),ground(B))).
@@ -128,7 +131,11 @@ evaluable_body_hook(member(_, L), _, is_list(L)).
 evaluable_body_hook(current_predicate(P), _, ground(P)).
 evaluable_body_hook(current_module(M), _, ground(M)).
 evaluable_body_hook(select(_, L, _), _, is_list(L)).
-evaluable_body_hook(option(O, L), _, (is_list(L), nonvar(O))).
+evaluable_body_hook(option(O, L), _, (once((is_dict(L);is_list(L))), nonvar(O))).
+evaluable_body_hook(option(O, L, _), _, (once((is_dict(L);is_list(L))), nonvar(O))).
+evaluable_body_hook(select_option(O, L, _), _, (once((is_dict(L);is_list(L))), nonvar(O))).
+evaluable_body_hook(select_option(O, L, _, _), _, (once((is_dict(L);is_list(L))), nonvar(O))).
+evaluable_body_hook(merge_options(N, O, _), _, (once((is_dict(N);is_list(N))),once((is_dict(O);is_list(O))))).
 evaluable_body_hook(nth0(I, L, _), _, (is_list(L);nonvar(I))).
 evaluable_body_hook(nth1(I, L, _), _, (is_list(L);nonvar(I))).
 evaluable_body_hook(arg(_, C, _), _, nonvar(C)).
@@ -140,6 +147,7 @@ evaluable_body_hook(is_list(A), _, (ground(A);is_list(A))).
 evaluable_body_hook(number(A),  _, nonvar(A)).
 evaluable_body_hook(float(A),   _, nonvar(A)).
 evaluable_body_hook(integer(A), _, nonvar(A)).
+evaluable_body_hook(succ(A, B), _, (ground(A);ground(B))).
 evaluable_body_hook(strip_module(A, _, _), _, nonvar(A)).
 evaluable_body_hook(clause(A, _),    _, (strip_module(A, M, B), atom(M), callable(B))).
 evaluable_body_hook(clause(A, _, _), _, (strip_module(A, M, B), atom(M), callable(B))).
@@ -148,7 +156,33 @@ evaluable_body_hook(format(Out, Format, Args), _,
                     (compound(Out), nonvar(Format), ground(Args))).
 evaluable_body_hook(sort(A, _), _, (is_list(A), maplist(nonvar, A))).
 evaluable_body_hook(A==B, _, (A==B;A\=B)).
+evaluable_body_hook(is_dict(D), _, (ground(D))).
+evaluable_body_hook(dict_pairs(D, T, P), _, (ground(D);ground(T),is_list(P))).
 evaluable_body_hook(A=..B, _, (is_list(B),B=[E|_],atomic(E);atomic(A);compound(A))).
+evaluable_body_hook(atom_number(A, N), _, (ground(A);ground(N))).
+evaluable_body_hook(functor(H, F, A), _, (nonvar(H);ground(F),ground(A))).
+evaluable_body_hook(predsort(G, L, _), _, (nonvar(G),is_list(L))).
+evaluable_body_hook(predicate_property(A,B), _, (nonvar(A),nonvar(B))).
+evaluable_body_hook(term_to_atom(A,B), _, (ground(A);ground(B))).
+evaluable_body_hook(list(A, B), _, (is_list(A);ground(B))).
+evaluable_body_hook(list_to_set(A, _), _, is_list(A)).
+evaluable_body_hook(re_replace(A, B, V, _), _, (ground(A),ground(B),ground(V))).
+evaluable_body_hook(context_module(_), _, fail).
+evaluable_body_hook(file_name_extension(B, E, N), _, (ground(B);ground(E),ground(N))).
+evaluable_body_hook(exists_file(F), _, ground(F)).
+evaluable_body_hook(open(_, _, _, _), _, fail).
+evaluable_body_hook(close(_), _, fail).
+evaluable_body_hook(odbc_query(_, _, _, _), _, fail).
+evaluable_body_hook(read_string(_, _, _), _, fail).
+evaluable_body_hook(read_file_to_string(_, _, _), _, fail).
+evaluable_body_hook(split_string(S, E, A,_), _, (ground(S),ground(E),ground(A))).
+evaluable_body_hook(atomics_to_string(L, S, A), _, (ground(S),(is_list(L);ground(A)))).
+evaluable_body_hook(between(L, U, _), _, (ground(L),ground(U))).
+evaluable_body_hook(sub_string(S, _, _, _, _), _, ground(S)).
+evaluable_body_hook(prolog_current_choice(_), _, fail).
+evaluable_body_hook(prolog_current_frame(_), _, fail).
+evaluable_body_hook(prolog_frame_attribute(_, _, _), _, fail).
+evaluable_body_hook(copy_term(_, _), _, true).
 
 replace_goal_hook(retractall(_), _, true).
 replace_goal_hook(retract(_),    _, true).
@@ -157,6 +191,7 @@ replace_goal_hook(asserta(_),    _, true).
 replace_goal_hook(assert( _),    _, true).
 replace_goal_hook(erase(  _),    _, true).
 replace_goal_hook(gtrace, _, true).
+replace_goal_hook(repeat, _, (true;true)).
 replace_goal_hook(write(_, _), _, true).
 replace_goal_hook(writeq(_, _), _, true).
 replace_goal_hook(writeln(_, _), _, true).
@@ -170,7 +205,7 @@ replace_goal_hook(nl(_), _, true).
 replace_goal_hook(call_ai(G), abstract_interpreter, G).
 replace_goal_hook(eval_ai(G), abstract_interpreter, G).
 replace_goal_hook(skip_ai(_), abstract_interpreter, true).
-replace_goal_hook(V is A, _, (ground(A)->V is A; var(V))).
+replace_goal_hook(V is A, _, (ground(A)->catch(V is A,_,fail); var(V))).
 replace_goal_hook(nb_getval(A, V), _, ignore((nonvar(A), nb_current(A, V)))).
 replace_goal_hook(nb_setarg(_, _, _), _, true).
 
@@ -382,16 +417,19 @@ abstract_interpreter_body(catch(Goal, Ex, Handler), M, Abs, S1, S) :-
 abstract_interpreter_body(once(Goal), M, Abs, S1, S) :- !,
     once(abstract_interpreter_body(Goal, M, Abs, S1, S)).
 abstract_interpreter_body(distinct(Goal), M, Abs, S1, S) :-
-    predicate_property(M:distinct(_), implementation_module(solution_sequences)), !,
+    predicate_property(M:distinct(_), implementation_module(solution_sequences)),
+    !,
     distinct(Goal, abstract_interpreter_body(Goal, M, Abs, S1, S)).
 abstract_interpreter_body(distinct(Witness, Goal), M, Abs, S1, S) :-
-    predicate_property(M:distinct(_, _), implementation_module(solution_sequences)), !,
+    predicate_property(M:distinct(_, _), implementation_module(solution_sequences)),
+    !,
     distinct(Witness, abstract_interpreter_body(Goal, M, Abs, S1, S)).
 
 ord_spec(asc(_)).
 ord_spec(desc(_)).
 
-abstract_interpreter_body(order_by(Spec, Goal), M, Abs, S1, S) :- !,
+abstract_interpreter_body(order_by(Spec, Goal), M, Abs, S1, S) :-
+    !,
     ( is_list(Spec),
       Spec \= [],
       maplist(nonvar, Spec),
@@ -399,15 +437,44 @@ abstract_interpreter_body(order_by(Spec, Goal), M, Abs, S1, S) :- !,
     ->order_by(Spec, abstract_interpreter_body(Goal, M, Abs, S1, S))
     ; abstract_interpreter_body(Goal, M, Abs, S1, S)
     ).
-abstract_interpreter_body(setup_call_cleanup(S, C, E), M, Abs, State1, State) :- !,
+abstract_interpreter_body(setup_call_cleanup(S, C, E), M, Abs, State1, State) :-
+    !,
     setup_call_cleanup(abstract_interpreter_body(S, M, Abs, State1, State2),
                        abstract_interpreter_body(C, M, Abs, State2, State3),
-                       abstract_interpreter_body(E, M, Abs, State3, State)),
-    ignore((var(State), State = State2)).
-abstract_interpreter_body(call_cleanup(C, E), M, Abs, State1, State) :- !,
+                       ( ( var(State3)
+                         ->( var(State2)
+                           ->State3 = State1
+                           ; State3 = State2
+                           )
+                         ; true
+                         ),
+                         abstract_interpreter_body(E, M, Abs, State3, State)
+                       )),
+    ignore(( var(State),
+             State = State3
+           )).
+
+abstract_interpreter_body(call_cleanup(C, E), M, Abs, State1, State) :-
+    !,
     call_cleanup(abstract_interpreter_body(C, M, Abs, State1, State2),
-                 abstract_interpreter_body(E, M, Abs, State2, State)),
-    ignore((var(State), State = State2)).
+                 ( ( var(State2)
+                   ->State2 = State1
+                   ; true
+                   ),
+                   abstract_interpreter_body(E, M, Abs, State2, State)
+                 )),
+    ignore(( var(State),
+             State = State2
+           )).
+abstract_interpreter_body(findall(Pattern, Goal, List), M, Abs, State, State) :-
+    !,
+    findall(Pattern,
+            ( call_nth(abstract_interpreter_body(Goal, M, Abs, State, _), N),
+              ( N = 2 % this prevents infinite loops
+              ->!
+              ; true
+              )
+            ), List, _).
 abstract_interpreter_body((A, B), M, Abs) -->
     !,
     { \+ terms_share(A, B)
@@ -495,6 +562,7 @@ interpret_local_cut(A, B, M, Abs, CutElse) -->
       ; []
       )
     ).
+
 abstract_interpreter_body(!,    _, _) --> !, cut_if_no_bottom.
 abstract_interpreter_body(A=B,  _, _) --> !, {A=B}.
 abstract_interpreter_body(A\=B, _, _) -->
@@ -505,12 +573,12 @@ abstract_interpreter_body(A\=B, _, _) -->
     ->{fail}
     ; bottom
     ).
-abstract_interpreter_body(subtract(A, B, C), _, _) -->
+abstract_interpreter_body(A\==B, _, _) -->
     !,
-    ( { is_list(A),
-        is_list(B)
-      }
-    ->{subtract(A, B, C)}
+    ( {A==B}
+    ->{fail}
+    ; {A\=B}
+    ->{true}
     ; bottom
     ).
 abstract_interpreter_body(BinExpr, _, _) -->
@@ -580,14 +648,13 @@ get_body_replacement(G, M, EvalL, MR) :-
       qualify_meta_goal(M:R, MQ),
       strip_module(MQ, _, Q),
       MR = I:Q
-    ; ( replace_goal_hook(G, IM, R),
-        MR = M:R
-      ; ( evaluable_goal_hook(G, IM)
-        ; functor(G, F, A),
-          memberchk(IM:F/A, EvalL)
-        ),
-        MR = M:G
+    ; replace_goal_hook(G, IM, R)
+    ->MR = M:R
+    ; ( evaluable_goal_hook(G, IM)
+      ; functor(G, F, A),
+        memberchk(IM:F/A, EvalL)
       )
+    ->MR = M:G
     ).
 
 is_bottom(State, State) :-
