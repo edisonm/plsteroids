@@ -155,21 +155,27 @@ slicer_abstraction(Spec, VarsR, Scope, MGoal, Body) -->
       ->Body = Body1
       ; Body = M:true
       )
-    ; % check if the body trivially fails:
-      ( Scope = body
-      ->( % if no side effects, increase precision executing the body:
-          ( match_head_body(M:Goal, Body1, Loc),
-            is_pure_body(Body1, is_impure_or_requires_subst(EvalL))
-          ->catch(call(Body1), _, true), % catch in case of not enough instantiation
-            Body = M:true
-          ; match_head_body(M:Goal, Body1, Loc),
-            ( is_pure_body(Body1, requires_subst(EvalL))
-            ->Body = M:true
-            ; Body = Body1
-            )
+    ; % if no side effects, increase precision executing the body:
+      ( Scope = body_if_impure % This branch is not tested yet: --EM
+      ->( match_head_body(M:Goal, Body1, Loc),
+          is_pure_body(Body1, is_impure_or_requires_subst(EvalL))
+        ->catch(call(Body1), _, true), % catch in case of not enough instantiation
+          Body = M:true
+        ; match_head_body(M:Goal, Body1, Loc),
+          ( is_pure_body(Body1, requires_subst(EvalL))
+          ->Body = M:true
+          ; Body = Body1
           )
         )
-      ; Loc = Loc1,
+      ; ( Scope = body % check if the body trivially fails:
+        ->once(( match_head_body(M:Goal, Body1, Loc),
+                 ( is_pure_body(Body1)
+                 ->catch(call(Body1), _, true)
+                 ; true
+                 )
+               ))
+        ; Loc = Loc1
+        ),
         Body = M:true
       )
     },

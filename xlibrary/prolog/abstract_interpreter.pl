@@ -95,9 +95,6 @@ collect certain information.
 :- dynamic
     evaluable_goal_hook/2.
 
-:- discontiguous
-    abstract_interpreter_body/5.
-
 evaluable_body_hook(absolute_file_name(A, _, O), _, (ground(A), ground(O))).
 evaluable_body_hook(atom_concat(A, B, C), _,
                     ( nonvar(A), nonvar(B)
@@ -323,8 +320,7 @@ abstract_interpreter(MGoal, Abstraction, Options) :-
 
 :- meta_predicate catch(2, ?, ?, ?, ?).
 catch(DCG, Ex, H, S1, S) :-
-    catch(call(DCG, S1, S), Ex, H).
-
+    catch(call(DCG, S1, S), Ex, ((S1 = S), H)).
 
 :- meta_predicate cut_to(2, ?, ?).
 
@@ -375,7 +371,6 @@ bottom(state(Loc, EvalL, OnErr, CallL, D, Cont, _),
 %   Like abstract_interpret(M:Goal,  Abstraction, Options, State),  where State1
 %   is determined using  Options, but intended to be  called recursivelly during
 %   the interpretation.
-
 abstract_interpreter_body(Goal, M, _) -->
     {var(Goal) ; var(M)}, bottom, !.
 abstract_interpreter_body(M:Goal, _, Abs) -->
@@ -389,25 +384,6 @@ abstract_interpreter_body(call(Goal), M, Abs) --> !,
     cut_to(abstract_interpreter_body(Goal, M, Abs)).
 abstract_interpreter_body(\+ A, M, Abs) --> !,
     abstract_interpret_body_not(A, M, Abs).
-
-abstract_interpret_body_not(A, M, Abs) -->
-    ( cut_to(abstract_interpreter_body(A, M, Abs))
-    ->( \+ is_bottom
-      ->!,
-        {fail}
-      ; {fail}
-      )
-    ; !
-    ).
-abstract_interpret_body_not(_, _, _) --> bottom.
-
-get_conts(Conts, State, State) :-
-    State = state(_, _, _, _, _, Conts, _).
-
-put_conts(Conts,
-          state(Loc, EvalL, OnErr, CallL, Data, _, Result),
-          state(Loc, EvalL, OnErr, CallL, Data, Conts, Result)).
-
 abstract_interpreter_body(catch(Goal, Ex, Handler), M, Abs, S1, S) :-
     !,
     catch(abstract_interpreter_body(Goal, M, Abs, S1, S), Ex,
@@ -424,10 +400,6 @@ abstract_interpreter_body(distinct(Witness, Goal), M, Abs, S1, S) :-
     predicate_property(M:distinct(_, _), implementation_module(solution_sequences)),
     !,
     distinct(Witness, abstract_interpreter_body(Goal, M, Abs, S1, S)).
-
-ord_spec(asc(_)).
-ord_spec(desc(_)).
-
 abstract_interpreter_body(order_by(Spec, Goal), M, Abs, S1, S) :-
     !,
     ( is_list(Spec),
@@ -450,9 +422,16 @@ abstract_interpreter_body(setup_call_cleanup(S, C, E), M, Abs, State1, State) :-
                          ),
                          abstract_interpreter_body(E, M, Abs, State3, State)
                        )),
-    ignore(( var(State),
-             State = State3
-           )).
+    ( var(State)
+    ->( var(State3)
+      ->( var(State2)
+        ->State = State1
+        ; State = State2
+        )
+      ; State = State3
+      )
+    ; true
+    ).
 
 abstract_interpreter_body(call_cleanup(C, E), M, Abs, State1, State) :-
     !,
@@ -463,9 +442,10 @@ abstract_interpreter_body(call_cleanup(C, E), M, Abs, State1, State) :-
                    ),
                    abstract_interpreter_body(E, M, Abs, State2, State)
                  )),
-    ignore(( var(State),
-             State = State2
-           )).
+    ( var(State)
+    ->State = State2
+    ; true
+    ).
 abstract_interpreter_body(findall(Pattern, Goal, List), M, Abs, State, State) :-
     !,
     findall(Pattern,
@@ -527,42 +507,6 @@ abstract_interpreter_body(A->B, M, Abs) --> !,
 abstract_interpreter_body(CallN, M, Abs) -->
     {do_resolve_calln(CallN, Goal)}, !,
     cut_to(abstract_interpreter_body(Goal, M, Abs)).
-
-push_top(Prev,
-         state(Loc, EvalL, OnErr, CallL, Data, Cont, Prev),
-         state(Loc, EvalL, OnErr, CallL, Data, Cont, [])).
-
-pop_top(bottom,
-        state(Loc, EvalL, OnErr, CallL, Data, Cont, _),
-        state(Loc, EvalL, OnErr, CallL, Data, Cont, bottom)).
-pop_top([]) --> [].
-
-% CutElse make the failure explicit wrt. B
-interpret_local_cut(A, B, M, Abs, CutElse) -->
-    { \+ terms_share(A, B)
-    ->CutOnFail = true
-    ; CutOnFail = fail
-    },
-    push_top(Prev),
-    get_conts(ContL),
-    put_conts([B|ContL]),
-    cut_to(abstract_interpreter_body(A, M, Abs)), % loose of precision
-    put_conts(ContL),
-    ( \+ is_bottom
-    ->!,
-      { CutElse = yes }
-    ; { CutElse = no  }
-    ),
-    pop_top(Prev),
-    ( abstract_interpreter_body(B, M, Abs)
-    *->
-      []
-    ; ( {CutOnFail = true}
-      ->cut_if_no_bottom
-      ; []
-      )
-    ).
-
 abstract_interpreter_body(!,    _, _) --> !, cut_if_no_bottom.
 abstract_interpreter_body(A=B,  _, _) --> !, {A=B}.
 abstract_interpreter_body(A\=B, _, _) -->
@@ -637,6 +581,65 @@ abstract_interpreter_body(G, M, _) -->
     {call(MR)}.
 abstract_interpreter_body(H, M, Abs) -->
     cut_to(abstract_interpreter_lit(H, M, M, Abs)).
+
+% Auxiliary predicates for abstract_interpreter_body//3.  Placed here since I
+% can not use discontiguous otherwise it will be impossible to debug it:
+abstract_interpret_body_not(A, M, Abs) -->
+    ( cut_to(abstract_interpreter_body(A, M, Abs))
+    ->( \+ is_bottom
+      ->!,
+        {fail}
+      ; {fail}
+      )
+    ; !
+    ).
+abstract_interpret_body_not(_, _, _) --> bottom.
+
+get_conts(Conts, State, State) :-
+    State = state(_, _, _, _, _, Conts, _).
+
+put_conts(Conts,
+          state(Loc, EvalL, OnErr, CallL, Data, _, Result),
+          state(Loc, EvalL, OnErr, CallL, Data, Conts, Result)).
+
+ord_spec(asc(_)).
+ord_spec(desc(_)).
+
+
+push_top(Prev,
+         state(Loc, EvalL, OnErr, CallL, Data, Cont, Prev),
+         state(Loc, EvalL, OnErr, CallL, Data, Cont, [])).
+
+pop_top(bottom,
+        state(Loc, EvalL, OnErr, CallL, Data, Cont, _),
+        state(Loc, EvalL, OnErr, CallL, Data, Cont, bottom)).
+pop_top([]) --> [].
+
+% CutElse make the failure explicit wrt. B
+interpret_local_cut(A, B, M, Abs, CutElse) -->
+    { \+ terms_share(A, B)
+    ->CutOnFail = true
+    ; CutOnFail = fail
+    },
+    push_top(Prev),
+    get_conts(ContL),
+    put_conts([B|ContL]),
+    cut_to(abstract_interpreter_body(A, M, Abs)), % loose of precision
+    put_conts(ContL),
+    ( \+ is_bottom
+    ->!,
+      { CutElse = yes }
+    ; { CutElse = no  }
+    ),
+    pop_top(Prev),
+    ( abstract_interpreter_body(B, M, Abs)
+    *->
+      []
+    ; ( {CutOnFail = true}
+      ->cut_if_no_bottom
+      ; []
+      )
+    ).
 
 get_body_replacement(G, M, EvalL, MR) :-
     predicate_property(M:G, implementation_module(IM)),
