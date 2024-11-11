@@ -51,9 +51,6 @@ sub_atomic(string, T, B, L, A, S) :- sub_string(T, B, L, A, S).
 
 :- use_module(library(pcre)).
 
-abstract_interpreter:evaluable_body_hook(left_trim(Type, Atomic, _), trim_utils, (ground(Type),ground(Atomic))).
-abstract_interpreter:evaluable_body_hook(right_trim(Type, Atomic, _), trim_utils, (ground(Type),ground(Atomic))).
-
 left_trim(Type, Atomic, LeftTrim) :-
     % Can get valid spaces using char_type(A, space), except special ones
     re_replace("^[ \t\n\v\f\r]+", "", Atomic, LeftTrim, [capture_type(Type)]).

@@ -180,6 +180,8 @@ evaluable_body_hook(prolog_current_choice(_), _, fail).
 evaluable_body_hook(prolog_current_frame(_), _, fail).
 evaluable_body_hook(prolog_frame_attribute(_, _, _), _, fail).
 evaluable_body_hook(copy_term(_, _), _, true).
+evaluable_body_hook(left_trim(Type, Atomic, _), trim_utils, (ground(Type),ground(Atomic))).
+evaluable_body_hook(right_trim(Type, Atomic, _), trim_utils, (ground(Type),ground(Atomic))).
 
 replace_goal_hook(retractall(_), _, true).
 replace_goal_hook(retract(_),    _, true).
@@ -371,6 +373,7 @@ bottom(state(Loc, EvalL, OnErr, CallL, D, Cont, _),
 %   Like abstract_interpret(M:Goal,  Abstraction, Options, State),  where State1
 %   is determined using  Options, but intended to be  called recursivelly during
 %   the interpretation.
+
 abstract_interpreter_body(Goal, M, _) -->
     {var(Goal) ; var(M)}, bottom, !.
 abstract_interpreter_body(M:Goal, _, Abs) -->
@@ -604,7 +607,6 @@ put_conts(Conts,
 
 ord_spec(asc(_)).
 ord_spec(desc(_)).
-
 
 push_top(Prev,
          state(Loc, EvalL, OnErr, CallL, Data, Cont, Prev),

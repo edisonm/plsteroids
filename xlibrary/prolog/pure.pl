@@ -15,6 +15,7 @@
         is_impure(0 ),
         is_pure_pred(0 ),
         is_pure_pred(0, 1 ),
+        is_pure_pred(0, 1, +),
         is_pure_body(0 ),
         is_pure_body(0, 1 ).
 
@@ -82,6 +83,7 @@ is_pure_body(G, M, IsImpure, _) :-
 is_pure_body(true, _, _, _) :- !.
 is_pure_body(fail, _, _, _) :- !.
 is_pure_body(_=_,  _, _, _) :- !.
+is_pure_body(\+ _, _, _, _) :- !, fail.
 is_pure_body(@(G, CM), _, IsImpure, Stack) :-
     !,
     strip_module(CM:G, M, H),
