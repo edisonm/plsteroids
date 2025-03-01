@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -30,9 +30,6 @@
 #include "bid_trans.h"
 
 BID_F80_CONST_DEF( c_half,  3ffe000000000000, 0000000000000000); // 0.5
-BID_F80_CONST_DEF( c_one,   3fff000000000000, 0000000000000000); // 1.0
-BID_F80_CONST_DEF( c_pi,    4000921fb54442d1, 8469898cc51701b8); // pi
-BID_F80_CONST_DEF( c_ln_pi, 3fff250d048e7a1b, d0bd5f956c6a843f); // ln(pi)
 
 #define BID64_INF 0x7800000000000000ull
 

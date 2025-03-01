@@ -1,5 +1,5 @@
 echo "BEGIN BUILDING LIBRARY IN LINUX..."
 rm *.a
-./linuxbuild COPT_ADD=-m64
+./macbuild COPT_ADD=-m64
 echo "END BUILDING LIBRARY IN LINUX..."
 

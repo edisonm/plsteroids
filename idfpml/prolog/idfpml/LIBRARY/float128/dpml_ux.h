@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -123,11 +123,12 @@ typedef struct {
 #define UX_DECR_EXPONENT(x,v)	   ((((UX_FLOAT *)(x))->exponent) -= (v))
 #define UX_TOGGLE_SIGN(x,v)	   ((((UX_FLOAT *)(x))->sign) ^= (v))
 
-#define UX_SIGN_BIT	      ((WORD) 1 << 31)
+#define MINUS_ONE             0xFFFFFFFF
+#define UX_SIGN_BIT	      ((U_WORD) 1 << 31)
 #define UX_MSB		      ((U_WORD)1 <<(BITS_PER_UX_FRACTION_DIGIT_TYPE-1))
 #define UX_OVERFLOW_EXPONENT  (1 << F_EXP_WIDTH)
 #define UX_UNDERFLOW_EXPONENT (- UX_OVERFLOW_EXPONENT)
-#define UX_ZERO_EXPONENT      (- (UX_EXPONENT_TYPE) 1 << (F_EXP_WIDTH + 2))
+#define UX_ZERO_EXPONENT      (MINUS_ONE << (F_EXP_WIDTH + 2))
 #define UX_INFINITY_EXPONENT  (-(UX_ZERO_EXPONENT + 1)) 
 
 

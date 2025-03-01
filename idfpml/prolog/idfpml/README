@@ -3,10 +3,10 @@
 
 
      ==================================================================
-     ======= Intel(R) Decimal Floating-Point Math Library v2.2 ========
+     ======= Intel(R) Decimal Floating-Point Math Library v2.3 ========
      ==================================================================
 
-                                                         June 8, 2018
+                                                     	April 30, 2023
 
 
      ******************************************************************
@@ -16,7 +16,7 @@
      Release History:
      ================
         Jul 2009 - Version 1.0 - implemented all the mandatory functions 
-                   from the IEEE Standard 754-2008
+                   from the IEEE Standard 754-2019
         Jun 2011 - Version 2.0 - implemented also the functions 
                    recommended in the ISO/IEC Technical Report 24732, 
                    'Extension for the programming language C to support 
@@ -25,32 +25,72 @@
         Jun 2018 - Version 2.0 Update 2 - fixed issues in powd64, 
                    acos64, and acos128. Added the llround, llquantexp, 
                    and quantum functions, as well as corresponding new tests.
-		   This version has been tested in Linux, Windows, OSX, and Solaris.
+                   This version has been tested in Linux, Windows, OSX, and 
+                   Solaris.
+        Apr 2024 - 1. Version 2.0 Update 3 - Clang and the latest Intel Compiler 
+                   builds were added.
+                   2. The return type of bid{128,64,32}_class functions was 
+                   updated and 'enum class_types' moved from bid_internal.h to 
+                   bid_functions.h.
+                   3. The payload mask constant was updated (0x0000cfffffffffff 
+                   --> 0x00003fffffffffff)
+                   for the bid128_nan function in bid128_noncomp.c.
+                   4. A few unused variables were removed in order to eliminate 
+                   potential build warnings.
+                   5. The __NO_BINARY80__ option was added (NO_BINARY80 should be 
+                   set to zero in the makefile in order to use 80-bit).
+                   6. The bid{64,32}_pow functions were updated so that powers 
+		   of 10 are now rounded correctly. For example,  bid64_pow(10,-398) 
+                   returns +1E-398 (and it returned zero before).
+                   7. The bid128_pow function was updated to use volatile for a 
+                   certain variable, in order to work correctly with Intel Compiler 
+                   optimization.
+                   8. The bid128_hypot function was updated for the case when the 
+                   exponent of one input value is much smaller than the exponent of 
+                   the other one (it was being done without checking the mantissas.
+                   For example, hypot(+1E+0, +3333333333333333333333333333333333E-35) 
+                   was returning +1E+0, instead 
+                   of +1000555401320242292114995032370049E-33.
+                   9. Sixteen files were updated by adding a 'default: break;' in 
+                   switch statements, to avoid compiler warnings.
+                   10. The ASCII value of 0x30 for zero was replaced with '0' in 
+                   bid128_to_string function.
+                   11. The bid{32,64}_from_string functions were updated, as the 
+                   result was not correct for certain inputs when the rounding mode 
+                   was set to 'rounding up'. For example, bid32_from_string function 
+                   with input value "10000000" returns +1000000E+1 now, instead 
+                   of +1000001E+1.
 
-  1. INTRODUCTION
+                   The updated library was tested in Linux and in Windows, compiled with 
+                   the Intel ICX (new) and ICC/ICL (classic) compilers, and also with 
+                   the GCC 13.1 and Clang 17.0 compilers.
+                   Testing was also performed with the Apple Clang compiler 14.0.0 on Mac.
+
+1. INTRODUCTION
   ===============
 
-  This package contains the release 2.0 Update 2(or V2.2) of the Intel(R) Decimal
-Floating-Point Math Library, conforming to the IEEE Standard 754-2008 for
-Floating-Point Arithmetic. This is an extension of Release 2.0 Update 1 (or V2.1) of 2011.
+  This package contains the release 2.0 Update 3 (or V2.3) of the Intel(R) Decimal
+Floating-Point Math Library, conforming to the IEEE Standard 754-2019 for Floating-
+Point Arithmetic. This is an extension of Release 2.0 Update 2 (or V2.2) of 2018.
 
   The library implements the functions defined for decimal floating-point
-arithmetic operations in the IEEE Standard 754-2008 for Floating-Point
-Arithmetic, which is a revision of the IEEE Standard 754-1985 for Binary
-Floating-Point Arithmetic.
+arithmetic operations in the IEEE Standard 754-2019 for Floating-Point
+Arithmetic, which is a revision of the IEEE Standard 754-2019 for Floating-Point Arithmetic. 
+However, there were no changes in what is mandated for decimal floating-point arithmetic
+in the IEEE Standard 754-2019, compared to the IEEE Standard 754-2019.
 
-The IEEE Standard 754-2008 for Floating-Point Arithmetic supports two
+The IEEE Standard 754-2019 for Floating-Point Arithmetic supports two
 encoding formats: the decimal encoding format, and the binary encoding format.
 The Intel(R) Decimal Floating-Point Math Library supports primarily the binary
 encoding format for decimal floating-point values, but the decimal encoding
 format is supported too in the library, by means of conversion functions
 between the two encoding formats.
 
-  Release 2.2 of the library contained in this package implements all
-the operations mandated by the IEEE Standard 754-2008. Alternate exception
+  Release 2.3 of the library contained in this package implements all
+the operations mandated by the IEEE Standard 754-2019. Alternate exception
 handling (not a mandatory feature) is not supported currently in the library,
 but the design facilitates adding it in the future. It is worth noting that
-several useful functions (not part of the IEEE 754-2008 definition) are
+several useful functions (not part of the IEEE 754-2019 definition) are
 provided in LIBRARY/src/bid_round.c. They can be used to round a q-digit decimal
 integer number represented in binary to q - x digits (1 <= x <= q - 1).
 
@@ -79,7 +119,7 @@ not correctly rounded either).
   - the LIBRARY subdirectory with all the source files necessary to build the
     library, and a README file which specifies how to build the library
     in Linux**, HP-UX**, Windows***, and other operating systems; a small set
-    of command files (RUNLINUX, RUNWINDOWS, etc.) can be used to build the
+    of command files (RUNLINUX_GCC, RUNWINDOWSINTEL64_ICX.bat, etc.) can be used to build the
     library with different options
 
   - the TESTS subdirectory with source and input files necessary to build and
@@ -89,20 +129,20 @@ not correctly rounded either).
     note that tests involving 80-bit binary floating-point values (these are
     only conversions to and from decimal floating-point formats) are skipped
     if the 80-bit floating-point data type is not supported; a small set
-    of command files (RUNLINUX, RUNWINDOWS, etc.) can be used to build and
+    of command files (RUNLINUX_GCC, RUNWINDOWSINTEL64_ICX.bat, etc.) can be used to build and
     run the tests with different options
 
   - the EXAMPLES subdirectory containing eight examples of calls to library
     functions with various combinations of build options (see Section 8
-    below); a README file is included; a small set of command files (RUNLINUX,
-    RUNWINDOWS, etc.) can be used to build and run the examples with different
+    below); a README file is included; a small set of command files (RUNLINUX_GCC,
+    RUNWINDOWSINTEL64_ICX.bat, etc.) can be used to build and run the examples with different
     options
 
   3. FUNCTION NAMES
   =================
 
   The function names used in the library are not identical to the names from
-the IEEE Standard 754-2008 for Floating-Point Arithmetic. The mapping between
+the IEEE Standard 754-2019 for Floating-Point Arithmetic. The mapping between
 the two sets is given in Section 10 below. The function names can be changed
 by editing the #define statements at the beginning of bid_conf.h.
 
@@ -177,25 +217,26 @@ where parameters are passed by reference; the rounding mode is a global
 variable; the status flags are stored in a global variable; the
 decimal operations will not change the inexact binary status flag.
 
+  If 80-bit long double precision is not supported then you can simply set
+NO_BINARY80 macro to '1' in the LIBRARY/makefile and TESTS/makefile.
 
   5. FUNCTION PROTOTYPES
   ======================
 
   Function prototypes are provided in LIBRARY/src/bid_functions.h (starting at
-line 396 if parameters are passed by reference, and at line 2994 if they
+line 413 if parameters are passed by reference, and at line 3011 if they
 are passed by value).
 
 
   6. TESTING
   ==========
 
-  The library was tested on several different platforms (IA-32 Architecture, 
-Intel(R) 64, and IA-64 Architecture running Linux**, Windows***, HP-UX**, 
-Solaris**, and OSX**).  For example in Linux** icc (Intel(R) C++ Compiler 9.1 
-or newer) and gcc** were used. In Windows*** icl (Intel(R) C++ Compiler 9.1 
-or newer) and cl (Microsoft*** Visual C++ Compiler) were used. For each of 
-these combinations eight combinations of parameter passing method and global 
-or local rounding mode and status flags were tested.
+  The library was tested on several different platforms (Intel(R)64 Architecture
+running Linux**, Windows*** and OSX**).  For example in Linux** the 
+oneAPI DPC++/C++ Compiler 2024.2.0, Clang**, and gcc** were used. In Windows***, 
+the oneAPI DPC++/C++ Compiler 2024.2.0  and the Microsoft*** Visual C++ Compiler 
+were used. For each of these combinations, eight combinations of parameter passing 
+method and global or local rounding mode and status flags were tested.
 
   In limited situations, it is possible for incorrect compiler behavior to 
 lead to incorrect results in the Intel(r) Decimal Floating-Point Math Library. 
@@ -231,7 +272,7 @@ Such an example is represented by the readtest program in TESTS/readtest.c.
   8. DECIMAL AND BINARY STATUS FLAGS
   ==================================
 
-  The IEEE Standard 754-2008 specifies distinct rounding modes for binary
+  The IEEE Standard 754-2019 specifies distinct rounding modes for binary
 and for decimal floating-point operations. However, the floating-point status
 flags may be identical for decimal and binary computations. In this
 implementation of the decimal arithmetic, the decimal floating-point status
@@ -246,7 +287,7 @@ functions, uncomment the following line in bid_conf.h
 prior to building the library:
         // #define UNCHANGED_BINARY_STATUS_FLAGS
 
-  9. MAPPING OF IEEE 754-2008 NAMES TO INTEL (R) DECIMAL FLOATING-POINT MATH
+  9. MAPPING OF IEEE 754-2019 NAMES TO INTEL (R) DECIMAL FLOATING-POINT MATH
                           LIBRARY FUNCTION NAMES
   =========================================================================
 
@@ -269,7 +310,7 @@ The library function names shown here can be changed by editing #define
 statements in bid_conf.h.
 
 ================================================================================
-IEEE 754-2008 Name                      Opd1   Opd2   Opd3   Result
+IEEE 754-2019 Name                      Opd1   Opd2   Opd3   Result
                                                 Intel(R) DFP Math Library Name
 ================================================================================
 roundToIntegralTiesToEven           BID64                BID64
@@ -726,10 +767,6 @@ compareSignalingNotLess             BID64  BID64         boolean
                                            __bid128_signaling_not_less
 N/A                                 IDEC_flags *IDEC_flags
                                            __bid_signalException
-is754version1985                                         int
-                                           __bid_is754
-is754version2008                                         int
-                                           __bid_is754R
 isSignMinus                         BID64                boolean
                                            __bid64_isSigned
                                     BID128               boolean
@@ -782,10 +819,6 @@ totalOrderMag                       BID64  BID64         boolean
                                            __bid64_totalOrderMag
                                     BID128 BID128        boolean
                                            __bid128_totalOrderMag
-sameQuantum                         BID64  BID64         boolean
-                                           __bid64_sameQuantum
-                                    BID128 BID128        boolean
-                                           __bid128_sameQuantum
 lowerFlags                          _IDEC_flags
                                            __bid_lowerFlags
 testFlags                           _IDEC_flags          boolean
@@ -805,7 +838,7 @@ setDecimalRoundingDirection         _IDEC_round
   10. DESCRIPTION OF THE INTEL(R) DECIMAL FP MATH LIBRARY FUNCTIONS
 
 This section gives brief descriptions of the functions available in the
-Intel(R) Decimal Floating-Point Math Library v2.2. The prototypes are
+Intel(R) Decimal Floating-Point Math Library v2.3. The prototypes are
 shown assuming all arguments are passed by value; the rounding mode variable is
 passed as an argument to each function that requires it; a pointer to a
 variable containing the status flags is passed to each function that requires
@@ -818,7 +851,7 @@ flags in the status word *pfpsf.
 
 Notes:
  1. Three decimal floating-point formats are supported, as defined in
-    IEEE Standard 754-2008: 32-bit, 64-bit, and 128-bit.
+    IEEE Standard 754-2019: 32-bit, 64-bit, and 128-bit.
     The data types used in the library for entities in the three formats are
     UINT32, UINT64, and UINT128 which can be mapped externally to types of
     appropriate sizes and alignments but having different names, for example
@@ -843,7 +876,7 @@ Notes:
     Operations with decimal floating-point results usually choose one
     representation of the result from among several possible that have the
     same numerical value (constituting a 'cohort'). The chosen representation
-    must have the 'preferred exponent' specified in the IEEE Standard 754-2008.
+    must have the 'preferred exponent' specified in the IEEE Standard 754-2019.
     (For example 1.0 * 10^(-2) + 10.0 * 10^(-3) = 20.0 * 10^(-3), and not
     2.0 * 10^(-2).)
     The encoding methods for decimal floating-point values are not explained
@@ -852,9 +885,9 @@ Notes:
     __bid128_from_string), or decoded using the decimal-to-string conversion
     functions (__bid64_to_string and __bid128_to_string).
  2. The acronym 'dpd' or 'DPD' is used to identify the decimal encoding method
-    for decimal floating-point values, defined in the IEEE Standard 754-2008.
+    for decimal floating-point values, defined in the IEEE Standard 754-2019.
     The acronym 'bid' or 'BID' is used to identify the binary encoding method
-    for decimal floating-point values, defined in the IEEE Standard 754-2008.
+    for decimal floating-point values, defined in the IEEE Standard 754-2019.
  3. The library functions that operate on decimal floating-point values do so on
     values encoded in BID format.
  4. The floating-point status flags for inexact result, underflow, overflow,
@@ -2973,7 +3006,7 @@ PROTOTYPE:
 FLOATING-POINT EXCEPTIONS: none
 
 FUNCTION: Tells which of the following ten classes x falls into (details in
-  the IEEE Standard 754-2008): signalingNaN, quietNaN, negativeInfinity,
+  the IEEE Standard 754-2019): signalingNaN, quietNaN, negativeInfinity,
   negativeNormal, negativeSubnormal, negativeZero, positiveZero,
   positiveSubnormal, positiveNormal, positiveInfinity
 PROTOTYPE:
@@ -2981,23 +3014,14 @@ PROTOTYPE:
     UINT64 x);
 FLOATING-POINT EXCEPTIONS: none
 
-FUNCTION: sameQuantum(x, y) is true if the exponents of x and y are the same,
-  and false otherwise; sameQuantum(NaN, NaN) and sameQuantum(inf, inf) are
-  true; if exactly one operand is infinite or exactly one operand is NaN,
-  sameQuantum is false
-PROTOTYPE:
-  int __bid64_sameQuantum (
-    UINT64 x, UINT64 y);
-FLOATING-POINT EXCEPTIONS: none
-
-FUNCTION: Return true if x and y are ordered (see the IEEE Standard 754-2008)
+FUNCTION: Return true if x and y are ordered (see the IEEE Standard 754-2019)
 PROTOTYPE:
   int __bid64_totalOrder (
     UINT64 x, UINT64 y);
 FLOATING-POINT EXCEPTIONS: none
 
 FUNCTION: Return true if the absolute values of x and y are ordered
-  (see the IEEE Standard 754-2008)
+  (see the IEEE Standard 754-2019)
 PROTOTYPE:
   int __bid64_totalOrderMag (
     UINT64 x, UINT64 y);
@@ -3093,7 +3117,7 @@ PROTOTYPE:
 FLOATING-POINT EXCEPTIONS: none
 
 FUNCTION: Tells which of the following ten classes x falls into (details in
-  the IEEE Standard 754-2008): signalingNaN, quietNaN, negativeInfinity,
+  the IEEE Standard 754-2019): signalingNaN, quietNaN, negativeInfinity,
   negativeNormal, negativeSubnormal, negativeZero, positiveZero,
   positiveSubnormal, positiveNormal, positiveInfinity
 PROTOTYPE:
@@ -3101,23 +3125,14 @@ PROTOTYPE:
     UINT128 x);
 FLOATING-POINT EXCEPTIONS: none
 
-FUNCTION: sameQuantum(x, y) returns true if the exponents of x and y are the same,
-  and false otherwise; sameQuantum(NaN, NaN) and sameQuantum(inf, inf) are
-  true; if exactly one operand is infinite or exactly one operand is NaN,
-  sameQuantum is false
-PROTOTYPE:
-  int __bid128_sameQuantum (
-    UINT128 x, UINT128 y);
-FLOATING-POINT EXCEPTIONS: none
-
-FUNCTION: Return true if x and y are ordered (see the IEEE Standard 754-2008)
+FUNCTION: Return true if x and y are ordered (see the IEEE Standard 754-2019)
 PROTOTYPE:
   int __bid128_totalOrder (
     UINT128 x, UINT128 y);
 FLOATING-POINT EXCEPTIONS: none
 
 FUNCTION: Return true if the absolute values of x and y are ordered
-  (see the IEEE Standard 754-2008)
+  (see the IEEE Standard 754-2019)
 PROTOTYPE:
   int __bid128_totalOrderMag (
     UINT128 x, UINT128 y);
@@ -3439,20 +3454,6 @@ PROTOTYPE:
     UINT32 x, _IDEC_round rnd_mode, _IDEC_flags *pfpsf);
 FLOATING-POINT EXCEPTIONS: P, I
 
-FUNCTION: Return true if and only if this programming environment conforms
-  to the 1985 version of the standard
-PROTOTYPE:
-  int __bid_is754 (
-    void);
-FLOATING-POINT EXCEPTIONS: none
-
-FUNCTION: Return true if and only if this programming environment conforms
-  to the revised version of the standard
-PROTOTYPE:
-  int __bid_is754R (
-    void);
-FLOATING-POINT EXCEPTIONS: none
-
 FUNCTION: Signals the exceptions specified in the flagmask operand, which
   can represent any subset of the exceptions
 PROTOTYPE:
@@ -3647,12 +3648,6 @@ _Decimal128 lgammad128(_Decimal128 x);  // library name: __bid128_lgamma
 _Decimal64 tgammad64(_Decimal64 x);  // library name: __bid64_tgamma
 _Decimal32 tgammad32(_Decimal32 x);  // library name: __bid32_tgamma
 _Decimal128 tgammad128(_Decimal128 x);  // library name: __bid128_tgamma
-_Decimal64 ceild64(_Decimal64 x);  // library name: __bid64_ceil
-_Decimal32 ceild32(_Decimal32 x);  // library name: __bid32_ceil
-_Decimal128 ceild128(_Decimal128 x);  // library name: __bid128_ceil
-_Decimal64 floord64(_Decimal64 x);  // library name: __bid64_floor
-_Decimal32 floord32(_Decimal32 x);  // library name: __bid32_floor
-_Decimal128 floord128(_Decimal128 x);  // library name: __bid128_floor
 _Decimal64 nearbyintd64(_Decimal64 x);  // library name: __bid64_nearbyint
 _Decimal32 nearbyintd32(_Decimal32 x);  // library name: __bid32_nearbyint
 _Decimal128 nearbyintd128(_Decimal128 x);  // library name: __bid128_nearbyint
@@ -3668,15 +3663,9 @@ long int lroundd128(_Decimal128 x);  // library name: __bid128_lround
 long long int llroundd64(_Decimal64 x);  // library name: __bid64_llround
 long long int llroundd32(_Decimal32 x);  // library name: __bid32_llround
 long long int llroundd128(_Decimal128 x);  // library name: __bid128_llround
-_Decimal64 nexttowardd64(_Decimal64 x, _Decimal128 y);  // library name: __bid64_nexttoward
-_Decimal32 nexttowardd32(_Decimal32 x, _Decimal128 y);  // library name: __bid32_nexttoward
-_Decimal128 nexttowardd128(_Decimal128 x, _Decimal128 y);  // library name: __bid128_nexttoward
 _Decimal64 fdimd64(_Decimal64 x, _Decimal64 y);  // library name: __bid64_fdim
 _Decimal32 fdimd32(_Decimal32 x, _Decimal32 y);  // library name: __bid32_fdim
 _Decimal128 fdimd128(_Decimal128 x, _Decimal128 y);  // library name: __bid128_fdim
-int samequantumd64 (_Decimal64 __x, _Decimal64 __y); // library name: __bid64_sameQuantum
-int samequantumd32 (_Decimal32 __x, _Decimal32 __y); // library name: __bid32_sameQuantum
-int samequantumd128 (_Decimal128 __x, _Decimal128 __y); // library name: __bid128_sameQuantum
 
 
 Calling Transcendental Functions
@@ -3756,7 +3745,7 @@ Footnotes:
 ==========
 * BID stands for Binary Integer Decimal, which is an informal name for
 the binary encoding format of decimal floating-point values, described in the
-IEEE Standard 754-2008.
+IEEE Standard 754-2019.
 
 ** Other names and brands may be claimed as the property of others.
 

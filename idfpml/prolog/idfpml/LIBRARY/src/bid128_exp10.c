@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without 
@@ -140,4 +140,3 @@ if ((x.w[BID_HIGH_128W] & 0x7800000000000000ull) == 0x7800000000000000ull) {
 
    BID_RETURN (res);
 }
-

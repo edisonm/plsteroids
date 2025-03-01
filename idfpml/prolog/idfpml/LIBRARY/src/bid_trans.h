@@ -1,7 +1,7 @@
 // bid_trans.h
 // ============================================================================
 /*
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -85,7 +85,7 @@
 #if !USE_COMPILER_F128_TYPE
 #   define BID_F128_TYPE	BID_UINT128
 #else
-#   if defined __INTEL_COMPILER
+#   if (defined __INTEL_COMPILER) || (defined __INTEL_LLVM_COMPILER)
 #       define  BID_F128_TYPE _Quad    
 #   else
 #       error "128-bit floating point type for this compiler is unknown"
@@ -95,7 +95,7 @@
 #if !USE_COMPILER_F80_TYPE
 #   define BID_F80_TYPE		BID_F128_TYPE
 #else
-#   if defined __INTEL_COMPILER
+#   if (defined __INTEL_COMPILER) || (defined __INTEL_LLVM_COMPILER)
 #       define  BID_F80_TYPE long double    
 #   else
 #       error "80-bit floating point type for this compiler is unknown"

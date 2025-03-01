@@ -1,0 +1,180 @@
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 000 **************************"
+echo ""
+echo ""
+cp main.c_000 main.c
+cp decimal.h_000 decimal.h
+cp ../LIBRARY/clang000libbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 001 **************************"
+echo ""
+echo ""
+cp main.c_001 main.c
+cp decimal.h_001 decimal.h
+cp ../LIBRARY/clang001libbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 010 **************************"
+echo ""
+echo ""
+cp main.c_010 main.c
+cp decimal.h_010 decimal.h
+cp ../LIBRARY/clang010libbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 011 **************************"
+echo ""
+echo ""
+cp main.c_011 main.c
+cp decimal.h_011 decimal.h
+cp ../LIBRARY/clang011libbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 100 **************************"
+echo ""
+echo ""
+cp main.c_100 main.c
+cp decimal.h_100 decimal.h
+cp ../LIBRARY/clang100libbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 101 **************************"
+echo ""
+echo ""
+cp main.c_101 main.c
+cp decimal.h_101 decimal.h
+cp ../LIBRARY/clang101libbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 110 **************************"
+echo ""
+echo ""
+cp main.c_110 main.c
+cp decimal.h_110 decimal.h
+cp ../LIBRARY/clang110libbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 111 **************************"
+echo ""
+echo ""
+cp main.c_111 main.c
+cp decimal.h_111 decimal.h
+cp ../LIBRARY/clang111libbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a
+./a.out
+rm a.out
+rm ../LIBRARY/libbid.a
+
+
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 000b **************************"
+echo ""
+echo ""
+cp main.c_000 main.c
+cp decimal.h_000 decimal.h
+cp ../LIBRARY/clang000blibbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a -lm
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 001b **************************"
+echo ""
+echo ""
+cp main.c_001 main.c
+cp decimal.h_001 decimal.h
+cp ../LIBRARY/clang001blibbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a -lm
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 010b **************************"
+echo ""
+echo ""
+cp main.c_010 main.c
+cp decimal.h_010 decimal.h
+cp ../LIBRARY/clang010blibbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a -lm
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 011b **************************"
+echo ""
+echo ""
+cp main.c_011 main.c
+cp decimal.h_011 decimal.h
+cp ../LIBRARY/clang011blibbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a -lm
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 100b **************************"
+echo ""
+echo ""
+cp main.c_100 main.c
+cp decimal.h_100 decimal.h
+cp ../LIBRARY/clang100blibbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a -lm
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 101b **************************"
+echo ""
+echo ""
+cp main.c_101 main.c
+cp decimal.h_101 decimal.h
+cp ../LIBRARY/clang101blibbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a -lm
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 110b **************************"
+echo ""
+echo ""
+cp main.c_110 main.c
+cp decimal.h_110 decimal.h
+cp ../LIBRARY/clang110blibbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a -lm
+./a.out
+rm a.out
+echo ""
+echo ""
+echo "***************** RUNNING EXAMPLE FOR clang 111b **************************"
+echo ""
+echo ""
+cp main.c_111 main.c
+cp decimal.h_111 decimal.h
+cp ../LIBRARY/clang111blibbid.a ../LIBRARY/libbid.a
+clang $1 main.c ../LIBRARY/libbid.a -lm
+./a.out
+rm a.out
+rm ../LIBRARY/libbid.a

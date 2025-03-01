@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without 
@@ -134,6 +134,7 @@ BID_TYPE0_FUNCTION_ARGTYPE1(BID_UINT64, bid64_round_integral_exact, BID_UINT64, 
       BID_RETURN (res);
     }
     break;
+  default: break; // default added to avoid compiler warning
   }	// end switch ()
 
   // q = nr. of decimal digits in x (1 <= q <= 54)
@@ -475,6 +476,7 @@ BID_TYPE0_FUNCTION_ARGTYPE1(BID_UINT64, bid64_round_integral_exact, BID_UINT64, 
       BID_RETURN (res);
     }
     break;
+  default: break; // default added to avoid compiler warning
   }	// end switch ()
   BID_RETURN (res);
 }

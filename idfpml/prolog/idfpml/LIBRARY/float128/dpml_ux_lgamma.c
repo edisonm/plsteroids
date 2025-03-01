@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -294,7 +294,7 @@ UX_LGAMMA(UX_FLOAT * unpacked_argument, int * signgam,
     *signgam = 1 - ((sign >> (BITS_PER_UX_SIGN_TYPE - 2)) & (floor_2x & 2));
 
     if (exponent < 5)
-	{ /* | x | < 16
+        { /* | x | < 16 */
 
         /* Set initial product to 1 and get  */
 

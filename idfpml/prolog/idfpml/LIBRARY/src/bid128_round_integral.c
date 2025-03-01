@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without 
@@ -183,6 +183,7 @@ case BID_ROUNDING_TO_ZERO:
     BID_RETURN (res);
   }
   break;
+default: break; // default added to avoid compiler warning
 }
 
   // q = nr. of decimal digits in x
@@ -797,6 +798,7 @@ case BID_ROUNDING_TO_ZERO:
     BID_RETURN (res);
   }
   break;
+default: break; // default added to avoid compiler warning
 }
 
 BID_RETURN (res);

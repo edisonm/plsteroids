@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without 
@@ -35,10 +35,10 @@ BID_F128_CONST_DEF( c_half,    3ffe000000000000, 0000000000000000); // 0.5
 
 BID128_FUNCTION_ARG1 (bid128_atanh, x)
 
-BID_UINT128 CX, CY, xn, one, one_m_x, one_p_x, res, tmp, coeff_res, y;
+BID_UINT128 CX, xn, one, one_m_x, res, tmp, y;
 BID_UINT64  sign_x;
-int exponent_x, exponent_y, cmp_res, exponent_res;
-BID_F128_TYPE rq, xq, yq;
+int exponent_x;
+BID_F128_TYPE rq, xq;
 
   // unpack arguments, check for NaN or Infinity
 	if (!unpack_BID128_value_BLE (&sign_x, &exponent_x, &CX, x)) {

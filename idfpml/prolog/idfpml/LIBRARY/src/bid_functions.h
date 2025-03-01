@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -94,17 +94,21 @@ typedef struct BID_ALIGN (16)
      } BID_UINT128;
 #endif
 
-#if !defined (__INTEL_COMPILER)
+#if !((defined __INTEL_COMPILER) || (defined __INTEL_LLVM_COMPILER))
 typedef BID_UINT128 _Quad;
 #endif
 
-#if !defined _MSC_VER || defined __INTEL_COMPILER
+#if defined __NO_BINARY80__
+#define __ENABLE_BINARY80__  0
+#else
+#if !defined _MSC_VER || defined __INTEL_COMPILER || defined __INTEL_LLVM_COMPILER
 #define __ENABLE_BINARY80__  1
+#endif
 #endif
 
 #ifndef HPUX_OS
   #define BINARY80 long double
-  #if defined (__INTEL_COMPILER) && USE_COMPILER_F128_TYPE
+  #if ((defined __INTEL_COMPILER) || (defined __INTEL_LLVM_COMPILER)) && USE_COMPILER_F128_TYPE
     #define BINARY128 _Quad
   #else
     #define BINARY128 BID_UINT128
@@ -166,6 +170,19 @@ typedef unsigned short int fexcept_t;
 #endif
 #endif
 #endif
+
+typedef enum class_types {
+  signalingNaN,
+  quietNaN,
+  negativeInfinity,
+  negativeNormal,
+  negativeSubnormal,
+  negativeZero,
+  positiveZero,
+  positiveSubnormal,
+  positiveNormal,
+  positiveInfinity
+} class_t;
 
 #define DEC_FE_INVALID      0x01
 #define DEC_FE_UNNORMAL     0x02
@@ -4674,7 +4691,7 @@ BID_EXTERN_C _IDEC_round _IDEC_glbround; // initialized to BID_ROUNDING_TO_NEARE
      BID_EXTERN_C BID_UINT32 bid32_copySign (BID_UINT32 x,
                                    BID_UINT32 y _EXC_MASKS_PARAM
                                    _EXC_INFO_PARAM);
-     BID_EXTERN_C int bid32_class (BID_UINT32 x _EXC_MASKS_PARAM _EXC_INFO_PARAM);
+     BID_EXTERN_C class_t bid32_class (BID_UINT32 x _EXC_MASKS_PARAM _EXC_INFO_PARAM);
      BID_EXTERN_C int bid32_sameQuantum (BID_UINT32 x, BID_UINT32 y
                                    _EXC_MASKS_PARAM _EXC_INFO_PARAM);
      BID_EXTERN_C int bid32_totalOrder (BID_UINT32 x, BID_UINT32 y
@@ -4708,7 +4725,7 @@ BID_EXTERN_C _IDEC_round _IDEC_glbround; // initialized to BID_ROUNDING_TO_NEARE
      BID_EXTERN_C BID_UINT64 bid64_copySign (BID_UINT64 x,
                                    BID_UINT64 y _EXC_MASKS_PARAM
                                    _EXC_INFO_PARAM);
-     BID_EXTERN_C int bid64_class (BID_UINT64 x _EXC_MASKS_PARAM _EXC_INFO_PARAM);
+     BID_EXTERN_C class_t bid64_class (BID_UINT64 x _EXC_MASKS_PARAM _EXC_INFO_PARAM);
      BID_EXTERN_C int bid64_sameQuantum (BID_UINT64 x, BID_UINT64 y
                                    _EXC_MASKS_PARAM _EXC_INFO_PARAM);
      BID_EXTERN_C int bid64_totalOrder (BID_UINT64 x, BID_UINT64 y
@@ -4744,7 +4761,7 @@ BID_EXTERN_C _IDEC_round _IDEC_glbround; // initialized to BID_ROUNDING_TO_NEARE
      BID_EXTERN_C BID_UINT128 bid128_copySign (BID_UINT128 x,
                                      BID_UINT128 y _EXC_MASKS_PARAM
                                      _EXC_INFO_PARAM);
-     BID_EXTERN_C int bid128_class (BID_UINT128 x _EXC_MASKS_PARAM
+     BID_EXTERN_C class_t bid128_class (BID_UINT128 x _EXC_MASKS_PARAM
                               _EXC_INFO_PARAM);
      BID_EXTERN_C int bid128_sameQuantum (BID_UINT128 x,
                                     BID_UINT128 y _EXC_MASKS_PARAM

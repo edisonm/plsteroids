@@ -1,20 +1,20 @@
 To build readtest - the tests for the Intel(R) Decimal Floating-Point Math 
-Library V2.2 (Version 2, Update 2) on processors that are implementations of the 
-IA-32 Architecture, Intel(R) 64, or IA-64 Architecture:  
+Library V2.3 (Version 2, Update 3) on processors that are implementations of the 
+Intel(R) 64 Architecture:  
 
-  In Linux* with icc (Intel(R) C++ Compiler 9.1 or newer) or gcc:
+  In Linux* with icx (Intel(R) C++ Compiler 2024.2 or newer) or gcc:
 
     make clean OS_TYPE=LINUX
-    make OS_TYPE=LINUX CC=icc CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0
-      - CC can be icc, gcc
+    make OS_TYPE=LINUX CC=icx CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0
+      - CC can be icx, icc, gcc, clang
       - CALL_BY_REF, GLOBAL_RND, GLOBAL_FLAGS, UNCHANGED_BINARY_FLAGS can be any of 0000, 0001, ... , 1111
 
-  In Windows** with icl (Intel(R) C++ Compiler 9.1 or newer) or cl (Microsoft
+  In Windows** with icx (Intel(R) C++ Compiler 2024.2 or newer) or cl (Microsoft
   Visual C++ Compiler**):  
 
     nmake clean OS_TYPE=WIN
     nmake -fmakefile.mak CC=icl CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0
-      -  CC can be cl, icl; EXCEPTION for Itanium when CC=cl: OS_TYPE=WIN_IA64
+      -  CC can be cl, icx, icl, clang
       -  CALL_BY_REF, GLOBAL_RND, GLOBAL_FLAGS, UNCHANGED_BINARY_FLAGS can be any of 0000, 0001, ... , 1111
       -  [g]make which stands for a GNU make-compatible make program (e.g. make from
          cygwin) can also be used
@@ -32,14 +32,8 @@ Note:
 =====
   For some other operating systems and architecture combinations see the
   following command files, as well as any command files invoked from these ones:
-        RUNLINUX
         RUNWINDOWS_nmake.bat
-        RUNWINDOWSINTEL64.bat (for Itanium Architecture)
-        RUNOSX
-        RUNOSXINTEL64 (for Itanium Architecture)
-        RUNSOLARIS
-        RUNHPUX32 (for HP-UX* on IA-64 Architecture, 32-bit data mode) 
-        RUNHPUX64 (for HP-UX* on IA-64 Architecture, 64-bit data mode)
+        RUNOSXINTEL64
   These command files build and run the tests from this directory,
   possibly using more than one compiler. Changes may be necessary in certain
   environments. However, prior to building these tests the similar RUN*

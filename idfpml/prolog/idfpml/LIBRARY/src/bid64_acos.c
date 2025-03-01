@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
 #define BID64_1 0x31c0000000000001ull
 
 BID_F80_CONST_DEF( c_9_10ths, 3ffecccccccccccc, cccccccccccccccd); // .9
-BID_F80_CONST_DEF( c_pi,      4000921fb54442d1, 8469898cc51701b8); // pi 
+BID_F80_CONST_DEF( c_pi,      4000921fb54442d1, 8469898cc51701b8); // pi
 BID_F80_CONST_DEF( c_zero,    0000000000000000, 0000000000000000); // 0.0
 BID_F80_CONST_DEF( c_one,     3fff000000000000, 0000000000000000); // 1.0
 BID_F80_CONST_DEF( c_two,     4000000000000000, 0000000000000000); // 2.0

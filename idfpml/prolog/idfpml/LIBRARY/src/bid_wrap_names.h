@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -200,8 +200,6 @@
 #define __wrap___bid128_scalbn   m(scalbnd128)
 #define __wrap___bid128_round_integral_exact        m(rintd128)
 //#define __wrap___bid128_round_integral_nearest_even
-#define __wrap___bid128_round_integral_negative     m(floord128)
-#define __wrap___bid128_round_integral_positive     m(ceild128)
 #define __wrap___bid128_round_integral_zero         m(truncd128)
 #define __wrap___bid128_round_integral_nearest_away m(roundd128)
 #define __wrap___bid128_rem        m(remainderd128)
@@ -363,8 +361,6 @@
 #define __wrap___bid64_scalbn   m(scalbnd64)
 #define __wrap___bid64_round_integral_exact        m(rintd64)
 //#define __wrap___bid64_round_integral_nearest_even
-#define __wrap___bid64_round_integral_negative     m(floord64)
-#define __wrap___bid64_round_integral_positive     m(ceild64)
 #define __wrap___bid64_round_integral_zero         m(truncd64)
 #define __wrap___bid64_round_integral_nearest_away m(roundd64)
 #define __wrap___bid64_rem         m(remainderd64)
@@ -525,8 +521,6 @@
 #define __wrap___bid32_scalbn   m(scalbnd32)
 #define __wrap___bid32_round_integral_exact        m(rintd32)
 //#define __wrap___bid32_round_integral_nearest_even
-#define __wrap___bid32_round_integral_negative     m(floord32)
-#define __wrap___bid32_round_integral_positive     m(ceild32)
 #define __wrap___bid32_round_integral_zero         m(truncd32)
 #define __wrap___bid32_round_integral_nearest_away m(roundd32)
 #define __wrap___bid32_rem         m(remainderd32)

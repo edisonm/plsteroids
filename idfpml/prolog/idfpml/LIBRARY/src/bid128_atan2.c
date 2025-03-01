@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without 
@@ -46,7 +46,7 @@ static BID_UINT128 BID128_10POW_M36 =
 BID128_FUNCTION_ARG2 (bid128_atan2, x, y)
 
 BID_UINT128 CX, CY, z, zabs, res;
-BID_UINT64  valid_y, sign_x, sign_y, sign_z;
+BID_UINT64  valid_y, sign_x, sign_y;
 int exponent_x, exponent_y, cmp_res;
 _IDEC_flags save_flags;
 BID_F128_TYPE rq, zq;

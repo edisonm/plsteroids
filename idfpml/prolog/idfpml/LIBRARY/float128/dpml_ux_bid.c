@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -53,11 +53,11 @@
 
 #define SUB_INF_FROM_INF	SQRT_OF_NEGATIVE
 
-/******************************************************************************/
-/*
-/* Basic arithmetic operations
-/*
-/******************************************************************************/
+/******************************************************************************
+ *
+ * Basic arithmetic operations
+ *
+ *****************************************************************************/
 
 #undef  F_ENTRY_NAME
 #define F_ENTRY_NAME	F_MUL_NAME

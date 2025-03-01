@@ -1,0 +1,50 @@
+rm -f *.o *.a  
+make   CC=clang CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0
+mv libbid.a clang000libbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=0
+mv libbid.a clang001libbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=0 GLOBAL_RND=1 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0
+mv libbid.a clang010libbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=0 GLOBAL_RND=1 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=0
+mv libbid.a clang011libbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=1 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0
+mv libbid.a clang100libbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=1 GLOBAL_RND=0 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=0
+mv libbid.a clang101libbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=1 GLOBAL_RND=1 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0
+mv libbid.a clang110libbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=1 GLOBAL_RND=1 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=0
+mv libbid.a clang111libbid.a
+
+make  clean 
+make   CC=clang CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=1
+mv libbid.a clang000blibbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=1
+mv libbid.a clang001blibbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=0 GLOBAL_RND=1 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=1
+mv libbid.a clang010blibbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=0 GLOBAL_RND=1 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=1
+mv libbid.a clang011blibbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=1 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=1
+mv libbid.a clang100blibbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=1 GLOBAL_RND=0 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=1
+mv libbid.a clang101blibbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=1 GLOBAL_RND=1 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=1
+mv libbid.a clang110blibbid.a
+make  clean 
+make   CC=clang CALL_BY_REF=1 GLOBAL_RND=1 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=1
+mv libbid.a clang111blibbid.a
+make  clean 

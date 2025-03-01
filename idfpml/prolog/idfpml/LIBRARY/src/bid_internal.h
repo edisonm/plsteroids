@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without 
@@ -35,7 +35,6 @@
 #   pragma warning( disable: 4996 )
 #endif
 
-#include <stdlib.h>
 #include "bid_conf.h"
 #include "bid_functions.h"
 
@@ -994,6 +993,8 @@ get_BID64 (BID_UINT64 sgn, int expon, BID_UINT64 coeff, int rmode,
 	// round up
 	if (sgn)
 	  r = SMALLEST_BID64;
+      default:
+	break;
       }
       return r;
     }
@@ -1110,6 +1111,8 @@ fast_get_BID64_check_OF (BID_UINT64 sgn, int expon, BID_UINT64 coeff, int rmode,
 	  // round up
 	  if (sgn)
 	    r = SMALLEST_BID64;
+	default:
+	  break;
 	}
 	return r;
       }
@@ -2929,19 +2932,6 @@ typedef struct BID_ALIGN (16)
       temp_x.d=(float)coefficient_x;\
       A=((tempx.i >>23) & EXPONENT_MASK32) - 0x7f;\
 }
-
-enum class_types {
-  signalingNaN,
-  quietNaN,
-  negativeInfinity,
-  negativeNormal,
-  negativeSubnormal,
-  negativeZero,
-  positiveZero,
-  positiveSubnormal,
-  positiveNormal,
-  positiveInfinity
-};
 
 typedef union { 
   BID_UINT32 ui32; 

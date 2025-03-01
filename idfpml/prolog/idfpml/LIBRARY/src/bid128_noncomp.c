@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without 
@@ -452,7 +452,7 @@ bid128_class (int *pres, BID_UINT128 * px _EXC_MASKS_PARAM _EXC_INFO_PARAM) {
   BID_UINT128 x = *px;
 #else
 RES_WRAPFN_DFP(int, bid128_class, 128)
-int
+class_t
 bid128_class (BID_UINT128 x _EXC_MASKS_PARAM _EXC_INFO_PARAM) {
 #endif
   int res;
@@ -1249,22 +1249,9 @@ BID_UINT128 bid128_nan (const char *tagp) {
 #else
   x = bid128_from_string ((char *)tagp _RND_MODE_ARG _EXC_FLAGS_ARG);
 #endif
-  x.w[BID_HIGH_128W] = x.w[BID_HIGH_128W] & 0x0000cfffffffffffull; // valid values fit in 110 bits=46+64
+  x.w[BID_HIGH_128W] = x.w[BID_HIGH_128W] & 0x00003fffffffffffull; // valid values fit in 110 bits=46+64
   res.w[BID_HIGH_128W] = res.w[BID_HIGH_128W] | x.w[BID_HIGH_128W];
   res.w[BID_LOW_128W] = x.w[BID_LOW_128W];
 
   BID_RETURN(res);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

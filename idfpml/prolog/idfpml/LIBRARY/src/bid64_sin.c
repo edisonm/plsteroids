@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -587,6 +587,7 @@ BID_TYPE0_FUNCTION_ARGTYPE1(BID_UINT64, bid64_sin, BID_UINT64, x)
             __bid_f80_neg( yd, yd ); break;
     case 3: __bid_f80_cos( yd, xd );
             __bid_f80_neg( yd, yd ); break;
+    default: break; // default added to avoid compiler warning
   }
 
   BIDECIMAL_CALL1(binary80_to_bid64,res,yd);

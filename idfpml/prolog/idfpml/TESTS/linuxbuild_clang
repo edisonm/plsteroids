@@ -1,0 +1,165 @@
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 000 ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang000libbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 001 ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang001libbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=0
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 010 ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang010libbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=0 GLOBAL_RND=1 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 011 ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang011libbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=0 GLOBAL_RND=1 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=0
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 100 ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang100libbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=1 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 101 ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang101libbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=1 GLOBAL_RND=0 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=0
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 110 ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang110libbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=1 GLOBAL_RND=1 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 111 ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang111libbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=1 GLOBAL_RND=1 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=0
+./readtest < readtest.in
+rm ../LIBRARY/libbid.a
+
+
+
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 000b ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang000blibbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=1
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 001b ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang001blibbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=1
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 010b ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang010blibbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=0 GLOBAL_RND=1 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=1
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 011b ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang011blibbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=0 GLOBAL_RND=1 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=1
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 100b ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang100blibbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=1 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=1
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 101b ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang101blibbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=1 GLOBAL_RND=0 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=1
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 110b ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang110blibbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=1 GLOBAL_RND=1 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=1
+./readtest < readtest.in
+echo ""
+echo ""
+echo "****************** RUNNING TESTS FOR clang 111b ***************************"
+echo ""
+echo ""
+make $1 clean OS_TYPE=LINUX
+cp ../LIBRARY/clang111blibbid.a ../LIBRARY/libbid.a
+ranlib ../LIBRARY/libbid.a
+make $1 OS_TYPE=LINUX CC=clang CALL_BY_REF=1 GLOBAL_RND=1 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=1
+./readtest < readtest.in
+rm ../LIBRARY/libbid.a

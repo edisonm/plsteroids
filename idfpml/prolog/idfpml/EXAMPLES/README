@@ -31,27 +31,16 @@ $ rm main.c decimal.h a.out
 
 Note: For some other operating systems and architecture combinations see the 
   following command files, as well as any command files invoked from these ones:
-	RUNLINUX
-	RUNWINDOWS.bat
-	RUNWINDOWSINTEL64.bat (for IA-64 Architecture)
-	RUNOSX
-	RUNOSXINTEL64 (for IA-64 Architecture)
-	RUNSOLARIS
-        RUNHPUX32 (for HP-UX* on IA-64 Architecture, 32-bit data mode)
-        RUNHPUX64 (for HP-UX* on IA-64 Architecture, 64-bit data mode)
+        RUNWINDOWS_nmake.bat
+        RUNOSXINTEL64
   These command files build and run all eight examples from this directory,
   possibly using more than one compiler. Changes may be needed for certain
   environments. However, prior to building these examples the similar RUN*
   command has to be executed in ../LIBRARY/ in order to build all the
   necessary versions of the Intel(R) Decimal Floating-Point Math Library
-  V2.2 (Version 2, Update 2).
+  V2.3 (Version 2, Update 3).
   The tests [when built correctly] pass if the word FAIL does not appear in
   the output.
-
-  If the MS compiler earlier than VS2005 is used, the following line
-     call windowsbuild.bat
-  should be replaced with the following line in RUNWINDOWSINTEL64.bat
-     call windowsbuild.bat bufferoverflowU.lib
 
 * Other names and brands may be claimed as the property of others.
 

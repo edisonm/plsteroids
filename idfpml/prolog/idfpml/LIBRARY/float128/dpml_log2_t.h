@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -261,4 +261,4 @@
 #define T2_64  (WORD) 0x3ff1380000000000  
 #define T1_32  (WORD) 0x3fed9000  
 #define T2_32  (WORD) 0x3ff13800  
-#define T2_MINUS_T1    (T2 - T1) 
+#define T2_MINUS_T1    (T2 - T1)

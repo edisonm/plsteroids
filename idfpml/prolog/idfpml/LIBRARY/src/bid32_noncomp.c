@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without 
@@ -369,7 +369,7 @@ bid32_class (int *pres, BID_UINT32 * px _EXC_MASKS_PARAM _EXC_INFO_PARAM) {
   BID_UINT32 x = *px;
 #else
 RES_WRAPFN_DFP(int, bid32_class, 32)
-int
+class_t
 bid32_class (BID_UINT32 x _EXC_MASKS_PARAM _EXC_INFO_PARAM) {
 #endif
   int res;

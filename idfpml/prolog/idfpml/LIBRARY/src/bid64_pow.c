@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,8 @@
 
 
 #include "bid_trans.h"
-#include <stdlib.h>
+
+int abs(int);
 
 #define BID64_0 0x31c0000000000000ull
 #define BID64_1 0x31c0000000000001ull
@@ -54,7 +55,7 @@ BID_UINT64 bid64_pow (BID_UINT64 x, BID_UINT64 y
 
 BID_TYPE_FUNCTION_ARG2(BID_UINT64, bid64_pow, x, y)
 
-BID_UINT64 y_int, res, xa;
+  BID_UINT64 y_int, res, xa;
   BID_F80_TYPE xd, yd, rd, ld, e_bin, abs_e_bin;
   int cmp_res, is_odd, is_int;
   BID_UINT64 lval_1 = BID64_1;
@@ -174,30 +175,39 @@ BID_UINT64 y_int, res, xa;
 
   {
     int exact_y;
-    int sign = 0;
+    int inexact = 0;
     int save_flags = *pfpsf;
 
-    *pfpsf &= ~BID_INEXACT_EXCEPTION;
+    *pfpsf &= ~(BID_INEXACT_EXCEPTION | BID_INVALID_EXCEPTION);
     BIDECIMAL_CALL1_NORND(bid64_to_int32_xrnint, exact_y, y);
-    if ((*pfpsf & BID_INEXACT_EXCEPTION) == 0) {
-      if (exact_y < 0) sign = 1;
-      exact_y = abs(exact_y);
-      if (exact_y > 0) {
-        BID_UINT64 tmp, r = BID64_1;
-        BID_UINT64 p = x;
+    if ((*pfpsf & (BID_INEXACT_EXCEPTION | BID_INVALID_EXCEPTION)) == 0) {
+      BID_UINT64 p;
+      if (exact_y < 0) {
+        BID_UINT64 tmp = BID64_1;
+        BIDECIMAL_CALL2(bid64_div, p, tmp, x);
+        if (*pfpsf & BID_INEXACT_EXCEPTION) {
+          inexact = 1;
+        }
+        exact_y *= (-1);
+      } else {
+        p = x;
+      }
+      if((!inexact) && (((unsigned)exact_y) <= 398)) {
+        // exact_y >= 0 here
+        BID_UINT64 r = BID64_1;
         for (; exact_y; exact_y >>= 1) {
           if (exact_y & 1) {
             BIDECIMAL_CALL2(bid64_mul, r, r, p);
           }
-          if (exact_y > 1)
+          if (exact_y > 1) {
             BIDECIMAL_CALL2(bid64_mul, p, p, p);
+          }
         }
-        tmp = BID64_1;
-        if (sign) BIDECIMAL_CALL2(bid64_div, r, tmp, r);
         BID_RETURN(r);
       }
+    } else {
+      *pfpsf = save_flags;
     }
-    *pfpsf = save_flags;
   }
 
 // Finally, we can assume all arguments are finite and nonzero.

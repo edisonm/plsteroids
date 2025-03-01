@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -99,49 +99,49 @@ BID128_FUNCTION_ARG1 (bid128_acos, x)
 
   __bid_f128_fabs(abs_xd, xd);
   if (__bid_f128_lt(abs_xd, c_1em40.v))
-   { BIDECIMAL_CALL2(bid128_add,res,pi2hi, pi2lo);
+  {  BIDECIMAL_CALL2(bid128_add,res,pi2hi, pi2lo);
      BID_RETURN(res);
-   } 
+  }
 
 // If the input is not too close to +/- 1 then do it "naively"
   if (__bid_f128_le(abs_xd, c_7_10ths.v))
-   { 
-      __bid_f128_acos(yd, xd);   
+  {
+     __bid_f128_acos(yd, xd);
      BIDECIMAL_CALL1(binary128_to_bid128,res,yd);
      BID_RETURN(res);
-   }
+  }
 
 // If the input is > 1 in magnitude, fail
   if (__bid_f128_gt(abs_xd, c_one.v))
-   { 
+  {
      res = BID128_NAN;
      #ifdef BID_SET_STATUS_FLAGS
      __set_status_flags (pfpsf, BID_INVALID_EXCEPTION);
      #endif
-     BID_RETURN(res)
-   }
+     BID_RETURN(res);
+  }
 
 // If the input is exactly 1, return a canonical zero with minimal exponent
 // Uses >= 1 instead of == 1 to avoid compiler warnings...
   if (__bid_f128_ge(xd, c_one.v))
-   { 
+  {
      res = BID128_0;
      BID_RETURN(res);
-   }
+  }
 
 // Otherwise compute sqrt(1 - x^2) accurately and use asin instead.
 
   else
-   { 
+  {
      BIDECIMAL_CALL3(bid128_fma,t,x,x,tm1);
      BIDECIMAL_CALL1(bid128_to_binary128,td,t);
      {
-     	__bid_f128_neg(yd, td);  
-     	__bid_f128_sqrt(yd, yd);
-     	__bid_f128_asin(yd, yd);
+        __bid_f128_neg(yd, td);
+        __bid_f128_sqrt(yd, yd);
+        __bid_f128_asin(yd, yd);
      }
      if (__bid_f128_lt(xd, c_zero.v)) __bid_f128_sub(yd, c_pi.v, yd);
      BIDECIMAL_CALL1(binary128_to_bid128,res,yd);
      BID_RETURN (res);
-   }
+  }
 }

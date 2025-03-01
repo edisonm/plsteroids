@@ -1,5 +1,5 @@
 #******************************************************************************
-# Copyright (c) 2007-2018, Intel Corp.
+# Copyright (c) 2007-2024, Intel Corp.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,18 +30,20 @@
 # Makefile for the readtest program - tests for the Intel(r)
 # Decimal Floating-Point Math Library
 
+DUMMY = not_set
+
 ifeq ($(CALL_BY_REF),1)
 COPT1 = -DDECIMAL_CALL_BY_REFERENCE=1
 else
 COPT1 = -DDECIMAL_CALL_BY_REFERENCE=0
 endif
- 
+
 ifeq ($(GLOBAL_RND),1)
 COPT2 = -DDECIMAL_GLOBAL_ROUNDING=1
 else
 COPT2 = -DDECIMAL_GLOBAL_ROUNDING=0
 endif
- 
+
 ifeq ($(GLOBAL_FLAGS),1)
 COPT3 = -DDECIMAL_GLOBAL_EXCEPTION_FLAGS=1
 else
@@ -53,16 +55,6 @@ COPT4 = -DBID_BIG_ENDIAN=1
 else
 COPT4 = -UBID_BIG_ENDIAN
 endif
- 
-ifeq ($(HPUX_OS),1)
-ifeq ($(DD64),1)
-COPT5 = -DHPUX_OS +DD64
-else
-COPT5 = -DHPUX_OS +DD32
-endif
-else
-COPT5 = -UHPUX_OS
-endif
 
 ifeq ($(UNCHANGED_BINARY_FLAGS),1)
 COPT6 = -DUNCHANGED_BINARY_STATUS_FLAGS 
@@ -70,12 +62,23 @@ else
 COPT6 = 
 endif
 
+NO_BINARY80 = 0
+ifeq ($(NO_BINARY80),1)
+COPT6 = -D__NO_BINARY80__
+else
+COPT6 = 
+endif
+
 ifeq ($(OS_TYPE),LINUX)
 CC =
-ifeq ($(HPUX_OS),1)
-COPT = +Ofenvaccess
-else
 ifeq ($(CC),icc)
+COPT = -Werror -Qoption,cpp,--extended_float_types
+DUMMY = set
+else
+COPT = -Werror
+endif
+ifeq ($(DUMMY),not_set)
+ifeq ($(CC),icx)
 COPT = -Werror -Qoption,cpp,--extended_float_types
 else
 COPT = -Werror
@@ -90,26 +93,54 @@ RM = rm -f
 LMOPT = -lm 
 
 else
-CC = icl
-ifeq ($(CC),icl)
-COPT = -D_CRT_SECURE_NO_DEPRECATE -Qlong_double -Qoption,cpp,--extended_float_types -Qpc80
-LMOPT = 
-else
-COPT = -D_CRT_SECURE_NO_DEPRECATE -DBID_MS_FLAGS
-ifeq ($(OS_TYPE),WIN_IA64)
-#LMOPT = bufferoverflowU.lib
+
+ifeq ($(CC),icx)
+CC = icx
+ifeq ($(CC),icx)
+COPT = -D_CRT_SECURE_NO_DEPRECATE -Qlong-double -Qoption,cpp,--extended_float_types -Qpc80
 LMOPT =
 else
-LMOPT = 
-endif
+COPT = -D_CRT_SECURE_NO_DEPRECATE -DBID_MS_FLAGS
+LMOPT =
 endif
 CFLAGS = -Od -I./ -D__intptr_t_defined -DWINDOWS /nologo $(COPT) $(COPT1) $(COPT2) $(COPT3) $(COPT4) $(COPT6) $(COPT_ADD) $(DEFINES)
 EXE = .exe
 OBJ = .obj
 LIBEXT = .lib
 RM = del
-
+else
+ifeq ($(CC),clang)
+CC = clang
+ifeq ($(CC),clang)
+COPT = -D_CRT_SECURE_NO_DEPRECATE 
+LMOPT =
+else
+COPT = -D_CRT_SECURE_NO_DEPRECATE -DBID_MS_FLAGS
+LMOPT =
 endif
+CFLAGS = -I./ -D__intptr_t_defined -DWINDOWS $(COPT) $(COPT1) $(COPT2) $(COPT3) $(COPT4) $(COPT6) $(COPT_ADD) $(DEFINES)
+EXE = .exe
+OBJ = .obj
+LIBEXT = .lib
+RM = del
+else
+CC = icl
+ifeq ($(CC),icl)
+COPT = -D_CRT_SECURE_NO_DEPRECATE -Qlong-double -Qoption,cpp,--extended_float_types -Qpc80
+LMOPT =
+else
+COPT = -D_CRT_SECURE_NO_DEPRECATE -DBID_MS_FLAGS
+LMOPT =
+endif
+CFLAGS = -Od -I./ -D__intptr_t_defined -DWINDOWS /nologo $(COPT) $(COPT1) $(COPT2) $(COPT3) $(COPT4) $(COPT6) $(COPT_ADD) $(DEFINES)
+EXE = .exe
+OBJ = .obj
+LIBEXT = .lib
+RM = del
+endif
+endif
+endif
+
 
 BID_LIB = ../LIBRARY/libbid$(LIBEXT)
 

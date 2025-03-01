@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -41,9 +41,6 @@ static BID_UINT128 BID128_1 =
 
 static BID_UINT128 BID128_POSHALF =
   {BID128_LH_INIT( 0x0000000000000005ull, 0x303e000000000000ull )};
-
-static BID_UINT128 BID128_NEGHALF =
-  {BID128_LH_INIT( 0x0000000000000005ull, 0xb03e000000000000ull )};
 
 static BID_UINT128 BID128_EXP_11000 =
   {BID128_LH_INIT( 0xd43ede775707fd0aull, 0x5550558ada285f8bull )};

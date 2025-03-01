@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,7 @@ BID128_FUNCTION_ARG1 (bid128_erfc, x)
 // Declare local variables
 
   BID_UINT128 res, x2_hi, x2_lo, y_hi, y_lo;
-  BID_F128_TYPE xd, ed, wd, yd, zd, xdi, xi2, pd;
+  BID_F128_TYPE xd, ed, yd, xdi, xi2, pd;
   int cmp_res;
   BID_F128_TYPE rt, abs_xd;
 

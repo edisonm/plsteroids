@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -29,13 +29,13 @@
 
 
 #include "bid_internal.h"
-#include <stdlib.h>
 
 #define BID32_NAN 0x7c000000ul
 #define BID32_1   0x32800001ul
 #define BID32_0   0x00000000ul
 #define BID32_INF 0x78000000ul
 
+int    abs(int);
 double fabs(double);
 double pow(double, double);
 
@@ -158,30 +158,39 @@ BID_TYPE_FUNCTION_ARG2(BID_UINT32, bid32_pow, x, y)
 
   {
     int exact_y;
-    int sign = 0;
+    int inexact = 0;
     int save_flags = *pfpsf;
 
-    *pfpsf &= ~BID_INEXACT_EXCEPTION;
+    *pfpsf &= ~(BID_INEXACT_EXCEPTION | BID_INVALID_EXCEPTION);
     BIDECIMAL_CALL1_NORND(bid32_to_int32_xrnint, exact_y, y);
-    if ((*pfpsf & BID_INEXACT_EXCEPTION) == 0) {
-      if (exact_y < 0) sign = 1;
-      exact_y = abs(exact_y);
-      if (exact_y > 0) {
-        BID_UINT32 tmp, r = BID32_1;
-        BID_UINT32 p = x;
+    if ((*pfpsf & (BID_INEXACT_EXCEPTION | BID_INVALID_EXCEPTION)) == 0) {
+      BID_UINT32 p;
+      if (exact_y < 0) {
+        BID_UINT32 tmp = BID32_1;
+        BIDECIMAL_CALL2(bid32_div, p, tmp, x);
+        if (*pfpsf & BID_INEXACT_EXCEPTION) {
+          inexact = 1;
+        }
+        exact_y *= (-1);
+      } else {
+        p = x;
+      }
+      if((!inexact) && (((unsigned)exact_y) <= 101)) {
+        // exact_y >= 0 here
+        BID_UINT32 r = BID32_1;
         for (; exact_y; exact_y >>= 1) {
           if (exact_y & 1) {
             BIDECIMAL_CALL2(bid32_mul, r, r, p);
           }
-          if (exact_y > 1)
+          if (exact_y > 1) {
             BIDECIMAL_CALL2(bid32_mul, p, p, p);
+          }
         }
-        tmp = BID32_1;
-        if (sign) BIDECIMAL_CALL2(bid32_div, r, tmp, r);
         BID_RETURN(r);
       }
+    } else {
+      *pfpsf = save_flags;
     }
-    *pfpsf = save_flags;
   }
 
 // Finally, we can assume all arguments are finite and nonzero.

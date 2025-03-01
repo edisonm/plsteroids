@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -32,10 +32,6 @@
 // 2-part conversion.
 
 BID_EXTERN_C void bid128_to_binary128_2part(BID_F128_TYPE *,BID_F128_TYPE *,BID_UINT128);
-
-// Standard NaN
-static BID_UINT128 BID128_NAN =
-  {BID128_LH_INIT( 0x0000000000000000ull, 0x7c00000000000000ull )};
 
 // +Infinity
 static BID_UINT128 BID128_INF =

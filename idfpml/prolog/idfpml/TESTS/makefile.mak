@@ -1,5 +1,5 @@
 #******************************************************************************
-# Copyright (c) 2007-2018, Intel Corp.
+# Copyright (c) 2007-2024, Intel Corp.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -77,12 +77,7 @@ COPT = -D_CRT_SECURE_NO_DEPRECATE -Qlong_double -Qoption,cpp,--extended_float_ty
 LMOPT = -oreadtest$(EXE)
 !ELSE
 COPT = -D_CRT_SECURE_NO_DEPRECATE -DBID_MS_FLAGS 
-!IF ("$(HOST_TYPE)"=="WIN_IA64")
-#LMOPT = /Fereadtest$(EXE) bufferoverflowU.lib
 LMOPT = /Fereadtest$(EXE)
-!ELSE
-LMOPT = /Fereadtest$(EXE)
-!ENDIF 
 !ENDIF
 CFLAGS = -Od -I./ -D__intptr_t_defined -DWINDOWS /nologo $(COPT) $(COPT1) $(COPT2) $(COPT3) $(COPT4) $(COPT6) 
 EXE = .exe

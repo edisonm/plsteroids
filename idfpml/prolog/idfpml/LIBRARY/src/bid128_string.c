@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without 
@@ -63,6 +63,7 @@ bid128_to_string (char *str, BID_UINT128 x
   BID_UINT128 C1;
   unsigned int k = 0; // pointer in the string
   unsigned int d0, d123;
+  unsigned int zero_digit = (unsigned int) '0';
   BID_UINT64 HI_18Dig, LO_18Dig, Tmp;
   BID_UINT32 MiDi[12], *ptr;
   char *c_ptr_start, *c_ptr;
@@ -241,14 +242,14 @@ bid128_to_string (char *str, BID_UINT128 x
     d123 = exp - 1000 * d0;
 
     if (d0) { // 1000 <= exp <= 6144 => 4 digits to return
-      str[k++] = d0 + 0x30;// ASCII for decimal digit d0
+      str[k++] = d0 + zero_digit; // ASCII for decimal digit d0
       ind = 3 * d123;
       str[k++] = bid_char_table3[ind];
       str[k++] = bid_char_table3[ind + 1];
       str[k++] = bid_char_table3[ind + 2];
     } else { // 0 <= exp <= 999 => d0 = 0
       if (d123 < 10) { // 0 <= exp <= 9 => 1 digit to return
-	str[k++] = d123 + 0x30;// ASCII
+	str[k++] = d123 + zero_digit; // ASCII
       } else if (d123 < 100) { // 10 <= exp <= 99 => 2 digits to return
 	ind = 2 * (d123 - 10);
 	str[k++] = bid_char_table2[ind];
@@ -620,58 +621,57 @@ bid128_from_string (char *ps _RND_MODE_PARAM _EXC_FLAGS_PARAM
       coeff_l2 = coeff_low + coeff_low;
       coeff_low = (coeff_l2 << 2) + coeff_l2 + buffer[i] - '0';
     }
-	switch(rnd_mode) {
-	case BID_ROUNDING_TO_NEAREST:
-    carry = ((unsigned) ('4' - buffer[i])) >> 31;
-    if ((buffer[i] == '5' && !(coeff_low & 1)) || dec_expon < 0) {
-      if (dec_expon >= 0) {
-        carry = 0;
-        i++;
-      }
-      for (; i < ndigits_total; i++) {
-        if (buffer[i] > '0') {
-          carry = 1;
-          break;
+    switch(rnd_mode) {
+    case BID_ROUNDING_TO_NEAREST:
+      carry = ((unsigned) ('4' - buffer[i])) >> 31;
+      if ((buffer[i] == '5' && !(coeff_low & 1)) || dec_expon < 0) {
+        if (dec_expon >= 0) {
+          carry = 0;
+          i++;
+        }
+        for (; i < ndigits_total; i++) {
+          if (buffer[i] > '0') {
+            carry = 1;
+            break;
+          }
         }
       }
+      break;
+
+    case BID_ROUNDING_DOWN:
+      if(sign_x) 
+        for (; i < ndigits_total; i++) {
+          if (buffer[i] > '0') {
+            carry = 1;
+            break;
+          }
+        }
+      break;
+    case BID_ROUNDING_UP:
+      if(!sign_x) 
+        for (; i < ndigits_total; i++) {
+          if (buffer[i] > '0') {
+            carry = 1;
+            break;
+          }
+        }
+      break;
+    case BID_ROUNDING_TO_ZERO:
+      carry=0;
+      break;
+    case BID_ROUNDING_TIES_AWAY:
+      carry = ((unsigned) ('4' - buffer[i])) >> 31;
+      if (dec_expon < 0) {
+        for (; i < ndigits_total; i++) {
+          if (buffer[i] > '0') {
+            carry = 1;
+            break;
+          }
+        }
+      }
+      break;
+    default: break; // default added to avoid compiler warning
     }
-	break;
-
-	case BID_ROUNDING_DOWN:
-		if(sign_x) 
-      for (; i < ndigits_total; i++) {
-        if (buffer[i] > '0') {
-          carry = 1;
-          break;
-        }
-      }
-		break;
-	case BID_ROUNDING_UP:
-		if(!sign_x) 
-      for (; i < ndigits_total; i++) {
-        if (buffer[i] > '0') {
-          carry = 1;
-          break;
-        }
-      }
-		break;
-	case BID_ROUNDING_TO_ZERO:
-		carry=0;
-		break;
-	case BID_ROUNDING_TIES_AWAY:
-    carry = ((unsigned) ('4' - buffer[i])) >> 31;
-    if (dec_expon < 0) {
-      for (; i < ndigits_total; i++) {
-        if (buffer[i] > '0') {
-          carry = 1;
-          break;
-        }
-      }
-    }
-		break;
-
-
-	}
     // now form the coefficient as coeff_high*10^17+coeff_low+carry
     scale_high = 100000000000000000ull;
     if (dec_expon < 0) {
@@ -693,7 +693,7 @@ bid128_from_string (char *ps _RND_MODE_PARAM _EXC_FLAGS_PARAM
       CX.w[1]++;
 
 #ifdef BID_SET_STATUS_FLAGS
-	if(set_inexact)
+    if(set_inexact)
       __set_status_flags (pfpsf, BID_INEXACT_EXCEPTION);
 #endif
 

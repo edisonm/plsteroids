@@ -1,6 +1,6 @@
 # ##############################################################################
 # ==============================================================================
-#  Copyright (c) 2007-2018, Intel Corp.
+#  Copyright (c) 2007-2024, Intel Corp.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without 
@@ -293,8 +293,8 @@ LongFileListToFile = rm -f $4; $(call EchoLongFileList,$1,$2,$3) > $4
 Warning = $(warning $1 = $($1))
 Error = $(warning $1 = $($1))
        
-OS_ALIAS     := Linux FreeBSD  Darwin SunOS HP-UX Windows_NT CYGWIN_NT-5.1 CYGWIN_NT-5.2-WOW64 CYGWIN_NT-6.1-WOW64
-OS_MAP_LIST  := LINUX FREEBSD  MACH   LINUX LINUX WINNT      WINNT         WINNT               WINNT
+OS_ALIAS     := Linux FreeBSD  Darwin SunOS HP-UX Windows_NT CYGWIN_NT-5.1 CYGWIN_NT-5.2-WOW64 CYGWIN_NT-6.1-WOW64 CYGWIN_NT-6.2-WOW64
+OS_MAP_LIST  := LINUX FREEBSD  MACH   LINUX LINUX WINNT      WINNT         WINNT               WINNT               WINNT
 OS_LIST      := LINUX FREEBSD  MACH   WINNT
 OS_TYPE      := LINUX LINUX    LINUX  WINNT
 OS_TYPES := LINUX WINNT
@@ -344,9 +344,9 @@ else
     endif
 endif
 
-ARCH_ALIAS := x86  ia64 EM64T x86_64 i686 amd64 Intel64 sun4u aarch64
-ARCH_LIST  := IA32 IA64 EFI2  EFI2   IA32 EFI2  EFI2    EFI2  EFI2
-ARCH_TYPE  := IA32 IA64 EFI2  EFI2   IA32 EFI2  EFI2    EFI2  EFI2
+ARCH_ALIAS := x86  ia64 EM64T x86_64 i686 amd64 Intel64 sun4u
+ARCH_LIST  := IA32 IA64 EFI2  EFI2   IA32 EFI2  EFI2    EFI2
+ARCH_TYPE  := IA32 IA64 EFI2  EFI2   IA32 EFI2  EFI2    EFI2
 ARCH_TYPES := IA32 IA64 EFI2
 
 UARCH_LIST := SSE GSSE LRB LRB2
@@ -522,19 +522,23 @@ ifeq ($(origin CC_NAME),undefined)
     endif
 endif
 
-CC_NAME_LIST  := icc icl gcc cl cc
-CC_TYPE_LIST  := gcc cl  gcc cl gcc
+CC_NAME_LIST  := icx icc icl gcc cl cc clang
+CC_TYPE_LIST  := gcc gcc cl gcc cl gcc gcc
 CC_TYPES      := gcc cl
-INTEL_CC_LIST := icc icl
+INTEL_CC_LIST := icc icl icx
+
 
 CC_NAME_INDEX := $(call GetIndex,$(CC_NAME),$(CC_NAME_LIST))
 ifeq ($(CC_NAME_INDEX),)
     $(error "Unknown CC_NAME ($(CC_NAME)). Must be one of $(CC_NAME_LIST))
 endif
+#$(error "CC_NAME_INDEX ($(CC_NAME_INDEX)). Ahmet))
 
 CC_INDEX      := $(call GetIndex,$(CC_NAME),$(CC_NAME_LIST))
 CC_TYPE       := $(word $(CC_INDEX),$(CC_TYPE_LIST))
 CC_TYPE_INDEX := $(call GetIndex,$(CC_TYPE),$(CC_TYPES))
+#$(error "CC_TYPE_INDEX ($(CC_TYPE_INDEX)). Ahmet))
+#$(error "CC_INDEX ($(CC_INDEX)). Ahmet))
 
 CcSelect       = $(strip $($(CC_INDEX)))
 CcTypeSelect   = $(strip $($(CC_TYPE_INDEX)))

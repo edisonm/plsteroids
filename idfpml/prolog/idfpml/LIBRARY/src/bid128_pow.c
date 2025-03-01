@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -28,14 +28,14 @@
 ******************************************************************************/
 
 #include "bid_trans.h"
-#include <stdlib.h>
+
+int abs(int);
 
 static BID_UINT128 BID128_0 = {BID128_LH_INIT( 0x0000000000000000ull, 0x3040000000000000ull )};
 static BID_UINT128 BID128_ZERO = {BID128_LH_INIT( 0x0000000000000000ull, 0x0000000000000000ull )};
 static BID_UINT128 BID128_1 = {BID128_LH_INIT( 0x0000000000000001ull, 0x3040000000000000ull )};
 static BID_UINT128 BID128_NAN = {BID128_LH_INIT( 0x0000000000000000ull, 0x7c00000000000000ull )};
 static BID_UINT128 BID128_INF = {BID128_LH_INIT( 0x0000000000000000ull, 0x7800000000000000ull )};
-static BID_UINT128 BID128_NEGINF = {BID128_LH_INIT( 0x0000000000000000ull, 0xF800000000000000ull )};
 
 // log(2) and log(10) scaled by 2^160
 
@@ -829,14 +829,10 @@ BID_UINT64 CY, PL0, PL1, PL2;                                       \
 BID128_FUNCTION_ARG2 (bid128_pow, x, y)
 
   BID_UINT128 res = {{ 0xbaddbaddbaddbaddull, 0xbaddbaddbaddbaddull }};
-  BID_UINT64 x_sign, y_sign, p_sign;
-  BID_UINT64 x_exp, y_exp, p_exp;
-  int true_p_exp;
-  BID_UINT128 C1, C2, y_int;
-  BID_F128_TYPE xq, yq, rq;
-  int s, is_odd, tmp_res;
+  BID_UINT128 y_int;
+  int is_odd;
   BID_UINT128 l, l_hi, l_lo, l_neg;
-  int is_nan, is_zero, is_signed, cmp_res, is_int;
+  int cmp_res, is_int;
 
 // We will always signal on signalling NaNs anyway
 
@@ -976,6 +972,7 @@ BID128_FUNCTION_ARG2 (bid128_pow, x, y)
 
   {
     int exact_y;
+    int volatile exact_y_abs;
     int sign = 0;
     int save_flags = *pfpsf;
 
@@ -983,15 +980,15 @@ BID128_FUNCTION_ARG2 (bid128_pow, x, y)
     BIDECIMAL_CALL1_NORND(bid128_to_int32_xrnint, exact_y, y);
     if ((*pfpsf & BID_INEXACT_EXCEPTION) == 0) {
       if (exact_y < 0) sign = 1;
-      exact_y = abs(exact_y);
-      if (exact_y > 0) {
+      exact_y_abs = abs(exact_y);
+      if (exact_y_abs > 0) {
         BID_UINT128 tmp, r = BID128_1;
         BID_UINT128 p = x;
-        for (; exact_y; exact_y >>= 1) {
-          if (exact_y & 1) {
+        for (; exact_y_abs; exact_y_abs >>= 1) {
+          if (exact_y_abs & 1) {
             BIDECIMAL_CALL2(bid128_mul, r, r, p);
           }
-          if (exact_y > 1)
+          if (exact_y_abs > 1)
             BIDECIMAL_CALL2(bid128_mul, p, p, p);
         }
         tmp = BID128_1;
@@ -1009,7 +1006,7 @@ BID128_FUNCTION_ARG2 (bid128_pow, x, y)
 
 // Compute accurate logarithm (l_hi,l_lo)
 
-{ int e, k, b, z, s_log;
+{ int e, k, b, s_log;
   BID_UINT64 r1, r2, c_lo;
   BID_UINT128 xa;
   BID_UINT128 c;

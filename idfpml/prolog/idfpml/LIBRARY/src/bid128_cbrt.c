@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without 
@@ -31,10 +31,10 @@
 
 BID128_FUNCTION_ARG1 (bid128_cbrt, x)
 
-BID_UINT128 CX, xn, res, tmp, coeff_res;
+BID_UINT128 CX, res, tmp;
 BID_UINT64  sign_x;
-int exponent_x, exponent_y, cmp_res, exponent_res, k, j, iexpon;
-BID_F128_TYPE rq, xq, yq;
+int exponent_x, k, j, iexpon;
+BID_F128_TYPE rq, xq;
 
   // unpack arguments, check for NaN or Infinity
 	if (!unpack_BID128_value_BLE (&sign_x, &exponent_x, &CX, x)) {

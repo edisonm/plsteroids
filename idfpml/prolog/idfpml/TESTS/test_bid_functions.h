@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -94,24 +94,29 @@ typedef struct BID_ALIGN (16)
      } BID_UINT128;
 #endif
 
-#if !defined (__INTEL_COMPILER)
+#if !((defined __INTEL_COMPILER) || (defined __INTEL_LLVM_COMPILER))
 typedef BID_UINT128 _Quad;
 #endif
 
-#if !defined _MSC_VER || defined __INTEL_COMPILER
+//#define __NO_BINARY80__ 1
+#if defined __NO_BINARY80__
+#define __ENABLE_BINARY80__  0
+#else
+#if !defined _MSC_VER || defined __INTEL_COMPILER || defined __INTEL_LLVM_COMPILER
 #define __ENABLE_BINARY80__  1
+#endif
 #endif
 
 // For building the open source tests:  
 // set USE_COMPILER_F128_TYPE=1 when using Intel compiler (_Quad is available)
 // unless otherwise specified by user
-#if defined (__INTEL_COMPILER) && !defined(USE_COMPILER_F128_TYPE)
+#if (defined (__INTEL_COMPILER) || defined (__INTEL_LLVM_COMPILER)) && !defined(USE_COMPILER_F128_TYPE)
 #define USE_COMPILER_F128_TYPE 1
 #endif
 
 #ifndef HPUX_OS
   #define BINARY80 long double
-  #if defined (__INTEL_COMPILER) && USE_COMPILER_F128_TYPE
+  #if ((defined __INTEL_COMPILER) || (defined __INTEL_LLVM_COMPILER)) && USE_COMPILER_F128_TYPE
     #define BINARY128 _Quad
   #else
     #define BINARY128 BID_UINT128

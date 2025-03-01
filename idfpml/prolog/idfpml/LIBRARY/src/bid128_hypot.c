@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without 
@@ -33,7 +33,7 @@
 BID128_FUNCTION_ARG2 (bid128_hypot, x, y)
 
 BID_UINT128 CX, CY, xn, yn, res, tmp, coeff_res;
-BID_UINT64  valid_x, valid_y, sign_x, sign_y, sign_z;
+BID_UINT64  valid_x, valid_y, sign_x, sign_y;
 int exponent_x, exponent_y, cmp_res, exponent_res;
 BID_F128_TYPE rq, xq, yq;
 
@@ -126,7 +126,7 @@ else {
 	x.w[BID_HIGH_128W] &= 0x7fffffffffffffffull;
 	y.w[BID_HIGH_128W] &= 0x7fffffffffffffffull;
 
-	if(exponent_x - exponent_y >= 35)
+	if(exponent_x - exponent_y >= 35+34)
 	{
 	 res.w[BID_HIGH_128W] = x.w[BID_HIGH_128W];
 	 res.w[BID_LOW_128W] = x.w[BID_LOW_128W];

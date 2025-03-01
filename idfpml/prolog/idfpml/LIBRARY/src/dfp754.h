@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -233,12 +233,6 @@ extern _Decimal128  lgammad128 (_Decimal128 __x);
 extern _Decimal32   tgammad32  (_Decimal32 __x);
 extern _Decimal64   tgammad64  (_Decimal64 __x);
 extern _Decimal128  tgammad128 (_Decimal128 __x);
-extern _Decimal32   ceild32   (_Decimal32 __x);
-extern _Decimal64   ceild64   (_Decimal64 __x);
-extern _Decimal128  ceild128  (_Decimal128 __x);
-extern _Decimal32   floord32  (_Decimal32 __x);
-extern _Decimal64   floord64  (_Decimal64 __x);
-extern _Decimal128  floord128 (_Decimal128 __x);
 extern _Decimal32   nearbyintd32  (_Decimal32 __x);
 extern _Decimal64   nearbyintd64  (_Decimal64 __x);
 extern _Decimal128  nearbyintd128 (_Decimal128 __x);
@@ -278,9 +272,6 @@ extern _Decimal128  nand128 (char *__tagp);
 extern _Decimal32   nextafterd32  (_Decimal32 __x, _Decimal32 __y);
 extern _Decimal64   nextafterd64  (_Decimal64 __x, _Decimal64 __y);
 extern _Decimal128  nextafterd128 (_Decimal128 __x, _Decimal128 __y);
-extern _Decimal32   nexttowardd32  (_Decimal32 __x, _Decimal128 __y);
-extern _Decimal64   nexttowardd64  (_Decimal64 __x, _Decimal128 __y);
-extern _Decimal128  nexttowardd128 (_Decimal128 __x, _Decimal128 __y);
 extern _Decimal32   fdimd32  (_Decimal32 __x, _Decimal32 __y);
 extern _Decimal64   fdimd64  (_Decimal64 __x, _Decimal64 __y);
 extern _Decimal128  fdimd128 (_Decimal128 __x, _Decimal128 __y);
@@ -296,9 +287,6 @@ extern _Decimal128  fmad128 (_Decimal128 __x, _Decimal128 __y, _Decimal128 __z);
 extern _Decimal32   quantized32  (_Decimal32 __x, _Decimal32 __y);
 extern _Decimal64   quantized64  (_Decimal64 __x, _Decimal64 __y);
 extern _Decimal128  quantized128 (_Decimal128 __x, _Decimal128 __y);
-extern int   samequantumd32  (_Decimal32 __x, _Decimal32 __y);
-extern int   samequantumd64  (_Decimal64 __x, _Decimal64 __y);
-extern int   samequantumd128 (_Decimal128 __x, _Decimal128 __y);
 extern int   quantexpd32  (_Decimal32 __x);
 extern int   quantexpd64  (_Decimal64 __x);
 extern int   quantexpd128 (_Decimal128 __x);

@@ -1,5 +1,5 @@
 /******************************************************************************
-  Copyright (c) 2007-2018, Intel Corp.
+  Copyright (c) 2007-2024, Intel Corp.
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,9 @@
 
 #include "dpml_private.h"
 
-#define CBRT_TABLE_NAME __dpml_bid_cbrt_t_table
+#if !defined(CBRT_TABLE_NAME)
+    #define CBRT_TABLE_NAME __dpml_bid_cbrt_t_table
+#endif
 
 #if !TABLE_IS_EXTERNAL
 
