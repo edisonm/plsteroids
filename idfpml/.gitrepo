@@ -6,7 +6,7 @@
 [subrepo]
 	remote = git@github.com:edisonm/idfpml.git
 	branch = master
-	commit = d97da3a1b1ff2870e41bb6eb4b39c1c3155db3f4
-	parent = 3869ee10ccc465285043ae2b939fbdc8c6b903bd
+	commit = 460e8516150ac1a9c2c0363fb10a8caffa7446d4
+	parent = c2d6b2030036f26b2df8e4eb937f13f986c2d291
 	method = merge
 	cmdver = 0.4.3
