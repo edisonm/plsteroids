@@ -22,7 +22,7 @@
         term_t a = PL_new_term_ref();                           \
         term_t b = PL_new_term_ref();                           \
         __rtcheck(PL_get_arg(1, v, a));                         \
-        __rtcheck(PL_get_arg(1, v, b));                         \
+        __rtcheck(PL_get_arg(2, v, b));                         \
         __rtcheck(PL_get_int64(a, (int64_t *)&(src.w[0])));     \
         __rtcheck(PL_get_int64(b, (int64_t *)&(src.w[1])));     \
         BIDECIMAL_CALL1(bid128_to_bid64, ref, src);             \
