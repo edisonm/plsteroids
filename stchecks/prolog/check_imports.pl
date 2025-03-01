@@ -100,11 +100,12 @@ head_used_usemod(Head, From) :-
     fail.
 
 mark_used_usemod(CM, M) :-
-    ( M \= CM,
-      \+ used_usemod(CM, M)
-    ->assertz(used_usemod(CM, M))
-    ; true
-    ).
+    with_mutex(used_usemod,
+               ( M \= CM,
+                 \+ used_usemod(CM, M)
+               ->assertz(used_usemod(CM, M))
+               ; true
+               )).
 
 record_multifile_deps(Head, From) :-
     caller_impl_module(Head, M),
@@ -221,6 +222,7 @@ current_unused_use_module(MFileD, UE, M, From) :-
     absolute_file_name(U, UFile, [file_type(prolog), access(exist),
                                   file_errors(fail)]),
     module_property(UM, file(UFile)),
+    \+ used_usemod(M, UM),
     \+ ignore_import(M, UM),
     module_property(UM, exports(EL)),
     EL \= [],
@@ -253,12 +255,7 @@ mark_import(Head, M, CM) :-
                forall(( clause(loc_declaration(Head, CM, import(_), _), _, CRef),
                         \+ used_import(CRef)),
                       assertz(used_import(CRef)))),
-    with_mutex(used_usemod,
-               ( M \= CM,
-                 \+used_usemod(CM, M)
-               ->assertz(used_usemod(CM, M))
-               ; true
-               )).
+    mark_used_usemod(CM, M).
 
 cleanup_imports :-
     retractall(used_import(_)),
