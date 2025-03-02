@@ -41,5 +41,5 @@ complexn_desc(pl_, [acos,  acosh, asin, asinh, atan,
                     sqrt,  tan,   tanh], 4).
 complexn_desc(pf_, [abs, carg, norm, real, imag], 4).
 complexn_desc(pl_, [add, mul, sub, div, pow], 5).
-complexn_desc(pf_, [set_fr_fr], 5).
+complexn_desc(pf_, [set_fr_fr], 5). 
 complexn_desc(pi_, [cmp], 3).

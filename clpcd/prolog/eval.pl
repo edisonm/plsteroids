@@ -79,6 +79,8 @@ cast(Type, Value, C) :-
     ->X is numerator(Value),
       Y is denominator(Value),
       do_eval(X/Y, Type, C)
+    ; ground(Value)
+    ->do_eval(Value, Type, C)
     ).
 
 castable(Type, Value) :-

@@ -83,10 +83,8 @@ compats(Prefix, A2, T, Cs) :-
 % compats(pl_, 4, T, int * int * -T * +T).
 % compats(pl_, 5, T, int * int * -T * +T * +T).
 compats(pi_, 3, T, -int * +T * +T).
-% compats(pf_, 4, T, int * int * -floatn_t * +T).
-% compats(pf_, 5, T, int * int * -floatn_t * +T * +T).
-compats(pf_, 4, T, int * int * -T * +T).
-compats(pf_, 5, T, int * int * -T * +T * +T).
+compats(pf_, 4, T, int * int * -floatn_t * +T).
+compats(pf_, 5, T, int * int * -T * +floatn_t * +floatn_t).
 
 dump_complexn_pl :-
     ( member(Pre-T, [complexn-complexn_t]),

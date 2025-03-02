@@ -212,11 +212,33 @@ submit_eq_b(Term, CLP) :-
 submit_eq_c(v(I,[]),CLP,B,Rest) :-
     !,
     submit_eq_c1(Rest,CLP,B,I).
-submit_eq_c(v(B,[X^P1]), CLP, v(A,[Y^P2]), []) :-
-    compare_d(CLP, =, P2, 2*P1),
+submit_eq_c(v(B,[X^P]), CLP, v(A,[Y^P1]), []) :-
     X==Y,
+    compare_d(CLP, >, P, 0 ),
+    compare_d(CLP, >, P1, P),
     !,
-    solve_2nd_eq(CLP, A, B, X, P1, 0 ).
+    ( eval_d(CLP, 0, X)
+    ; solve_linear(CLP, A, B, P1-P, X)
+    ).
+submit_eq_c(v(C,[X^P]), CLP, v(B, [Y^P1]), [v(A, [Z^P2])]) :-
+    X==Y,
+    X==Z,
+    compare_d(CLP, >, P, 0 ),
+    compare_d(CLP, =, P2-P, 2*(P1-P)),
+    !,
+    ( eval_d(CLP, 0, X)
+    ; solve_cuadratic(CLP, A, B, C, P1-P, X)
+    ).
+submit_eq_c(v(D,[X^P]), CLP, v(C, [Y^P1]), [v(B, [Z^P2]), v(A, [Z^P3])]) :-
+    X==Y,
+    X==Z,
+    compare_d(CLP, >, P, 0 ),
+    compare_d(CLP, =, P2-P, 2*(P1-P)),
+    compare_d(CLP, =, P3-P, 3*(P1-P)),
+    !,
+    ( eval_d(CLP, 0, X)
+    ; solve_cubic(CLP, A, B, C, D, P1-P, X)
+    ).
 % case c2: A,B and Rest are linear
 submit_eq_c(A,CLP,B,Rest) :-	% c2
     A = v(_,[X^1]),
@@ -238,16 +260,32 @@ submit_eq_c(A,CLP,B,Rest) :-
 
 root_d(CLP, I, K, P, R) :-
     div_d(CLP, I, K, Base),
+    eval_d(CLP, sign(Base), S),
     div_d(CLP, 1, P, Exp),
-    eval_d(CLP, Base ** Exp, N),
-    cast_d(CLP, N, R).
+    eval_d(CLP, abs(Base) ** Exp, N),
+    rsgn_d(CLP, S, P, W),
+    eval_d(CLP, W*N, M),
+    cast_d(CLP, M, R).
 
-solve_2nd_eq(CLP, A, B, X, P1, C) :-
+solve_cuadratic(CLP, A, B, C, P, X) :-
+    solve_cuadratic(CLP, A, B, C, Z),
+    eval_d(CLP, -1, M),
+    submit_eq_c1([], CLP, v(M,[X^P]), Z).
+
+solve_linear(CLP, A, B, P, X) :-
+    solve_linear(CLP, A, B, Z),
+    eval_d(CLP, -1, M),
+    submit_eq_c1([], CLP, v(M,[X^P]), Z).
+
+solve_linear(CLP, A, B, Z) :- div_d(CLP, -B, A, Z).
+
+solve_cuadratic(CLP, A, B, C, Z) :-
     eval_d(CLP, B*B, B2),
     eval_d(CLP, 4*A*C, P),
-    ( compare_d(CLP, >, B2, P)
-    -> % Note: B =:= 0 not required, since is considered before
-      eval_d(CLP, B2 - P, Disc),
+    eval_d(CLP, B2 - P, Disc),
+    ( compare_d(CLP, =, B2, P)
+    ->div_d(CLP, -B, 2*A, Z)
+    ; % Note: B =:= 0 not required, since is considered before
       div_d(CLP, B + sign(B)*sqrt(Disc), -2, Temp),
       div_d(CLP, Temp, A, R1),
       div_d(CLP, C, Temp, R2),
@@ -259,19 +297,50 @@ solve_2nd_eq(CLP, A, B, X, P1, C) :-
         ; Z = R1
         )
       )
-    ; compare_d(CLP, =, B2, P),
-      div_d(CLP, -B, 2*A, Z)
-    ),
-    eval_d(CLP, -1, M1),
-    submit_eq_c1([], CLP, v(M1,[X^P1]), Z).
+    ).
+
+solve_cubic(CLP, A, B, C, D, P, X) :-
+    solve_cubic(CLP, A, B, C, D, Z),
+    eval_d(CLP, -1, M),
+    submit_eq_c1([], CLP, v(M,[X^P]), Z).
+
+solve_cubic(CLP, A, B, C, D, X) :-
+    eval_d(CLP, (3*A*C - B^2) / (3*A)^2, P),
+    eval_d(CLP, (2*B^3 - 9*A*B*C + 27*A^2*D) / (54*A^3), Q),
+    eval_d(CLP, Q^2 + P^3, Delta),
+    ( compare_d(CLP, >, Delta, 0 )
+    ->% One real root, two complex conjugates
+      eval_d(CLP, sqrt(Delta), SD),
+      root_d(CLP, -Q + SD, 1, 3, S),
+      eval_d(CLP, -P/S, T),
+      eval_d(CLP, S + T, Y1),
+      eval_d(CLP, Y1 - B / (3*A), X1),
+      X = X1
+    ; compare_d(CLP, =, Delta, 0 )
+    ->% All roots real, at least two are equal
+      eval_d(CLP, cbrt(-Q), S),
+      eval_d(CLP, 2*S - B / (3*A), X1),
+      eval_d(CLP, -S - B / (3*A), X2),
+      (X = X1 ; X = X2)
+    ; % Three distinct real roots (Delta < 0 )
+      eval_d(CLP, sqrt(-P^3), R),
+      eval_d(CLP, acos(-Q / R), Theta),
+      eval_d(CLP, 2*cbrt(R) * cos(Theta / 3), Y1),
+      eval_d(CLP, 2*cbrt(R) * cos((Theta + 2*pi) / 3), Y2),
+      eval_d(CLP, 2*cbrt(R) * cos((Theta + 4*pi) / 3), Y3),
+      eval_d(CLP, Y1 - B / (3*A), X1),
+      eval_d(CLP, Y2 - B / (3*A), X2),
+      eval_d(CLP, Y3 - B / (3*A), X3),
+      (X = X1 ; X = X2 ; X = X3)
+    ).
 
 % submit_eq_c1(Rest,CLP,B,K)
 %
 % Handles case c1 of submit_eq/1
-
+/*
 % case c11a:
 % i+kX^p=0 if p is an odd integer
-% special case: one solution if P is negativ but also for a negative X
+% special case: one solution if P is negative but also for a negative X
 submit_eq_c1([], CLP, v(K,[X^P]), I) :-
     var(X),
     compare_d(CLP, \=, 0, P),
@@ -297,22 +366,35 @@ submit_eq_c1([], CLP, v(K,[X^P]), I) :-
     ; eval_d(CLP, -Val, ValNeg),
       X = ValNeg
     ).
+*/
 % case c11c:
 % i+kX^p=0 for p =\= 0, 0 =< (-I/K)
 submit_eq_c1([], CLP, v(K,[X^P]), I) :-
     var(X),
     compare_d(CLP, \=, 0, P),
-    compare_d(CLP, =<, 0, sign(-I)*sign(K)),
+    % compare_d(CLP, =<, 0, sign(-I)*sign(K)),
     !,
     root_d(CLP, -I, K, P, Val),
     X = Val.
 % second degree equation: Note that the solver is a bit modified from the
 % standard formulas, to ensure numerical stability, and to order the solutions
 submit_eq_c1([v(A,[Y^P2])], CLP, v(B,[X^P1]), C) :-
-    compare_d(CLP, =, P2, 2*P1),
     X==Y,
+    compare_d(CLP, =, P2, 2*P1),
     !,
-    solve_2nd_eq(CLP, A, B, X, P1, C).
+    solve_cuadratic(CLP, A, B, C, P1, X).
+submit_eq_c1([v(A,[Y^P3])], CLP, v(C,[X^P1]), D) :-
+    X==Y,
+    compare_d(CLP, =, P3, 3*P1),
+    !,
+    solve_cubic(CLP, A, 0, C, D, P1, X).
+submit_eq_c1([v(B,[Y^P2]), v(A,[Z^P3])], CLP, v(C,[X^P1]), D) :-
+    X==Y,
+    X==Z,
+    compare_d(CLP, =, P3, 3*P1),
+    compare_d(CLP, =, P2, 2*P1),
+    !,
+    solve_cubic(CLP, A, B, C, D, P1, X).
 % case c11d: fail if var(X) and none of the above.
 submit_eq_c1([], _, v(_K,[X^_P]), _I) :-
     var(X),

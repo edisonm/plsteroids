@@ -105,7 +105,7 @@ foreign_t is_complexn_t(term_t v) {
     {                                                                   \
         complexn_t *cx;                                                 \
         PL_blob_t *type;                                                \
-        mpfr_prec_t prec_ar, prec_r, prec_i, prec_ai;                   \
+        mpfr_prec_t prec_r, prec_i, prec_ar, prec_ai;                   \
         complexn_t *ra;                                                 \
         __rtcheck(PL_get_complexn_t(a, &ra));                           \
         cx = malloc(sizeof(complexn_t));                                \
@@ -123,24 +123,20 @@ foreign_t is_complexn_t(term_t v) {
 #define GEN_COMPLEXN_pf_4(name)                                         \
     foreign_t pf_complexn_##name(term_t p_r, term_t p_i, term_t r, term_t a) \
     {                                                                   \
-        complexn_t *cx;                                                 \
-        floatn_t fr;                                                    \
+        floatn_t *fr;                                                   \
         PL_blob_t *type;                                                \
         mpfr_prec_t prec_r, prec_i, prec_ar, prec_ai;                   \
         complexn_t *ra;                                                 \
         __rtcheck(PL_get_complexn_t(a, &ra));                           \
-        cx = malloc(sizeof(complexn_t));                                \
+        fr = malloc(sizeof(complexn_t));                                \
         mpc_get_prec2(&prec_ar, &prec_ai, *ra);                         \
         if (!PL_get_long(p_r, &prec_r))                                 \
             prec_r = prec_ar;                                           \
         if (!PL_get_long(p_i, &prec_i))                                 \
             prec_i = prec_ai;                                           \
-        mpc_init3(*cx, prec_r, prec_i);                                 \
-        mpfr_init2(fr, MAX(prec_r, prec_i));                            \
-        mpc_##name(fr, *ra, MPFR_RNDN);                                 \
-        mpc_set_fr(*cx, fr, MPC_RNDNN);                                 \
-        mpfr_clear(fr);                                                 \
-        return PL_unify_complexn_t(r, cx);                              \
+        mpfr_init2(*fr, MAX(prec_r, prec_i));                           \
+        mpc_##name(*fr, *ra, MPFR_RNDN);                                \
+        return PL_unify_floatn_t(r, fr);                                \
     }
 
 // COMPLEXN_FUNCTION2
@@ -167,7 +163,7 @@ foreign_t is_complexn_t(term_t v) {
 
 // COMPLEXN_FUNCTION2f
 #define GEN_COMPLEXN_pf_5(name)                                         \
-    foreign_t pf_complexn_##name(term_t a, term_t b, term_t p_r, term_t p_i, term_t r) \
+    foreign_t pf_complexn_##name(term_t p_r, term_t p_i, term_t r, term_t a, term_t b) \
     {                                                                   \
         complexn_t *cx;                                                 \
         PL_blob_t *type;                                                \

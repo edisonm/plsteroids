@@ -37,6 +37,18 @@
 :- public cd_type/2.
 :- public cd_text/2.
 
+clpcd_domain_ops:rsgn_d(CDType, S, P, C) :-
+    cd_type(CDType, Type),
+    \+ clause(clpcdd_domain_ops:rsgn_d(CDType, S, P, C), _),
+    neck,
+    eval(Type, integer(P) mod 2, R),
+    ( near_compare(Type, =, R, 0 )
+    ->near_compare(Type, =, S, 1),
+      pmone(C)
+    ; near_compare(Type, =, R, 1),
+      C = S
+    ).
+
 clpcd_domain_ops:compare_d(Domain, Op, A, B) :-
     cd_type(Domain, Type),
     neck,
@@ -73,7 +85,7 @@ clpcd_domain_ops:integerp(Domain, A, C) :-
     cd_type(Domain, Type),
     neck,
     eval(Type, integer(A), B),
-    compare(=, A, B), % near_compare(=, A, B)
+    compare_d(Domain, =, A, B), % near_compare(=, A, B)
     int(Type, C, B).
 
 clpcd_domain_ops:numbers_only(Domain, Y) :-

@@ -43,12 +43,24 @@
 :- use_module(library(neck)).
 :- use_module(library(near_utils)).
 :- use_module(library(cdqr), []).
+:- use_module(library(clpcd/domain_ops)).
 :- reexport(library(clpcd)).
 :- init_expansors.
 
 clpcd_domain_ops:clpcd_module(cdq, cdq).
 
 :- initialization(set_clpcd(cdq)).
+
+clpcd_domain_ops:rsgn_d(Type, S, P, C) :-
+    Type = cdq,
+    neck,
+    R is integer(P) mod 2,
+    ( near_compare(=, R, 0 )
+    ->near_compare(=, S, 1),
+      pmone(C)
+    ; near_compare(=, R, 1),
+      C = S
+    ).
 
 clpcd_domain_ops:compare_d(cdq, Op, A, B) :-
     compare_q(Op, A, B).

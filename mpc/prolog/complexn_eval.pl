@@ -32,30 +32,64 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(complexn_eval, []).
+:- module(complexn_eval, [int/3]).
 
+:- use_module(library(solution_sequences)).
 :- use_module(library(lists)).
 :- use_module(library(neck)).
 :- use_module(library(libcomplexn)).
+:- use_module(library(libfloatn)).
 :- use_module(library(compare_eq)).
 :- use_module(library(list_sequence)).
 :- use_module(library(complexn_desc)).
+:- use_module(library(floatn_eval), []).
 :- init_expansors.
 
 :- include(library(floatn_reserve_eps)).
 
 cd_prefix(complexn(R, I), complexn, [R, I]).
 
-op_pred(=,  equal).
-% op_pred(=<, lessequal).
-% op_pred(>=, greaterequal).
-% op_pred(<,  less).
-% op_pred(>,  greater).
-op_pred(\=, not_equal).
+op_pred(Op, Pred) :- floatn_eval:op_pred(Op, Pred).
 
 complexn_not_equal(A, B) :- \+ complexn_equal(A, B).
 
-complexn_equal(A, B) :- complexn_cmp(R, A, B), R=:=0.
+complexn_equal(A, B) :-
+    inner_cast(_, A, C),
+    inner_cast(_, B, D),
+    complexn_cmp(R, C, D), R=:=0.
+
+real_type(complexn(R, _), floatn(R)).
+
+Body :-
+    cd_prefix(Type, Pref, [R, I]),
+    real_type(Type, RType),
+    floatn_eval:cd_prefix(RType, RPre, _),
+    op_pred(_, Pred),
+    atomic_list_concat([Pref, '_', Pred], F),
+    Body =.. [F, X, Y],
+    \+ predicate_property(complexn_eval:Body, defined),
+    atomic_list_concat([RPre, '_', Pred], G),
+    Conv =.. [G, A, B],
+    necki,
+    complexn_real(R, I, A, X),
+    complexn_real(R, I, B, Y),
+    floatn_eval:Conv.
+
+Head :-
+    complexn_desc(pf_, FL, A),
+    member(F, FL),
+    atom_concat(complexn_w_, F, P),
+    functor(Head, P, A),
+    Head =.. [_, R, I, C|AL],
+    atom_concat(complexn_, F, Q),
+    Body =.. [Q, R, I, X|AL],
+    necki,
+    Body,
+    complexn(X, R, I, C).
+
+int(_, A, B) :-
+    complexn_real(_, _, C, B),
+    floatn_get_si(A, C).
 
 expr_pred(A/B, div(A, B)).
 expr_pred(A**B, pow(A, B)).
@@ -73,15 +107,43 @@ expr_pred(-A, neg(A)).
 % expr_pred(ceil(A),     rint_ceil(A)).
 % expr_pred(truncate(A), rint_trunc(A)).
 % expr_pred(mod(A, B),   fmod(A, B)).
-expr_pred(Pred, Pred) :-
-    member(Desc, [pl_, pc_, pf_]),
+expr_pred(Expr, Pred) :-
+    member(Pref-Desc, ['w_'-pf_, ''-pl_, ''-pc_]),
     complexn_desc(Desc, FL, A2),
     member(F, FL),
     A is A2 - 3,
-    functor(Pred, F, A),
+    functor(Expr, F, A),
+    atom_concat(Pref, F, P),
+    Expr =.. [_|L],
+    Pred =.. [P|L],
     \+ expr_pred(_, Pred),
     \+ expr_pred(Pred, _),
     neck.
+expr_pred(Expr, Pred) :-
+    floatn_eval:expr_pred(Expr, Pred),
+    \+ expr_pred(Expr, Pred),
+    neck.
+
+eval_2([R, I], F, C) --> [complexn_real(R, I, C, F)].
+
+Body :-
+    cd_prefix(Type, Pref, EAL),
+    real_type(Type, RType),
+    floatn_eval:cd_prefix(RType, RPre, EFL),
+    distinct(Pred, expr_pred(Expr, Pred)),
+    once(floatn_eval:expr_pred(Expr, Pred)),
+    Pred =.. [Name|AL],
+    atomic_list_concat([Pref, '_', Name], BN),
+    append(EAL, [C|AL], BL),
+    Body =.. [BN|BL],
+    \+ predicate_property(complexn_eval:Body, defined),
+    atomic_list_concat([RPre, '_', Name], BC),
+    foldl(eval_2(EAL), AL, FL, EvalL, [floatn_eval:Conv, inner_cast(Type, F, C)]),
+    append(EFL, [F|FL], CL),
+    Conv =.. [BC|CL],
+    list_sequence(EvalL, EvalS),
+    necki,
+    EvalS.
 
 is_complexn(X) :- complexn_t(X).
 
