@@ -72,7 +72,7 @@ element_group(declaration, _-MTE, G) :-
       G=meta_predicate(M:F/A)
     ; G = MTE
     ).
-element_group(predicate,      _:F/A,   F/A).
+element_group(predicate,    _:_:F/A,   F/A).
 element_group(clause,         _:F/A-_, F/A).
 element_group(name,           _:F/A,   F/A).
 
@@ -128,14 +128,20 @@ duptype_elem(clause, MH, FileD, hash(DupId), M:F/A-Idx) :-
     strip_module(MBody, _C, Body),
     copy_term_nat((H :- Body), Term),
     variant_sha1(Term, DupId).
-duptype_elem(predicate, MH, FileD, hash(DupId), M:F/A) :-
+duptype_elem(predicate, MH, FileD, hash(DupId), File:Line:F/A) :-
     predicate_property(MH, file(File)),
     get_dict(File, FileD, _),
-    strip_module(MH, M, H),
+    strip_module(MH, _, H),
     findall((H :- B),
             ( clause(MH, MB),
               strip_module(MB, _, B)
             ), ClauseL),
+    findall(File:Line,
+            once(( From = clause(Ref),
+                   clause(MH, _, Ref),
+                   from_to_file(From, File),
+                   from_to_line(From, Line)
+                 )), [File:Line]),
     copy_term_nat(ClauseL, Term),
     variant_sha1(Term, DupId),
     functor(H, F, A).
@@ -192,8 +198,8 @@ has_dupclauses(H, M) :-
     prop_asr(head, M:H, _, Asr),
     prop_asr(glob, plprops:dupclauses(_), _, Asr).
 
-element_head(predicate, M:F/A,   M:H) :- functor(H, F, A).
-element_head(clause,    M:F/A-_, M:H) :- functor(H, F, A).
+element_head(predicate, P:_:F/A,   P:H) :- functor(H, F, A).
+element_head(clause,      M:F/A-_, M:H) :- functor(H, F, A).
 
 curr_duptype_elem(MFileD, DupType, DupId, Elem) :-
     get_dict(M, MFileD, FileD),
@@ -236,10 +242,12 @@ clean_redundant_group(GKey-Group, (DupType/GKey)-List) :-
 
 elem_property(name,           PI,        PI,        T, T).
 elem_property(clause,         M:F/A-Idx, (M:H)/Idx, T, T) :- functor(H, F, A).
-elem_property(predicate,      M:F/A,     M:H,       T, T) :- functor(H, F, A).
 
 elem_location(declaration, From-_, declaration, Loc) :- !,
     from_location(From, Loc).
+elem_location(predicate, File:Line:_/_, _, Loc) :-
+    !,
+    from_location(file(File, Line, _, _), Loc).
 elem_location(DupType, Elem, D, Loc) :-
     elem_property(DupType, Elem, Prop, T, D),
     property_location(Prop, T, Loc).
