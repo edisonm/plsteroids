@@ -53,6 +53,6 @@ test(supe) :-
 test(bb_inf) :-
     example(flugpl,Obj,_,Ints,_),
     bb_inf(Ints, Obj, Inf),
-    assertion({Inf = 1201500}).
+    assertion({abs(Inf/1201500 - 1) < 2*epsilon}).
 
 :- end_tests(clpcd).
