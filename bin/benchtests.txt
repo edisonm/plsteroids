@@ -2,6 +2,7 @@ assertions.stest
 andorra/tests/mqu.plt
 imports.stest
 unused.stest
+mpfr/tests/mpfr.plt
 andorra/tests/money.plt
 stchecks/tests/stchecks_5.plt
 refactor/tests/refspeed.plt
@@ -22,12 +23,12 @@ wrong_dynamic.stest
 andorra/tests/qu_evan.plt
 refactor/tests/self_refactor.plt
 undefined.stest
+xtools/tests/assrt_meta.plt
 stchecks/tests/stchecks_2.plt
 stchecks/tests/stchecks_1.plt
 stchecks/tests/stchecks_3.plt
 stchecks/tests/stchecks_4.plt
 stchecks/tests/stchecks_6.plt
-xtools/tests/assrt_meta.plt
 andorra/tests/fib.plt
 idfpml/tests/cddd.plt
 refactor/tests/conjunction_unfold.plt
@@ -57,8 +58,8 @@ refactor/tests/replace_sentences.plt
 refactor/tests/seekn_parenthesis_right.plt
 andorra/tests/map.plt
 refactor/tests/comments_ex.plt
-assertions/tests/foreign/foreign.plt
 refactor/tests/preserve_comments.plt
+assertions/tests/foreign/foreign.plt
 refactor/tests/goal_loaded.plt
 refactor/tests/sentence_list.plt
 refactor/tests/del_elem_list.plt
@@ -118,4 +119,3 @@ andorra/tests/dia_sums.plt
 xlibrary/tests/interface.plt
 xlibrary/tests/i18n/i18n.plt
 assertions/tests/metaprops.plt
-mpfr/tests/mpfr.plt
