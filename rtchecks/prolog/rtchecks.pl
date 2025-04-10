@@ -156,7 +156,7 @@ term_expansion(assertions:asr_head_prop(Asr, M, Pred, Status, Type, Dict, Ctx, F
     current_prolog_flag(rtchecks_static, StaticL),
     memberchk(Status, StaticL),
     Type \= (prop),
-    \+ prop_asr(Pred, M, _, (prop), _, _, _),
+    \+ prop_asr(Pred, M, _, (prop), _, _, _, _),
     is_valid_status_type(Status, Type),
     \+ ( '$current_source_module'(CM),
          '$defined_predicate'(CM:'$rtchecked'(_)),

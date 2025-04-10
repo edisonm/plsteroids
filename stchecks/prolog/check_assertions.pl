@@ -70,7 +70,10 @@
 
 checker:check(assertions, Result, Options) :-
     cleanup_db,
-    check_assertions(Options, Result).
+    % Set rtchecks_status regardless of the prosyn options, since this is the
+    % assertions specific check.
+    with_prolog_flag(rtchecks_status, [check],
+                     check_assertions(Options, Result)).
 
 cleanup_db :-
     retractall(violations_db(_, _, _)).
@@ -360,4 +363,4 @@ asr_aprop_ctcheck_abstraction(Key, W, L, Asr, Prop, From) :-
 verif_is_property(system, true, 0) :- !. % ignore true (identity)
 verif_is_property(M, F, A) :-
     functor(H, F, A),
-    prop_asr(H, M, _, prop, _, _, _).
+    prop_asr(H, M, _, prop, _, _, _, _).

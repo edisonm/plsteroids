@@ -137,23 +137,23 @@ assertion_is_valid(T, Status, Type, Asr) :-
     ).
 
 no_acheck_predicate(T, Pred, M) :-
-    prop_asr(Pred, M, true, comp, _, _, Asr),
+    prop_asr(Pred, M, true, comp, _, _, _, Asr),
     \+ prop_asr(call, _, _, Asr),
     ( prop_asr(glob, no_acheck(_), _, Asr)
     ; prop_asr(glob, no_acheck(T, _), _, Asr)
     ).
 
 current_assertion(T, Pred, M, Asr) :-
-    prop_asr(Pred, M, Status, Type, _, _, Asr),
+    prop_asr(Pred, M, Status, Type, _, IM, _, Asr),
     \+ ( T = rt,
-         prop_asr(Pred, M, _, prop, _, _, _)
+         prop_asr(Pred, M, _, prop, _, _, _, _)
        ),
     \+ no_acheck_predicate(T, Pred, M),
     assertion_is_valid(T, Status, Type, Asr),
     ( current_prolog_flag(rtchecks_level, inner)
     ->true
     ; current_prolog_flag(rtchecks_level, exports),
-      predicate_property(M:Pred, exported)
+      predicate_property(IM:Pred, exported)
     ->true
     ),
     \+ black_list_pred(Pred).

@@ -180,7 +180,7 @@ inferred_det(C, M, Det) :-
     Det1 = Det.
 
 valid_prop_asr(Lit, M, Asr) :-
-    prop_asr(Lit, M, Status, Type, _, _, Asr),
+    prop_asr(Lit, M, Status, Type, _, _, _, Asr),
     valid_status(Status),
     valid_type(Type).
 
