@@ -38,5 +38,6 @@
 
 call_ref(Head, Ref) :-
     clause(Head, Body, Ref),
+    \+ clause_property(Ref, erased),
     clause_property(Ref, module(M)),
     call(M:Body).
