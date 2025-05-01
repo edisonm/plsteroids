@@ -55,9 +55,11 @@
         retract_near(0 ),
         retractall_near(0 ).
 
-fact_near(Call) :-
+%   Note: For some reason we have to module qualify Call to avoid green choicepoints here
+
+fact_near(M:Call) :-
     freeze_near(Call, Mask),
-    Mask,
+    M:Mask,
     frozen_near(Mask).
 
 fact_near(Call, Ref) :-
