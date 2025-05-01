@@ -45,6 +45,7 @@
            repsilon/2]).
 
 :- use_module(library(apply)).
+:- use_module(library(call_ref)).
 :- use_module(library(mapargs)).
 :- use_module(library(compare_eq)).
 
@@ -54,23 +55,23 @@
         retract_near(0 ),
         retractall_near(0 ).
 
-fact_near(M:Call) :-
+fact_near(Call) :-
     freeze_near(Call, Mask),
-    M:Mask,
+    Mask,
     frozen_near(Mask).
 
-fact_near(M:Call, Ref) :-
+fact_near(Call, Ref) :-
     freeze_near(Call, Mask),
-    clause(M:Mask, _, Ref),
+    call_ref(Mask, Ref),
     frozen_near(Mask).
 
-retract_near(M:Call) :-
-    fact_near(M:Call, Ref),
+retract_near(Call) :-
+    fact_near(Call, Ref),
     erase(Ref).
 
-retractall_near(M:Call) :-
+retractall_near(Call) :-
     forall(( freeze_near(Call, Mask),
-             clause(M:Mask, _, Ref)
+             call_ref(Mask, Ref)
            ),
            erase(Ref)).
 
