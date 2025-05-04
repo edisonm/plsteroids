@@ -8,7 +8,7 @@
 :- use_module(library(arithex)).
 :- init_expansors.
 
-:- meta_predicate cdqr_eval_d(+,?).
+:- meta_predicate clpcd_domain_ops:eval_d(+,+,?).
 
 cdqr_eval_d(F, R) :-
     arithmetic_expression_value(F, R).

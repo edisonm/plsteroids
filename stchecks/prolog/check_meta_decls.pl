@@ -38,6 +38,7 @@
 :- use_module(library(prolog_metainference), []).
 :- use_module(library(is_entry_point)).
 :- use_module(library(location_utils)).
+:- use_module(library(extra_location)).
 :- use_module(library(option_utils)).
 :- use_module(library(from_utils)).
 
@@ -86,6 +87,7 @@ check_meta_decls_each(MFileD, Loc, M, Spec) :-
     prolog_metainference:inferred_meta_pred(Head, M, Spec),
     get_dict(M, MFileD, FileD),
     \+ predicate_property(M:Head, meta_predicate(_)),
+    \+ loc_declaration(Head, M, (meta_predicate), _),
     %% Only exported predicates would require qualification
     %% of meta-arguments -- EMM after JW talk
     is_entry_point(Spec, M),
