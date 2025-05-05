@@ -33,10 +33,10 @@
 */
 
 :- module(libbid,
-          [bid64/2,
-           bid128/2,
-           bid64_t/1,
-           bid128_t/1
+          [ bid64/2,
+            bid128/2,
+            bid64_t/1,
+            bid128_t/1
           ]).
 
 % Implementation using terms '$bid64'(INT64), '$bid128'(INT64, INT64)

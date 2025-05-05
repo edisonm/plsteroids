@@ -33,7 +33,8 @@
 */
 
 :- module(filepos_line,
-          [filepos_line/4]).
+          [ filepos_line/4
+          ]).
 
 :- use_module(library(prolog_codewalk), []).
 
