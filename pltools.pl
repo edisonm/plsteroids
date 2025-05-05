@@ -1,5 +1,3 @@
-
-:- use_module(library(record_locations), []).
 % load tools
 :- use_module(library(comment_data)).
 :- use_module(library(prolog_xref)). % Be careful: this after comment_data
