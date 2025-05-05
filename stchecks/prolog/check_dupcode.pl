@@ -132,16 +132,16 @@ duptype_elem(predicate, MH, FileD, hash(DupId), File:Line:M:F/A) :-
     predicate_property(MH, file(File)),
     get_dict(File, FileD, _),
     strip_module(MH, M, H),
-    findall((H :- B),
-            ( clause(MH, MB),
-              strip_module(MB, _, B)
-            ), ClauseL),
     findall(File:Line,
             once(( From = clause(Ref),
                    clause(MH, _, Ref),
                    from_to_file(From, File),
                    from_to_line(From, Line)
                  )), [File:Line]),
+    findall((H :- B),
+            ( clause(MH, MB),
+              strip_module(MB, _, B)
+            ), ClauseL),
     copy_term_nat(ClauseL, Term),
     variant_sha1(Term, DupId),
     functor(H, F, A).
@@ -177,11 +177,35 @@ dtype_dupid_elem(T,              T, _, H, M, T-M:PI, G) :-
       G =H
     ).
 
-ignore_dupgroup((DupType-_)-ElemL) :-
-    \+ consider_dupgroup(DupType, ElemL).
+elem_module(declaration, _-MTE,     M) :- em_declaration(MTE, M).
+elem_module(predicate, _:_:M:_/_,   M).
+elem_module(clause,        M:_/_-_, M).
+elem_module(name,          M:_/_,   M).
 
-consider_dupgroup(DupType, CIL) :-
-    append(_, [CI|PIL2], CIL),
+em_declaration(meta_predicate(M:_), M).
+% em_declaration(use_module,          _) :- fail.
+% em_declaration(dynamic,             _) :- fail.
+em_declaration(dynamic(_, M, _),    M).
+
+elem_mod_location(DupType, Elem, M, Loc) :-
+    elem_location(DupType, D, Elem, Loc),
+    elem_module(D, Elem, M).
+
+elem_same_location(DupType, ElemL) :-
+    maplist(elem_mod_location(DupType), ElemL, MU, LocU),
+    % if the modules are different, but the loc is the same, then ignore it
+    sort(MU, ML),
+    sort(LocU, LocL),
+    ML = [_, _|_],
+    LocL = [_].
+
+consider_dupgroup((DupType-_)-ElemL) :-
+    % only consider duplicates:
+    ElemL = [_, _|_],
+    % not if from the same location, since most of the time it is due to a file
+    % included from two different modules:
+    \+ elem_same_location(DupType, ElemL), 
+    append(_, [CI|PIL2], ElemL),
     element_head(DupType, CI, MH1),
     consider_dupgroup_1(DupType, MH1),
     member(CI2, PIL2),
@@ -217,9 +241,8 @@ check_dupcode(MFileD, Result) :-
             curr_duptype_elem(MFileD, DupType, DupId, Elem), PU),
     sort(PU, PL),
     group_pairs_by_key(PL, GL),
-    partition(\ (_-[_])^true, GL, _, GD), % Consider duplicates
-    findall(G, ( member(G, GD),
-                 \+ ignore_dupgroup(G)
+    findall(G, ( member(G, GL),
+                 consider_dupgroup(G)
                ), Groups),
     ungroup_keys_values(Groups, Pairs),
     clean_redundants(Pairs, CPairs),
@@ -243,18 +266,21 @@ clean_redundant_group(GKey-Group, (DupType/GKey)-List) :-
 elem_property(name,           PI,        PI,        T, T).
 elem_property(clause,         M:F/A-Idx, (M:H)/Idx, T, T) :- functor(H, F, A).
 
-elem_location(declaration, From-_, declaration, Loc) :- !,
+elem_location(declaration, declaration, From-_, Loc) :- !,
     from_location(From, Loc).
-elem_location(predicate, File:Line:_:_/_, predicate, Loc) :-
+elem_location(predicate, predicate, File:Line:_:_/_, Loc) :-
     !,
     from_location(file(File, Line, _, _), Loc).
-elem_location(DupType, Elem, D, Loc) :-
+elem_location(DupType, D, Elem, Loc) :-
     elem_property(DupType, Elem, Prop, T, D),
     property_location(Prop, T, Loc).
 
 add_location(DupType/GKey-DupId/Elem,
              warning-(DupType/GKey-(DupId-(LocDL/Elem)))) :-
-    findall(Loc/D, (elem_location(DupType, Elem, D, Loc), D \= goal), LocDU),
+    findall(Loc/D,
+            ( elem_location(DupType, D, Elem, Loc),
+              D \= goal
+            ), LocDU),
     sort(LocDU, LocDL).
 
 prolog:message(acheck(dupcode)) -->
