@@ -32,12 +32,21 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(call_ref, [call_ref/2]).
+:- module(call_ref,
+          [ call_ref/2,
+            call_ref/3
+          ]).
 
-:- meta_predicate call_ref(0, -).
+:- meta_predicate
+        call_ref(0, -),
+        call_ref(0, -, -).
 
 call_ref(Head, Ref) :-
-    clause(Head, Body, Ref),
-    \+ clause_property(Ref, erased),
+    call_ref(Head, Body, Ref),
     clause_property(Ref, module(M)),
     call(M:Body).
+
+% Use this instead of clause/3 to avoid erased clauses
+call_ref(Head, Body, Ref) :-
+    clause(Head, Body, Ref),
+    \+ clause_property(Ref, erased).
