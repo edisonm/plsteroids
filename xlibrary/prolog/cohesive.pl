@@ -47,6 +47,7 @@
 :- use_module(library(normalize_head)).
 :- use_module(library(option)).
 :- use_module(library(sequence_list)).
+:- use_module(library(call_ref)).
 :- reexport(library(cohesive_op)).
 :- reexport(library(compound_expand)).
 :- init_expansors.
@@ -177,7 +178,7 @@ check_cohm_clause(Context, H, IM, Clause) :-
       aux_cohesive_pred(H, CohM, _Scope, HExt),
       cohesive_module(H, Context, IM, CohM),
       ( CohM \= Context
-      ->once(clause(IM:HExt, _))
+      ->once(call_ref(IM:HExt, _, _))
       ; true
       )
     ).
