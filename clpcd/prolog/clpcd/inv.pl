@@ -137,6 +137,10 @@ setnum(_, N, X) :- arithmetic_expression_value(0.8/N, X).
 
 curr_num_arithmetic_function(Expr) :-
     current_arithmetic_function(Expr),
+    Expr \= roundtoward(_, _),
+    % FIXME: SWIPL crassh with the next test:
+    % Expr=roundtoward(1,a),catch(arithmetic_expression_value(Expr,Value),_,fail).
+    % platform: aarch64
     \+ \+ ( mapnargs(setnum(Expr), Expr),
             catch(arithmetic_expression_value(Expr, Value),
                   _,

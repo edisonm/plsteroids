@@ -2,6 +2,7 @@
 SHELL=/bin/bash
 MAKEFLAGS += --silent --no-print-directory
 JOBS?=$(shell nproc)
+ARCH=$(shell uname -m)
 
 PLSTEROIDS=target/bin/plsteroids
 
@@ -13,7 +14,10 @@ bid:
 	cd idfpml/prolog/idfpml/LIBRARY ; \
 	  $(MAKE) CC=gcc CALL_BY_REF=1 GLOBAL_RND=1 GLOBAL_FLAGS=1 UNCHANGED_BINARY_FLAGS=0
 
-build: bid
+build:
+	if [ "aarch64" != "$(ARCH)" ] ; then \
+	  $(MAKE) bid ; \
+	fi
 	$(MAKE) $(PLSTEROIDS)
 
 all: swipl plclean build
@@ -156,3 +160,6 @@ packstrees:
 
 %.modrevstree:
 	swipl -q -s ./plsteroids -g "[collect_deps,library(modules_trees),library(show_tree)],modrevs_trees([$*],A),show_trees(A),halt"
+
+status:
+	echo ARCH=$(ARCH)

@@ -10,6 +10,10 @@ SWIPL_PROVIDED_VERSION_CMD=test -f $(REQUIRED_SWIPL) && $(REQUIRED_SWIPL) -g 'cu
 SWIPL_PROVIDED_VERSION=`$(SWIPL_PROVIDED_VERSION_CMD)`
 SWIPL_REQUIRED_VERSION=$(shell cat bin/swipl_version)
 
+ifeq (aarch64,$(ARCH))
+  CMAKE_OPTS="-DSWIPL_PACK_JPL=OFF"
+endif
+
 plstatus:
 	echo SWIPL_PROVIDED_VERSION=$(SWIPL_PROVIDED_VERSION)
 	echo SWIPL_REQUIRED_VERSION=$(SWIPL_REQUIRED_VERSION)
@@ -41,7 +45,7 @@ swipl:
 	    rm -rf build-`hostname`-V* ; \
 	    mkdir -p $${DIR} ; \
             cd $${DIR} ; \
-            cmake -DCMAKE_INSTALL_PREFIX=$(SWIPL_INSTALL_PREFIX) -G Ninja .. ; \
+            cmake -DCMAKE_INSTALL_PREFIX=$(SWIPL_INSTALL_PREFIX) $(CMAKE_OPTS) -G Ninja .. ; \
             ninja ; \
             ninja install ; \
 	  fi ) ; \

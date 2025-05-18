@@ -6,7 +6,9 @@
 :- use_module(library(ssl)).
 :- use_module(library(pldoc), []).
 :- use_module(library(apply_macros), []).
+:- if(\+ current_prolog_flag(processor, 'aarch64-linux')).
 :- use_module(library(bid_eval), []).
+:- endif.
 
 :- set_prolog_flag(autoload, false).
 

@@ -1,3 +1,4 @@
+:- set_prolog_flag(encoding, utf8).
 :- use_module(xtools/prolog/record_locations, []). % must be the first
 :- set_prolog_flag(autoload, false).
 :- [packages].
