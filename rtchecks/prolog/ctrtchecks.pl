@@ -240,16 +240,15 @@ checkif_asr_comp(T, PropValues, Asr, M:Goal1, M:Goal) :-
 %   G = not_fails(is_det(exception(p(A),exc)))
 %   ```
 
-comps_to_goal([],             _) --> [].
-comps_to_goal([Check|Checks], Asr) -->
-    comps_to_goal2(Checks, Check, Asr).
+comps_to_goal([],             _, G, G).
+comps_to_goal([Check|Checks], Asr, G1, G) :-
+    comps_to_goal2(Checks, Check, Asr, G1, G).
 
-comps_to_goal2([], Check, Asr), [Next] -->
-    [In],
-    {comp_pos_to_goal(Asr, Check, In, Next)}.
-comps_to_goal2([Check|Checks], Check1, Asr) -->
-    comp_pos_to_goal(Asr, Check1),
-    comps_to_goal2(Checks, Check, Asr).
+comps_to_goal2([], Check, Asr, G1, G) :-
+    comp_pos_to_goal(Asr, Check, G1, G).
+comps_to_goal2([Check|Checks], Check1, Asr, G1, G) :-
+    comp_pos_to_goal(Asr, Check1, G1, G2),
+    comps_to_goal2(Checks, Check, Asr, G2, G).
 
 :- meta_predicate check_call(+, +, 0).
 check_call(T, AsrL, Goal) :-
