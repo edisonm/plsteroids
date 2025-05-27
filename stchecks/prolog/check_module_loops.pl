@@ -85,7 +85,7 @@ ml_msg_can_be_broken_at([M2, Loc1, M1, PL1, L1, Loc3, M3, PL3, L3]) -->
     ml_msg_alternative_paths(M2, 'uses',    Loc3, M3, PL3, L3).
 
 ml_msg_alternative_paths(M2, Label, Loc, M, PL, L) -->
-    ['\t'|Loc], ["~w ~w ~w: ~w"-[M2, Label, M, L], nl],
+    ['\t'], Loc, ["~w ~w ~w: ~w"-[M2, Label, M, L], nl],
     foldl(ml_msg_path, PL).
 
 ml_msg_path(P) -->

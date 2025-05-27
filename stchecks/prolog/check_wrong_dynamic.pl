@@ -193,16 +193,16 @@ prolog:message(acheck(wrong_dynamic, Type-List)) -->
     wrong_dynamic_message(Type, List).
 
 modified_nondynamic(DType, Loc/PI-MLocPIs) -->
-    ['\t'|Loc], ['~w ~q modified by'-[DType, PI], nl],
+    ['\t'], Loc, ['~w ~q modified by'-[DType, PI], nl],
     foldl(show_locpi, MLocPIs).
 
-show_locpi(Loc/PI) --> ['\t\t'|Loc], check:predicate(PI), [nl].
+show_locpi(Loc/PI) --> ['\t\t'], Loc, check:predicate(PI), [nl].
 
-show_locci(Loc/CI) --> ['\t\t'|Loc], CI, [nl].
+show_locci(Loc/CI) --> ['\t\t'], Loc, CI, [nl].
 
 unmodified_dynamic(Loc-PIs) -->
     {compact_pi_list(PIs, CPIs)},
-    ['\t'|Loc], ['predicates ~w'-[CPIs], nl].
+    ['\t'], Loc, ['predicates ~w'-[CPIs], nl].
 
 wrong_dynamic_message(modified_nondynamic(DType), LocPIs) -->
     ['Predicates are ~w, but never declared dynamic and modified:'-DType, nl],

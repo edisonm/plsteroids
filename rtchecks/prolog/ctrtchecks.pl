@@ -201,6 +201,10 @@ checkif_asrs_comp([Asr-PVL|AsrL], T, Goal1) :-
     checkif_asr_comp(T, PVL, Asr, Goal1, Goal),
     checkif_asrs_comp(AsrL, T, Goal).
 
+comp_pos_to_goal(Asr, g(Asr, M:Glob, Loc), '$with_gloc'(M:Glob, Loc), Goal) :-
+    functor(Glob, _, N),
+    arg(N, Glob, Goal).
+
 checkif_asr_comp(T, PropValues, Asr, M:Goal1, M:Goal) :-
     ( memberchk(PropValues, [[], [[]]]),
       copy_term_nat(Asr, NAsr),
@@ -209,14 +213,10 @@ checkif_asr_comp(T, PropValues, Asr, M:Goal1, M:Goal) :-
                 valid_prop(T, Glob)
               ), GlobL),
       GlobL \= []
-    ->comps_to_goal(GlobL, comp_pos_to_goal(Asr), Goal2, M:Goal1),
+    ->comps_to_goal(GlobL, Asr, Goal2, M:Goal1),
       Goal = '$with_asr'(Goal2, Asr)
     ; Goal = Goal1
     ).
-
-comp_pos_to_goal(Asr, g(Asr, M:Glob, Loc), '$with_gloc'(M:Glob, Loc), Goal) :-
-    functor(Glob, _, N),
-    arg(N, Glob, Goal).
 
 :- meta_predicate '$with_asr'(0, ?).
 '$with_asr'(Comp, Asr) :-
@@ -230,7 +230,7 @@ comp_pos_to_goal(Asr, g(Asr, M:Glob, Loc), '$with_gloc'(M:Glob, Loc), Goal) :-
 '$with_ploc'(Comp, GLoc) :-
     with_value(Comp, '$with_ploc', GLoc).
 
-%!  comps_to_goal(+Check:list, :Goal)//
+%!  comps_to_goal(+Check:list, Asr)//
 %
 %   This predicate allows to compound a list of global properties in to
 %   successive meta-calls, but in the third argument you can use your own
@@ -240,17 +240,16 @@ comp_pos_to_goal(Asr, g(Asr, M:Glob, Loc), '$with_gloc'(M:Glob, Loc), Goal) :-
 %   G = not_fails(is_det(exception(p(A),exc)))
 %   ```
 
-:- meta_predicate comps_to_goal(?, 3, ?, ?).
 comps_to_goal([],             _) --> [].
-comps_to_goal([Check|Checks], Goal) -->
-    comps_to_goal2(Checks, Check, Goal).
+comps_to_goal([Check|Checks], Asr) -->
+    comps_to_goal2(Checks, Check, Asr).
 
-:- meta_predicate comps_to_goal2(?, ?, 3, ?, ?).
-comps_to_goal2([], Check, Goal) -->
-    call(Goal, Check).
-comps_to_goal2([Check|Checks], Check1, Goal) -->
-    call(Goal, Check1),
-    comps_to_goal2(Checks, Check, Goal).
+comps_to_goal2([], Check, Asr), [Next] -->
+    [In],
+    {comp_pos_to_goal(Asr, Check, In, Next)}.
+comps_to_goal2([Check|Checks], Check1, Asr) -->
+    comp_pos_to_goal(Asr, Check1),
+    comps_to_goal2(Checks, Check, Asr).
 
 :- meta_predicate check_call(+, +, 0).
 check_call(T, AsrL, Goal) :-
