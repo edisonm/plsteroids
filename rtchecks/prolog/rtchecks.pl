@@ -64,7 +64,7 @@
 wrap_asr_rtcheck(Asr, rtcheck(Asr)).
 
 rtcheck_wrap(M, G, CM, RAsrL) :-
-    '$wrap_predicate'(M:G, rtchecks, _, W, rtcheck_pred(W, M, CM, RAsrL)).
+    '$wrap_predicate'(M:G, rtchecks, _, W, M:rtcheck_pred(W, M, CM, RAsrL)).
 
 rtcheck_wrap_each(M, G, P, P-AsrL) :-
     qualify_meta_goal(G, M, CM, P),
@@ -225,7 +225,7 @@ ppassertion_type_goal(Goal, Status, Call, Loc) :-
 
 wrap_ppcheck :-
     forall(ppassertion_type_goal(Goal, Status, Call, Loc),
-           '$wrap_predicate'(ppntprops:Goal, rtchecks, _, _, rtcheck_call(Status, Call, Loc))).
+           '$wrap_predicate'(ppntprops:Goal, rtchecks, _, _, ppntprops:rtcheck_call(Status, Call, Loc))).
 
 unwrap_ppcheck :-
     forall(( pp_status(Status),
