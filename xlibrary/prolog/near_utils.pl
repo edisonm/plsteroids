@@ -41,6 +41,7 @@
            real_compare/3,
            near_compare/3,
            unify_near/2,
+           equiv_near/2,
            repsilon/1,
            repsilon/2]).
 
@@ -157,6 +158,7 @@ compare(<,  A, B, E) :- B - A >  E.
 compare(>,  A, B, E) :- A - B >  E.
 compare(\=, A, B, E) :- abs(A - B) > E.
 
+% =/2
 unify_near(Arg1, Arg2) :-
     ( real(Arg1),
       real(Arg2)
@@ -166,4 +168,16 @@ unify_near(Arg1, Arg2) :-
       )
     ->Arg1 = Arg2
     ; mapargs(unify_near, Arg1, Arg2)
+    ).
+
+% ==/2
+equiv_near(Arg1, Arg2) :-
+    ( real(Arg1),
+      real(Arg2)
+    ->real_near(Arg1, Arg2)
+    ; ( var(Arg1)
+      ; var(Arg2)
+      )
+    ->Arg1 == Arg2
+    ; mapargs(equiv_near, Arg1, Arg2)
     ).
