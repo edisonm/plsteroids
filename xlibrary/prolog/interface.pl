@@ -33,8 +33,7 @@
 */
 
 :- module(interface,
-          [ bind_interface/2,
-            end_interface/4
+          [ bind_interface/2
           ]).
 
 :- use_module(library(lists)).
@@ -44,7 +43,7 @@
 :- init_expansors.
 
 :- multifile
-    '$interface'/1,
+    '$interface_spec'/2,
     '$interface'/2,
     '$implementation'/2.
 
@@ -60,13 +59,16 @@ not_interface(M, F/A) :-
 this_interface(Interface, DIL) -->
     [interface:'$interface'(Interface, DIL)].
 
-decl_dynbridge(DIL) -->
-    findall((:- dynamic F/A),
-            member(F/A, DIL)).
+scope_decl(shared, F/A, (:- dynamic F/A)).
+scope_decl(local,  F/A, (:- thread_local F/A)).
 
-end_interface(Interface, DIL) -->
+decl_dynbridge(DIL, Scope) -->
+    {scope_decl(Scope, F/A, Decl)},
+    findall(Decl, member(F/A, DIL)).
+
+end_interface(Interface, Scope, DIL) -->
     this_interface(Interface, DIL),
-    decl_dynbridge(DIL).
+    decl_dynbridge(DIL, Scope).
 
 term_expansion_decl(implements(Alias), Clauses) :-
     '$current_source_module'(Implementation),
@@ -86,32 +88,39 @@ term_expansion_decl(implements_mod(Interface), Clauses) :-
              findall((:- export(PI)), member(PI, PIL))
            ), Clauses).
 term_expansion_decl(interfaces(Alias), Clauses) :-
+    term_expansion_decl(interfaces(Alias, shared), Clauses).
+term_expansion_decl(interfaces(Alias, Scope), Clauses) :-
     '$current_source_module'(Interface),
     Interface:use_module(Alias, []),
     absolute_file_name(Alias, File, [file_type(prolog), access(read)]),
     module_property(Implementation, file(File)),
-    term_expansion_decl(interfaces_mod(Implementation), Clauses).
+    term_expansion_decl(interfaces_mod(Implementation, Scope), Clauses).
 term_expansion_decl(interfaces_mod(Implementation), Clauses) :-
+    term_expansion_decl(interfaces_mod(Implementation, shared), Clauses).
+term_expansion_decl(interfaces_mod(Implementation, Scope), Clauses) :-
     '$current_source_module'(Interface),
-    phrase(interfaces_mod_clauses(Interface, Implementation), Clauses).
-term_expansion_decl(interface, interface:'$interface'(Interface)) :- 
+    phrase(interfaces_mod_clauses(Interface, Scope, Implementation), Clauses).
+term_expansion_decl(interface, interface:'$interface_spec'(Interface, shared)) :- 
+    '$current_source_module'(Interface).
+term_expansion_decl(interface(Scope), interface:'$interface_spec'(Interface, Scope)) :-
+    memberchk(Scope, [shared, local]),
     '$current_source_module'(Interface).
 
-interfaces_mod_clauses(Interface, Implementation) -->
+interfaces_mod_clauses(Interface, Scope, Implementation) -->
     {module_property(Implementation, exports(PIL))},
     findall((:- export(PI)), member(PI, PIL)),
-    end_interface(Interface, PIL).
+    end_interface(Interface, Scope, PIL).
 
 term_expansion((:- Decl), Clauses) :-
     term_expansion_decl(Decl, Clauses).
 term_expansion(end_of_file, Clauses) :-
     '$current_source_module'(Interface),
-    '$interface'(Interface),
+    '$interface_spec'(Interface, Scope),
     module_property(Interface, file(File)),
     prolog_load_context(source, File),
     module_property(Interface, exports(PIL)),
     exclude(not_interface(Interface), PIL, DIL),
-    phrase(end_interface(Interface, DIL), Clauses, [end_of_file]).
+    phrase(end_interface(Interface, Scope, DIL), Clauses, [end_of_file]).
 
 prolog:called_by(Pred, Interface, Context, PredL) :-
     '$interface'(Interface, DIL),
