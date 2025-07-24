@@ -51,9 +51,13 @@ checker_check_non_loaded(Results, Options1) :-
     ( ( option(dir(_), Options1)
       ; option(dirs(_), Options1)
       )
-    ->Options = Options1
+    ->Options2 = Options1
     ; working_directory(Dir, Dir),
-      Options = [dir(Dir)|Options]
+      Options2 = [dir(Dir)|Options]
+    ),
+    ( option(loaded(_), Options2)
+    ->Options = Options2
+    ; Options = [loaded(false)|Options2]
     ),
     check_non_loaded(Options, Results).
 
