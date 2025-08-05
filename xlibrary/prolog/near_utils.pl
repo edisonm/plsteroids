@@ -160,24 +160,28 @@ compare(\=, A, B, E) :- abs(A - B) > E.
 
 % =/2
 unify_near(Arg1, Arg2) :-
-    ( real(Arg1),
-      real(Arg2)
-    ->real_near(Arg1, Arg2)
-    ; ( var(Arg1)
+    ( ( var(Arg1)
       ; var(Arg2)
+      ; integer(Arg1),
+        integer(Arg2)
       )
     ->Arg1 = Arg2
+    ; rnum(Arg1),
+      rnum(Arg2)
+    ->real_near(Arg1, Arg2)
     ; mapargs(unify_near, Arg1, Arg2)
     ).
 
 % ==/2
 equiv_near(Arg1, Arg2) :-
-    ( real(Arg1),
-      real(Arg2)
-    ->real_near(Arg1, Arg2)
-    ; ( var(Arg1)
+    ( ( var(Arg1)
       ; var(Arg2)
+      ; integer(Arg1),
+        integer(Arg2)
       )
     ->Arg1 == Arg2
+    ; rnum(Arg1),
+      rnum(Arg2)
+    ->real_near(Arg1, Arg2)
     ; mapargs(equiv_near, Arg1, Arg2)
     ).
