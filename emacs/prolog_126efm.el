@@ -452,7 +452,7 @@ Legal values:
     (swi
      ("discontiguous" "dynamic" "ensure_loaded" "export" "export_list" "import"
       "meta_predicate" "module" "module_transparent" "multifile" "require" "table"
-      "use_module" "volatile"))
+      "thread_local" "use_module" "volatile"))
     (gnu
      ("built_in" "char_conversion" "discontiguous" "dynamic" "ensure_linked"
       "ensure_loaded" "foreign" "include" "initialization" "multifile" "op"
