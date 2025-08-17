@@ -4181,8 +4181,22 @@ the life of an Emacs session."
   (interactive)
   (message "Using Prolog mode version %s" prolog-mode-version))
 
+(defun prolog-char-constant-syntax-propertize (start end)
+  "Treat 0'X as a character constant only outside quoted atoms."
+  (save-excursion
+    (goto-char start)
+    (while (re-search-forward "0\\('\\)."
+                             end t)
+      ;; Only patch if not inside a string/quoted atom
+      (unless (nth 3 (syntax-ppss (match-beginning 1)))
+        (put-text-property (match-beginning 1) (1+ (match-beginning 1))
+                           'syntax-table (string-to-syntax "_"))))))
 
-
+;; Now add this to your prolog-mode setup:
+(add-hook 'prolog-mode-hook
+          (lambda ()
+            (setq syntax-propertize-function
+                  #'prolog-char-constant-syntax-propertize)))
 
 ;; ----------------------------------------------------------------------
 ;; Persistent command history
