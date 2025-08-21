@@ -38,6 +38,7 @@
             freeze_cohesive_module_rt/6,
             scope_t/1,
             call_cm/3,
+            call_cm/4,
             call_cm/5,
             '$cohesive'/2
           ]).
@@ -71,6 +72,7 @@
 
 :- meta_predicate
         call_cm(0, +, -),
+        call_cm(0, +, -, -),
         call_cm(0, +, ?, -, -).
 
 :- public freeze_cohesive_module_rt/6.
@@ -108,8 +110,8 @@ cohesive_module_rt(H, Context, M, CohM, sexport, CheckCohM) :-
     call_check_cohesive_module(H, Context, M, CohM, CheckCohM).
 cohesive_module_rt(_, C, _, C, sprivat, _).
 
-cohesive_pred_pi(CM, PI) -->
-    { normalize_head(CM:PI, M:H),
+cohesive_pred_pi(IM, PI) -->
+    { normalize_head(IM:PI, M:H),
       aux_cohesive_pred(H, CohM, Scope, HExt),
       functor(H, F, A),
       aux_cohesive_module(M, F, A, CohM, CheckCohM),
@@ -125,7 +127,7 @@ cohesive_pred_pi(CM, PI) -->
     ; []
     ),
     [ ( H :- context_module(Context),
-             call(CM:HWrp)
+             call(IM:HWrp)
       ),
       ( HWrp :-
             freeze_cohesive_module_rt(H, Context, M, CohM, Scope, CheckCohM),
@@ -151,6 +153,15 @@ call_cm(Goal, Context, CohM, HWrp, IM) :-
 call_cm(Goal, Context, CohM) :-
     call_cm(Goal, Context, CohM, HWrp, IM),
     IM:HWrp.
+
+call_cm(Goal, Context, Scope, CohM) :-
+    strip_module(Goal, _, Head),
+    predicate_property(Goal, implementation_module(M)),
+    functor(Head, F, A),
+    aux_cohesive_module(M, F, A, CohM, CheckCohM),
+    aux_cohesive_pred(Head, CohM, Scope, HExt),
+    freeze_cohesive_module_rt(Head, Context, M, CohM, Scope, CheckCohM),
+    M:HExt.
 
 coh_head_expansion(Scope, Head, IM:HeadExt) :-
     prolog_load_context(module, CM),
