@@ -51,6 +51,7 @@
 :- use_module(library(call_ref)).
 :- reexport(library(cohesive_op)).
 :- reexport(library(compound_expand)).
+:- before(neck).
 :- init_expansors.
 
 /* <module> Cohesive predicates
