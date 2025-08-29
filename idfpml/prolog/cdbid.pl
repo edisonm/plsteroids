@@ -39,10 +39,10 @@
 :- use_module(library(clpcd/domain_ops)).
 :- init_expansors.
 
-cd_type(cddd, bid64 ).
-cd_type(cdqd, bid128).
+cd_type(cddb, bid64 ).
+cd_type(cdqb, bid128).
 
-cd_text(cddd, 'a double decimal number').
-cd_text(cdqd, 'a quadruple decimal number').
+cd_text(cddb, 'a double (bid) decimal number').
+cd_text(cdqb, 'a quadruple (bid) decimal number').
 
 :- include(library(cd_common)).

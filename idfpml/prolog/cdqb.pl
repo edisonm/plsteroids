@@ -37,12 +37,12 @@
     the GNU General Public License.
 */
 
-:- module(cdqd, []).
+:- module(cdqb, []).
 
 :- license(gpl_swipl, 'CLP(CDQD)').
 :- use_module(library(cdbid)).
 :- reexport(library(clpcd)).
 
-clpcd_domain_ops:clpcd_module(cdqd, cdqd).
+clpcd_domain_ops:clpcd_module(cdqb, cdqb).
 
-:- initialization(set_clpcd(cdqd)).
+:- initialization(set_clpcd(cdqb)).
