@@ -934,7 +934,7 @@ VERSION is of the format (Major . Minor)"
   (make-local-variable 'indent-line-function)
   (setq indent-line-function 'prolog-indent-line)
   (make-local-variable 'comment-start)
-  (setq comment-start "%%")
+  (setq comment-start "%")
   (make-local-variable 'comment-end)
   (setq comment-end "")
   (make-local-variable 'comment-start-skip)
