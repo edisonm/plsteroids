@@ -36,6 +36,7 @@
 
 :- use_module(library(apply)).
 :- use_module(library(lists)).
+:- use_module(library(option)).
 :- use_module(library(checker)).
 :- use_module(library(clambda)).
 :- use_module(library(calls_to)).
@@ -222,7 +223,7 @@ current_unused_use_module(MFileD, UE, M, From) :-
     absolute_file_name(U, UFile, [file_type(prolog), access(exist),
                                   file_errors(fail)]),
     module_property(UM, file(UFile)),
-    \+ used_usemod(M, UM),
+    \+ used_usemod_rec(M, UM),
     \+ ignore_import(M, UM),
     module_property(UM, exports(EL)),
     EL \= [],
@@ -238,11 +239,21 @@ current_unused_use_module(MFileD, UE, M, From) :-
            predicate_property(MHead, implementation_module(IM)),
            % Ignore if reexported from compound_expand:
            IM \= compound_expand,
-           once(( used_usemod(M, IM)
+           once(( used_usemod_rec(M, IM)
                 ; loc_declaration(Head, M, goal, _)
                 ))
          )
        ).
+
+used_usemod_rec(M, UM) :-
+    used_usemod(M, UM),
+    !.
+used_usemod_rec(M, UM) :-
+    '$load_context_module'(File, UM, Options),
+    option(reexport(true), Options),
+    module_property(CM, file(File)),
+    used_usemod_rec(M, CM),
+    !.
 
 mark_import(Head, CM, _, _, _, _) :-
     nonvar(CM),
