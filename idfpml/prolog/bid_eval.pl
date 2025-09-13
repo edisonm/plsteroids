@@ -90,7 +90,6 @@ expr_pred(Pred, Pred) :-
     member(F, FL),
     succ(A, A1),
     functor(Pred, F, A),
-    \+ expr_pred(_, Pred),
     \+ expr_pred(Pred, _),
     neck.
 
