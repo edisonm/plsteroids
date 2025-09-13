@@ -2,12 +2,12 @@
 
 :- [mip].
 
-test(entailed) :-
+test(entailed1) :-
     {A =< 4},
     entailed(A=\=5),
     !.
 
-test(entailed) :-
+test(entailed2) :-
     {A =< 4},
     \+ entailed(A=\=3).
 
