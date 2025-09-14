@@ -69,18 +69,10 @@ patches:
 
 push:
 	git checkout bin/
-	git push
-	git subrepo clean --all
-	for i in `git subrepo status -q|grep -v smtp` ; do \
-	  git subrepo push $${i} ; \
-	done
-	git push
+	git push --recurse-submodules=check
 
 pull:
-	git pull
-	for i in `git subrepo status -q` ; do \
-	  git subrepo pull $${i} ; \
-	done
+	git pull --recurse-submodules
 
 noop:
 
