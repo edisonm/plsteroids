@@ -40,7 +40,7 @@
 clpcd_domain_ops:rsgn_d(CDType, S, P, C) :-
     cd_type(CDType, Type),
     \+ clause(clpcdd_domain_ops:rsgn_d(CDType, S, P, C), _),
-    neck,
+    necki,
     eval(Type, integer(P) mod 2, R),
     ( near_compare(Type, =, R, 0 )
     ->near_compare(Type, =, S, 1),
@@ -51,39 +51,39 @@ clpcd_domain_ops:rsgn_d(CDType, S, P, C) :-
 
 clpcd_domain_ops:compare_d(Domain, Op, A, B) :-
     cd_type(Domain, Type),
-    neck,
+    necki,
     near_compare(Type, Op, A, B).
 
 clpcd_domain_ops:eval_d(C, F, R) :-
     cd_type(C, T),
-    neck,
+    necki,
     eval(T, F, R).
 
 clpcd_domain_ops:div_d(Domain, A, B, C) :-
     cd_type(Domain, Type),
-    neck,
+    necki,
     eval(Type, A/B, C).
 
 clpcd_domain_ops:cast_d(Domain, A, B) :-
     cd_type(Domain, Type),
-    neck,
+    necki,
     cast(Type, A, B).
 
 clpcd_domain_ops:floor_d(Domain, A, B) :-
     cd_type(Domain, Type),
-    neck,
+    necki,
     eepsilon(Type, abs(A), E),
     eval(Type, floor(A+E), B).
 
 clpcd_domain_ops:ceiling_d(Domain, A, B) :-
     cd_type(Domain, Type),
-    neck,
+    necki,
     eepsilon(Type, abs(A), E),
     eval(Type, ceiling(A-E), B).
 
 clpcd_domain_ops:integerp(Domain, A, C) :-
     cd_type(Domain, Type),
-    neck,
+    necki,
     eval(Type, integer(A), B),
     compare_d(Domain, =, A, B), % near_compare(=, A, B)
     int(Type, C, B).
@@ -91,7 +91,7 @@ clpcd_domain_ops:integerp(Domain, A, C) :-
 clpcd_domain_ops:numbers_only(Domain, Y) :-
     cd_type(Domain, Type),
     cd_text(Domain, Text),
-    neck,
+    necki,
     (   var(Y)
     ;   number(Y)
     ;   castable(Type, Y)

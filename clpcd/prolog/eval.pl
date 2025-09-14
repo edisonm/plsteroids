@@ -101,6 +101,10 @@ do_eval_cputime(T, V) :-
     X is cputime,
     inner_cast(T, X, V).
 
+:- table
+    do_eval_z/2,
+    eepsilon/2.
+
 do_eval_z(Type, C) :- cast(Type, 0, C).
 
 eepsilon(T, E) :-
