@@ -49,4 +49,4 @@ cd_text(cdfloatn(_), 'a multiple precison floating point number').
 
 :- include(library(cd_common)).
 
-:- initialization(set_clpcd(cdfloatn(53))).
+:- initialization(set_clpcd(cdfloatn(128))).
