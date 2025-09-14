@@ -69,7 +69,7 @@ patches:
 
 push:
 	git checkout bin/
-	git push --recurse-submodules=check
+	git push --recurse-submodules=on-demand
 
 pull:
 	git pull --recurse-submodules
