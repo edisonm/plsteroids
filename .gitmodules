@@ -28,3 +28,6 @@
 [submodule "andorra"]
 	path = andorra
 	url = git@github.com:edisonm/andorra.git
+[submodule "smtp"]
+	path = smtp
+	url = https://github.com/JanWielemaker/smtp.git

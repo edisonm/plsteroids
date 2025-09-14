@@ -34,9 +34,6 @@
 :- module(smtp,
           [ smtp_send_mail/3            % +To, :Goal, +Options
           ]).
-
-:- use_module(library(apply)).
-:- use_module(library(base64)).
 :- use_module(library(socket)).
 :- use_module(library(ssl)).
 :- use_module(library(readutil)).
