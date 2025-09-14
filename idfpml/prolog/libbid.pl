@@ -39,8 +39,6 @@
             bid128_t/1
           ]).
 
-% Implementation using terms '$bid64'(INT64), '$bid128'(INT64, INT64)
-
 % Original library downloaded from:
 % https://software.intel.com/en-us/articles/intel-decimal-floating-point-math-library
 
@@ -65,24 +63,10 @@
 
 :- type [ bid64_t/1,
           bid128_t/1
-        ].
+        ] + native(prefix(is_)).
 
-bid64_t('$bid64'(V)) :-
-    int64(V).
-
-bid128_t('$bid128'(V1, V2)) :-
-    int64(V1),
-    int64(V2).
-
-:- pred [ bid64/2,
-          bid128/2
+:- pred [ bid64(+term, -term),
+          bid128(+term, -term)
         ] + native(prefix(pl_)).
 
 :- include(plbin(bid_auto)).
-
-user:portray('$bid64'(V)) :-
-    bid64_string('$bid64'(V), S),
-    format('"~s"', [S]).
-user:portray('$bid128'(V1,V2)) :-
-    bid128_string('$bid128'(V1,V2), S),
-    format('"~s"', [S]).

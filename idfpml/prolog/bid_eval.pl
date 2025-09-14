@@ -136,31 +136,34 @@ do_eval(Expr, Type, C) :-
     EvalS,
     AC.
 
+:- table
+    do_eval_z_/2,
+    do_eval_1/2,
+    do_eval_m1/2,
+    do_eval_e/2,
+    do_eval_pi/2,
+    do_eval_epsilon/2.
+
 do_eval_z_(Type, C) :-
     cd_type(Type),
-    do_eval_z(Type, C),
-    neck.
+    do_eval_z(Type, C).
 
 do_eval_1(Type, C) :-
     cd_type(Type),
-    cast(Type, 1, C),
-    neck.
+    cast(Type, 1, C).
 
 do_eval_m1(Type, C) :-
     cd_type(Type),
-    cast(Type, -1, C),
-    neck.
+    cast(Type, -1, C).
 
 do_eval_e(Type, C) :-
     cd_type(Type),
     do_eval_1(Type, F1),
-    exp(Type, C, F1),
-    neck.
+    exp(Type, C, F1).
 
 do_eval_pi(Type, C) :-
     cd_type(Type),
-    do_eval(4*atan(1), Type, C),
-    neck.
+    do_eval(4*atan(1), Type, C).
 
 do_eval_epsilon(Type, E) :-
     cd_type(Type),
@@ -170,5 +173,4 @@ do_eval_epsilon(Type, E) :-
            do_eval(P^X, Type, E),
            do_eval(O+E, Type, Y),
            compare_b(=, Type, Y, O)
-         )),
-    neck.
+         )).
