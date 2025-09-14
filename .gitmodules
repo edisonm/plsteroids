@@ -19,3 +19,6 @@
 [submodule "clpcd"]
 	path = clpcd
 	url = git@github.com:edisonm/clpcd.git
+[submodule "refactor"]
+	path = refactor
+	url = git@github.com:edisonm/refactor.git
