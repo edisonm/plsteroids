@@ -10,3 +10,6 @@
 [submodule "assertions"]
 	path = assertions
 	url = git@github.com:edisonm/assertions.git
+[submodule "xlibrary"]
+	path = xlibrary
+	url = git@github.com:edisonm/xlibrary.git
