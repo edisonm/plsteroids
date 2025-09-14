@@ -1,3 +1,6 @@
 [submodule "decml"]
 	path = decml
 	url = git@github.com:edisonm/decml.git
+[submodule "idfpml"]
+	path = idfpml
+	url = git@github.com:edisonm/idfpml.git

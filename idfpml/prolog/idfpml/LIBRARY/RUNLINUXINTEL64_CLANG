@@ -1,5 +1,0 @@
-echo "BEGIN BUILDING LIBRARY IN LINUX..."
-rm *.a
-./linuxbuild_clang
-echo "END BUILDING LIBRARY IN LINUX..."
-
