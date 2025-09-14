@@ -25,3 +25,6 @@
 [submodule "rtchecks"]
 	path = rtchecks
 	url = git@github.com:edisonm/rtchecks.git
+[submodule "andorra"]
+	path = andorra
+	url = git@github.com:edisonm/andorra.git
