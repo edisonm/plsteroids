@@ -58,8 +58,8 @@
 :- use_foreign_header('pl-bid').
 :- use_foreign_source('pl-bid').
 :- gen_foreign_library(plbin(libbid)).
-:- use_module(library(gen_bid)).
-:- gen_bid.
+:- use_module(library(bid_desc)).
+:- gen(bid).
 
 :- type [ bid64_t/1,
           bid128_t/1

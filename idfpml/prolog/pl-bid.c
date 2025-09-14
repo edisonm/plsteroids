@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <foreign_interface.h>
 
-#define GEN_BID_write_ref(__type)                                       \
+#define GEN_bid_write_ref(__type)                                       \
     static int write_bid##__type##_ref(IOSTREAM *stream,                \
                                        atom_t aref, int flags)          \
     {                                                                   \
@@ -15,7 +15,7 @@
         return TRUE;                                                    \
     }
 
-#define GEN_BID_release(__type)                                 \
+#define GEN_bid_release(__type)                                 \
     static int release_bid##__type(atom_t aref)                 \
     {                                                           \
         bid##__type##_t *ref = PL_blob_data(aref, NULL, NULL);  \
@@ -23,14 +23,14 @@
         return TRUE;                                            \
     }
 
-#define GEN_BID_aquire(__type)                                  \
+#define GEN_bid_aquire(__type)                                  \
     static void aquire_bid##__type(atom_t aref)                 \
     {                                                           \
         bid##__type##_t *ref = PL_blob_data(aref, NULL, NULL);  \
         (void) ref;                                             \
     }
 
-#define GEN_BID___record(__type)                \
+#define GEN_bid___record(__type)                \
     static PL_blob_t __record_bid##__type##_t = \
     {                                           \
         PL_BLOB_MAGIC,                          \
@@ -42,10 +42,10 @@
         aquire_bid##__type                      \
     };
 
-#define GEN_BID_record(__type)                                  \
+#define GEN_bid_record(__type)                                  \
     PL_blob_t *record_bid##__type##_t = &__record_bid##__type##_t;
 
-#define GEN_BID_is(__type)                                       \
+#define GEN_bid_is(__type)                                       \
     foreign_t is_bid##__type##_t(term_t v) {                     \
         void *src;                                               \
         PL_blob_t *type;                                         \
@@ -53,7 +53,7 @@
             && type == record_bid##__type##_t;                   \
     }
 
-#define GEN_BID_caster(__type)                                          \
+#define GEN_bid_caster(__type)                                          \
     foreign_t pl_bid##__type(term_t v, term_t t) {                      \
         BID_UINT##__type ref;                                           \
         switch (PL_term_type(v)) {                                      \
@@ -105,7 +105,7 @@
         return FI_unify_bid##__type##_t(t, res);                        \
     }
 
-#define GEN_BID_pl_2(__type, __func)                                    \
+#define GEN_bid_pl_2(__type, __func)                                    \
     foreign_t pl_bid##__type##_##__func(term_t res, term_t x) {         \
         bid##__type##_t *a;                                             \
         if (PL_get_bid##__type##_t(x, &a)) {                            \
@@ -116,7 +116,7 @@
         return FALSE;                                                   \
     }
 
-#define GEN_BID_pl_3(__type, __func)                                    \
+#define GEN_bid_pl_3(__type, __func)                                    \
     foreign_t pl_bid##__type##_##__func(term_t res, term_t x, term_t y) { \
         bid##__type##_t *a, *b;                                         \
         if (FI_get_bid##__type##_t(NULL, x, &a)                         \
@@ -128,7 +128,7 @@
         return FALSE;                                                   \
     }
 
-#define GEN_BID_pn_3(__type, __func)                                    \
+#define GEN_bid_pn_3(__type, __func)                                    \
     foreign_t pn_bid##__type##_##__func(term_t res, term_t x, term_t y) { \
         bid##__type##_t *a, *b;                                         \
         if (FI_get_bid##__type##_t(NULL, x, &a)                         \
@@ -140,7 +140,7 @@
         return FALSE;                                                   \
     }
 
-#define GEN_BID_is_2(__type, __func)                                    \
+#define GEN_bid_is_2(__type, __func)                                    \
     foreign_t is_bid##__type##_##__func(term_t x, term_t y) {           \
         bid##__type##_t *a, *b;                                         \
         int c;                                                          \
@@ -152,7 +152,7 @@
         return FALSE;                                                   \
     }
 
-#define GEN_BID_pi_2(__type, __func)                                    \
+#define GEN_bid_pi_2(__type, __func)                                    \
     foreign_t pi_bid##__type##_##__func(term_t res, term_t x) {         \
         bid##__type##_t *a;                                             \
         if (FI_get_bid##__type##_t(NULL, x, &a)) {                      \
@@ -163,7 +163,7 @@
         return FALSE;                                                   \
     }
 
-#define GEN_BID_pt_2(__type, __func)                                    \
+#define GEN_bid_pt_2(__type, __func)                                    \
     foreign_t pt_bid##__type##_##__func(term_t t, term_t r) {           \
         char s[__type/2];                                               \
         bid##__type##_t *v;                                             \
@@ -173,13 +173,13 @@
         return TRUE;                                                    \
     }
 
-#define GEN_BID_pl_unify(__type)                                        \
+#define GEN_bid_pl_unify(__type)                                        \
     int PL_unify_bid##__type##_t(term_t t, bid##__type##_t *fr) {       \
         return PL_unify_blob(t, fr, sizeof(bid##__type##_t),            \
                              record_bid##__type##_t);                   \
     }
 
-#define GEN_BID_pl_get(__type)                                          \
+#define GEN_bid_pl_get(__type)                                          \
     int PL_get_bid##__type##_t(term_t t, bid##__type##_t **v) {         \
         PL_blob_t *type;                                                \
         if (PL_get_blob(t, (void **)v, NULL, &type)                     \
@@ -188,22 +188,22 @@
         return FALSE;                                                   \
     }
 
-#define GEN_BID_ALL(__pre, __func) \
-    GEN_BID_##__pre( 64, __func) \
-    GEN_BID_##__pre(128, __func)
+#define GEN_bid_ALL(__pre, __func) \
+    GEN_bid_##__pre( 64, __func) \
+    GEN_bid_##__pre(128, __func)
 
-#define GEN_BID_ALL_1(__pre) \
-    GEN_BID_##__pre( 64)     \
-    GEN_BID_##__pre(128)
+#define GEN_bid_ALL_1(__pre) \
+    GEN_bid_##__pre( 64)     \
+    GEN_bid_##__pre(128)
 
-GEN_BID_ALL_1(caster)
-GEN_BID_ALL_1(write_ref)
-GEN_BID_ALL_1(release)
-GEN_BID_ALL_1(aquire)
-GEN_BID_ALL_1(__record)
-GEN_BID_ALL_1(record)
-GEN_BID_ALL_1(is)
-GEN_BID_ALL_1(pl_unify)
-GEN_BID_ALL_1(pl_get)
+GEN_bid_ALL_1(caster)
+GEN_bid_ALL_1(write_ref)
+GEN_bid_ALL_1(release)
+GEN_bid_ALL_1(aquire)
+GEN_bid_ALL_1(__record)
+GEN_bid_ALL_1(record)
+GEN_bid_ALL_1(is)
+GEN_bid_ALL_1(pl_unify)
+GEN_bid_ALL_1(pl_get)
 
 #include "pl-bid_auto.h"

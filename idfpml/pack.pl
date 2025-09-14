@@ -10,3 +10,4 @@ download('https://github.com/edisonm/idfpml.git').
 requires(xlibrary).
 requires(assertions).
 requires(clpcd).
+requires(decml).

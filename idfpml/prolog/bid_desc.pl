@@ -34,6 +34,12 @@
 
 :- module(bid_desc, [bid_desc/3]).
 
+:- use_module(library(lists)).
+:- reexport(library(gen_dec)).
+
+gen_dec:prefix_type(bid, Pre, T) :- member(Pre-T, [bid64-bid64_t, bid128-bid128_t]).
+gen_dec:desc(bid, Prefix, FL, A) :- bid_desc(Prefix, FL, A).
+
 bid_desc(pl_, [acos,   acosh, asin,   asinh, atan,
                atanh,  cbrt,  cos,    cosh,  erf,
                erfc,   exp10,  exp2,  exp,   expm1,
