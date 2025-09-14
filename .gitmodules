@@ -22,3 +22,6 @@
 [submodule "refactor"]
 	path = refactor
 	url = git@github.com:edisonm/refactor.git
+[submodule "rtchecks"]
+	path = rtchecks
+	url = git@github.com:edisonm/rtchecks.git
