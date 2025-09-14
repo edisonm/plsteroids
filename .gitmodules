@@ -7,3 +7,6 @@
 [submodule "stchecks"]
 	path = stchecks
 	url = git@github.com:edisonm/stchecks.git
+[submodule "assertions"]
+	path = assertions
+	url = git@github.com:edisonm/assertions.git
