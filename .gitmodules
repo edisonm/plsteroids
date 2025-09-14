@@ -13,3 +13,6 @@
 [submodule "xlibrary"]
 	path = xlibrary
 	url = git@github.com:edisonm/xlibrary.git
+[submodule "xtools"]
+	path = xtools
+	url = git@github.com:edisonm/xtools.git
