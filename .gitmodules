@@ -4,3 +4,6 @@
 [submodule "idfpml"]
 	path = idfpml
 	url = git@github.com:edisonm/idfpml.git
+[submodule "stchecks"]
+	path = stchecks
+	url = git@github.com:edisonm/stchecks.git
