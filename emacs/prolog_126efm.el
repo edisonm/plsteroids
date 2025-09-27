@@ -877,66 +877,17 @@ Set by prolog-build-case-strings.")
            ((not (zerop (skip-syntax-backward ".")))))
           (point))))
 
-(defconst prolog-smie-grammar
-  ;; Rather than construct the operator levels table from the BNF,
-  ;; we directly provide the operator precedences from GNU Prolog's
-  ;; manual (7.14.10 op/3).  The only problem is that GNU Prolog's
-  ;; manual uses precedence levels in the opposite sense (higher
-  ;; numbers bind less tightly) than SMIE, so we use negative numbers.
-  '(("." -999 -999)
-    ("?-" nil -1200)
-    (":-" -1200 -1200)
-    ("=>" -1200 -1200)
-    ("-->" -1200 -1200)
-    ("discontiguous" nil -1150)
-    ("dynamic" nil -1150)
-    ("meta_predicate" nil -1150)
-    ("module_transparent" nil -1150)
-    ("multifile" nil -1150)
-    ("public" nil -1150)
-    ("|" -1105 -1105)
-    (";" -1100 -1100)
-    ("*->" -1050 -1050)
-    ("->" -1050 -1050)
-    ("," -1000 -1000)
-    ("\\+" nil -900)
-    ("=" -700 -700)
-    ("\\=" -700 -700)
-    ("=.." -700 -700)
-    ("==" -700 -700)
-    ("\\==" -700 -700)
-    ("@<" -700 -700)
-    ("@=<" -700 -700)
-    ("@>" -700 -700)
-    ("@>=" -700 -700)
-    ("is" -700 -700)
-    ("=:=" -700 -700)
-    ("=\\=" -700 -700)
-    ("<" -700 -700)
-    ("=<" -700 -700)
-    (">" -700 -700)
-    (">=" -700 -700)
-    (":" -600 -600)
-    ("+" -500 -500)
-    ("-" -500 -500)
-    ("/\\" -500 -500)
-    ("\\/" -500 -500)
-    ("*" -400 -400)
-    ("/" -400 -400)
-    ("//" -400 -400)
-    ("rem" -400 -400)
-    ("mod" -400 -400)
-    ("<<" -400 -400)
-    (">>" -400 -400)
-    ("**" -200 -200)
-    ("^" -200 -200)
-    ;; Prefix
-    ;; ("+" 200 200)
-    ;; ("-" 200 200)
-    ;; ("\\" 200 200)
-    (:smie-closer-alist (t . "."))
-    )
-  "Precedence levels of infix operators.")
+;; Rather than construct the operator levels table from the BNF,
+;; we directly provide the operator precedences from GNU Prolog
+;; via gen_psg.pl tool.  The only problem is that GNU Prolog's
+;; manual uses precedence levels in the opposite sense (higher
+;; numbers bind less tightly) than SMIE, so we use negative numbers.
+
+(let* ((this-file (or load-file-name buffer-file-name))
+       (dir (file-name-directory this-file))
+       (target (expand-file-name "gen_psg.el" dir)))
+  (when (file-exists-p target)
+    (load-file target)))
 
 (defun prolog-smie-rules (kind token)
   (pcase (cons kind token)
