@@ -807,7 +807,7 @@ Set by prolog-build-case-strings.")
 (defconst prolog-string-regexp
   "\\(\"\\([^\n\"]\\|\\\\\"\\)*\"\\)"
   "Regexp matching a string.")
-(defconst prolog-head-delimiter "\\(=>\\|:-\\|\\+:\\|-:\\|\\+\\?\\|-\\?\\|-->\\)"
+(defconst prolog-head-delimiter "\\(:-\\|=>\\|\\+:\\|-:\\|\\+\\?\\|-\\?\\|-->\\)"
   "A regexp for matching on the end delimiter of a head (e.g. \":-\").")
 
 (defvar prolog-compilation-buffer "*prolog-compilation*"
@@ -843,8 +843,159 @@ Set by prolog-build-case-strings.")
        ("ssu" . "=>")
        ("propagation" . "==>")))))
 
+;; SMIE support
 
-
+(require 'smie)
+
+(defconst prolog-operator-chars "-\\\\#&*+./:<=>?@\\^`~")
+
+(defun prolog-smie-forward-token ()
+  ;; FIXME: Add support for 0'<char>, if needed after adding it to
+  ;; syntax-propertize-functions.
+  (forward-comment (point-max))
+  (buffer-substring-no-properties
+   (point)
+   (progn (cond
+           ((looking-at "[!;]") (forward-char 1))
+           ((not (zerop (skip-chars-forward prolog-operator-chars))))
+           ((not (zerop (skip-syntax-forward "w_'"))))
+           ;; In case of non-ASCII punctuation.
+           ((not (zerop (skip-syntax-forward ".")))))
+          (point))))
+
+(defun prolog-smie-backward-token ()
+  ;; FIXME: Add support for 0'<char>, if needed after adding it to
+  ;; syntax-propertize-functions.
+  (forward-comment (- (point-max)))
+  (buffer-substring-no-properties
+   (point)
+   (progn (cond
+           ((memq (char-before) '(?! ?\; ?\,)) (forward-char -1))
+           ((not (zerop (skip-chars-backward prolog-operator-chars))))
+           ((not (zerop (skip-syntax-backward "w_'"))))
+           ;; In case of non-ASCII punctuation.
+           ((not (zerop (skip-syntax-backward ".")))))
+          (point))))
+
+(defconst prolog-smie-grammar
+  ;; Rather than construct the operator levels table from the BNF,
+  ;; we directly provide the operator precedences from GNU Prolog's
+  ;; manual (7.14.10 op/3).  The only problem is that GNU Prolog's
+  ;; manual uses precedence levels in the opposite sense (higher
+  ;; numbers bind less tightly) than SMIE, so we use negative numbers.
+  '(("." -999 -999)
+    ("?-" nil -1200)
+    (":-" -1200 -1200)
+    ("=>" -1200 -1200)
+    ("-->" -1200 -1200)
+    ("discontiguous" nil -1150)
+    ("dynamic" nil -1150)
+    ("meta_predicate" nil -1150)
+    ("module_transparent" nil -1150)
+    ("multifile" nil -1150)
+    ("public" nil -1150)
+    ("|" -1105 -1105)
+    (";" -1100 -1100)
+    ("*->" -1050 -1050)
+    ("->" -1050 -1050)
+    ("," -1000 -1000)
+    ("\\+" nil -900)
+    ("=" -700 -700)
+    ("\\=" -700 -700)
+    ("=.." -700 -700)
+    ("==" -700 -700)
+    ("\\==" -700 -700)
+    ("@<" -700 -700)
+    ("@=<" -700 -700)
+    ("@>" -700 -700)
+    ("@>=" -700 -700)
+    ("is" -700 -700)
+    ("=:=" -700 -700)
+    ("=\\=" -700 -700)
+    ("<" -700 -700)
+    ("=<" -700 -700)
+    (">" -700 -700)
+    (">=" -700 -700)
+    (":" -600 -600)
+    ("+" -500 -500)
+    ("-" -500 -500)
+    ("/\\" -500 -500)
+    ("\\/" -500 -500)
+    ("*" -400 -400)
+    ("/" -400 -400)
+    ("//" -400 -400)
+    ("rem" -400 -400)
+    ("mod" -400 -400)
+    ("<<" -400 -400)
+    (">>" -400 -400)
+    ("**" -200 -200)
+    ("^" -200 -200)
+    ;; Prefix
+    ;; ("+" 200 200)
+    ;; ("-" 200 200)
+    ;; ("\\" 200 200)
+    (:smie-closer-alist (t . "."))
+    )
+  "Precedence levels of infix operators.")
+
+(defun prolog-smie-rules (kind token)
+  (pcase (cons kind token)
+    (`(:elem . basic) prolog-indent-width)
+    ;; The list of arguments can never be on a separate line!
+    (`(:list-intro . ,_) t)
+    ;; When we don't know how to indent an empty line, assume the most
+    ;; likely token will be ";".
+    (`(:elem . empty-line-token) ";")
+    (`(:after . ".") '(column . 0)) ;; To work around smie-closer-alist.
+    ;; Allow indentation of if-then-else as:
+    ;;    (   test
+    ;;    ->  thenrule
+    ;;    ;   elserule
+    ;;    )
+    (`(:before . ,(or `"->" `";"))
+     (and (smie-rule-bolp) (smie-rule-parent-p "(" ";") (smie-rule-parent 0)))
+    (`(:after . ,(or `"->" `"*->"))
+     ;; We distinguish
+     ;;
+     ;;     (a ->
+     ;;          b;
+     ;;      c)
+     ;; and
+     ;;     (    a ->
+     ;;          b
+     ;;     ;    c)
+     ;;
+     ;; based on the space between the open paren and the "a".
+     (unless (and (smie-rule-parent-p "(" ";")
+                  (save-excursion
+                    (smie-indent-forward-token)
+                    (smie-backward-sexp 'halfsexp)
+                    (if (smie-rule-parent-p "(")
+                        (not (eq (char-before) ?\())
+                      (smie-indent-backward-token)
+                      (smie-rule-bolp))))
+       prolog-indent-width))
+    (`(:after . ";")
+     ;; Align with same-line comment as in:
+     ;;   ;   %% Toto
+     ;;       foo
+     (and (smie-rule-bolp)
+          (looking-at ";[ \t]*\\(%\\)")
+          (let ((offset (- (save-excursion (goto-char (match-beginning 1))
+                                           (current-column))
+                           (current-column))))
+            ;; Only do it for small offsets, since the comment may actually be
+            ;; an "end-of-line" comment at comment-column!
+            (if (<= offset prolog-indent-width) offset))))
+    (`(:before . ":-")
+     (if (smie-rule-bolp)
+          (smie-rule-parent 0 )
+       ))
+    (`(:after . ,(or `":-" `"-->"))
+     (let ((offset (- prolog-indent-width (smie-indent-calculate))))
+       (if (<= 0 offset) offset prolog-indent-width)))
+    ))
+
 ;;-------------------------------------------------------------------
 ;; Prolog mode
 ;;-------------------------------------------------------------------
@@ -968,7 +1119,9 @@ VERSION is of the format (Major . Minor)"
   (make-local-variable 'font-lock-defaults)
   (setq font-lock-defaults
         '(prolog-font-lock-keywords nil nil ((?_ . "w"))))
-)
+  (smie-setup prolog-smie-grammar #'prolog-smie-rules
+              :forward-token #'prolog-smie-forward-token
+              :backward-token #'prolog-smie-backward-token))
 
 (defun prolog-mode-keybindings-common (map)
   "Define keybindings common to both Prolog modes in MAP."
