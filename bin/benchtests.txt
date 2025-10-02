@@ -20,14 +20,14 @@ module_loops.stest
 useless_cuts.stest
 stchecks/tests/stchecks.plt
 andorra/tests/qu_vitor.plt
-trivial_fails.stest
 deprecated.stest
+trivial_fails.stest
 refactor/tests/move_terms.plt
 wrong_dynamic.stest
 andorra/tests/qu_evan.plt
 refactor/tests/self_refactor.plt
-undefined.stest
 xtools/tests/assrt_meta.plt
+undefined.stest
 stchecks/tests/stchecks_2.plt
 stchecks/tests/stchecks_1.plt
 stchecks/tests/stchecks_3.plt
@@ -61,6 +61,7 @@ andorra/tests/map.plt
 refactor/tests/seekn_parenthesis_right.plt
 refactor/tests/comments_ex.plt
 refactor/tests/preserve_comments.plt
+refactor/tests/tags_dict.plt
 refactor/tests/goal_loaded.plt
 refactor/tests/sentence_list.plt
 refactor/tests/del_elem_list.plt
@@ -97,8 +98,8 @@ refactor/tests/successive_operators.plt
 refactor/tests/operator_to_pred.plt
 refactor/tests/change_arithmetic.plt
 refactor/tests/move_empty_list.plt
-refactor/tests/subst_modq_term.plt
 refactor/tests/operator_to_operator.plt
+refactor/tests/subst_modq_term.plt
 refactor/tests/add_operator1.plt
 refactor/tests/del_literal.plt
 refactor/tests/add_arg_sent.plt
