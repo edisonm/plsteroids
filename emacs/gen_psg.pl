@@ -2,6 +2,7 @@
           [ gen_psg/0
           ]).
 
+:- use_module(library(lists)).
 :- use_module(library(solution_sequences)).
 
 gen_psg :-
