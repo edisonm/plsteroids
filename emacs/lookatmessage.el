@@ -1,82 +1,90 @@
 ;; Author: Edison Mera
 ;; Hook to point at the given ERROR using one keystroke
 
-(defun look-at-message ()
-  (save-excursion 
-    (let (error-filename error-line error-column)
+(defun look-at-message--base-directory (buf)
+  "Directory used to resolve relative file names for BUF."
+  (with-current-buffer buf
+    (or (and buffer-file-name (file-name-directory buffer-file-name))
+        default-directory)))
+
+(defun look-at-message (origin-buffer &optional cd-to-base-dir)
+  "Open the file at point and jump to line/column.
+If file name is relative, resolve it against ORIGIN-BUFFER and also set
+the visited buffer's `default-directory' to that base directory."
+  (save-excursion
+    (let* ((origin-buffer (or origin-buffer (current-buffer)))
+           (base-dir (look-at-message--base-directory origin-buffer))
+           error-filename error-line error-column
+           (was-relative nil))
+
+      ;; --- original filename extraction ---
       (search-backward-regexp "[^a-ZA-Z0-9\\/\._-]")
       (forward-char 1)
       (let ((beg (point)))
-	(search-forward-regexp "[^a-ZA-Z0-9\\/\._-]")
-	(backward-char 1)
-	(setq error-filename (buffer-substring-no-properties beg (point))))
-      (if (file-exists-p error-filename)
-	  (let ()
-            (if (search-forward-regexp "[ :]" nil t nil)
-                (let ()
-	          (let ((beg (point)))
-	            (if (search-forward-regexp "[^0-9]" nil t nil)
-                        (let ()
-	                  (backward-char 1)
-	                  (setq error-line (string-to-number
-				            (buffer-substring-no-properties beg (point)))))))
-                  (if (search-forward-regexp "[ :]" nil t nil)
-                      (let ()
-                        (let ((beg (point)))
-                          (if (search-forward-regexp "[^0-9]" nil t nil)
-                              (let ()
-                                (backward-char 1)
-                                (setq error-column (string-to-number
-                                                    (buffer-substring-no-properties beg (point))))
-                                (forward-char 1))))))))
-	    ;; (if (get-file-buffer error-filename)
-	    ;; 	(switch-to-buffer-other-window (get-file-buffer error-filename))
-	    ;;   (find-file-other-window error-filename))
-	    ;; (message (concat "FILE=" error-filename
-	    ;; 		     ", LINE=" (number-to-string error-line)
-	    ;; 		     ", COLUMN=" (number-to-string error-column)))
-            (if (not (eq error-filename nil))
-                (find-file-other-window error-filename))
-            (if (not (eq error-line nil))
-                (goto-line error-line))
-            (if (not (eq error-column nil))
-	        (move-to-column error-column))
-	    )
-        (message (concat "File " error-filename " not found"))
-	)
-      )
-    )
-  )
+        (search-forward-regexp "[^a-ZA-Z0-9\\/\._-]")
+        (backward-char 1)
+        (setq error-filename (buffer-substring-no-properties beg (point))))
 
-(defun look-at-message-browse ()
-  (let ((oldbuf (current-buffer)))
-    (look-at-message)
-    (switch-to-buffer-other-window oldbuf))
-  )
+      ;; --- original line/column parsing (kept) ---
+      (when (search-forward-regexp "[ :]" nil t nil)
+        (let ((beg (point)))
+          (when (search-forward-regexp "[^0-9]" nil t nil)
+            (backward-char 1)
+            (setq error-line
+                  (string-to-number
+                   (buffer-substring-no-properties beg (point))))))
 
-(defun look-at-message-go ()
-  (interactive)
-  (look-at-message)
-  )
+        (when (search-forward-regexp "[ :]" nil t nil)
+          (let ((beg (point)))
+            (when (search-forward-regexp "[^0-9]" nil t nil)
+              (backward-char 1)
+              (setq error-column
+                    (string-to-number
+                     (buffer-substring-no-properties beg (point))))
+              (forward-char 1)))))
+
+      ;; Remember whether it was relative *before* expanding
+      (setq was-relative (and error-filename
+                              (not (file-name-absolute-p error-filename))))
+
+      ;; Expand relative -> absolute so `file-exists-p` and open work
+      (when was-relative
+        (setq error-filename (expand-file-name error-filename base-dir)))
+
+      ;; --- Open and jump (as in your original) ---
+      (if (and error-filename (file-exists-p error-filename))
+          (progn
+            (find-file-other-window error-filename)  ;; open buffer [1]
+
+            ;; This is the equivalent of doing: M-x cd /home/user/project
+            ;; but only for the visited file buffer, and only when it was relative.
+            (if cd-to-base-dir
+              (when was-relative
+                (setq-local default-directory (file-name-as-directory base-dir))))
+
+            (when error-line (goto-line error-line))       ;; [1]
+            (when error-column (move-to-column error-column))) ;; [1]
+        (message (concat "File " (or error-filename "<nil>") " not found"))))))
 
 (defun look-at-message-show ()
   (interactive)
-  (look-at-message-browse)
-  )
+  (let ((oldbuf (current-buffer)))
+    ;; Pass origin buffer so relative paths resolve from where you invoked it
+    (look-at-message oldbuf nil)
+    (switch-to-buffer-other-window oldbuf)))
 
-(defun look-at-message-next ()
+(defun look-at-message-show-in-dir ()
   (interactive)
-  (look-at-message-browse)
-  (next-line)
-  )
+  (let ((oldbuf (current-buffer)))
+    ;; Pass origin buffer so relative paths resolve from where you invoked it
+    (look-at-message oldbuf 'true)
+    (switch-to-buffer-other-window oldbuf)))
 
-(defun look-at-message-previous ()
+(defun look-at-message-go ()
   (interactive)
-  (look-at-message-browse)
-  (previous-line)
+  (look-at-message (current-buffer) nil)
   )
 
-(global-set-key "\C-c`" 'look-at-message-show)
+(global-set-key "\C-cs" 'look-at-message-show)
+(global-set-key "\C-cd" 'look-at-message-show-in-dir)
 (global-set-key "\C-cg" 'look-at-message-go)
-(global-set-key "\C-cn" 'look-at-message-next)
-(global-set-key "\C-cp" 'look-at-message-previous)
