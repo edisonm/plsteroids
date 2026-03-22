@@ -15,8 +15,8 @@ rtchecks/tests/rtchecks.plt
 clpcd/tests/cdr.plt
 dupcode.stest
 stchecks/tests/stchecks_unused.plt
-clpcd/tests/cdq.plt
 module_loops.stest
+clpcd/tests/cdq.plt
 useless_cuts.stest
 stchecks/tests/stchecks.plt
 andorra/tests/qu_vitor.plt
@@ -26,8 +26,8 @@ refactor/tests/move_terms.plt
 wrong_dynamic.stest
 andorra/tests/qu_evan.plt
 refactor/tests/self_refactor.plt
-xtools/tests/assrt_meta.plt
 undefined.stest
+xtools/tests/assrt_meta.plt
 stchecks/tests/stchecks_2.plt
 stchecks/tests/stchecks_1.plt
 stchecks/tests/stchecks_3.plt
@@ -57,10 +57,11 @@ refactor/tests/change_conjunction.plt
 andorra/tests/mutest.plt
 refactor/tests/add_arrow_op.plt
 refactor/tests/replace_sentences.plt
-andorra/tests/map.plt
 refactor/tests/seekn_parenthesis_right.plt
+andorra/tests/map.plt
 refactor/tests/comments_ex.plt
 refactor/tests/preserve_comments.plt
+assertions/tests/foreign/foreign.plt
 refactor/tests/tags_dict.plt
 refactor/tests/goal_loaded.plt
 refactor/tests/sentence_list.plt
@@ -98,8 +99,8 @@ refactor/tests/successive_operators.plt
 refactor/tests/operator_to_pred.plt
 refactor/tests/change_arithmetic.plt
 refactor/tests/move_empty_list.plt
-refactor/tests/operator_to_operator.plt
 refactor/tests/subst_modq_term.plt
+refactor/tests/operator_to_operator.plt
 refactor/tests/add_operator1.plt
 refactor/tests/del_literal.plt
 refactor/tests/add_arg_sent.plt
@@ -121,4 +122,3 @@ andorra/tests/dia_sums.plt
 xlibrary/tests/interface.plt
 xlibrary/tests/i18n/i18n.plt
 assertions/tests/metaprops.plt
-assertions/tests/foreign/foreign.plt
