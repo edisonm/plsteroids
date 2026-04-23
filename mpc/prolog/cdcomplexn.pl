@@ -32,23 +32,38 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(cdcomplexn, []).
+:- module(cdcomplexn,
+          [ get_precision/2,
+            set_precision/2
+          ]).
 
 :- license(gpl_swipl, 'CLP(COMPLEXN)').
 :- use_module(library(complexn_eval)).
 :- use_module(library(neck)).
+:- use_module(library(foreseen)).
 :- use_module(library(clpcd/domain_ops)).
 :- reexport(library(clpcd)).
 :- init_expansors.
 
-clpcd_domain_ops:clpcd_module(cdcomplexn(_), cdcomplexn).
+:- thread_local precision/2.
+
+clpcd_domain_ops:clpcd_module(cdcomplexn(R, I), cdcomplexn) :- get_precision(R, I).
+
+get_precision(R, I) :-
+    precision(R, I),
+    !.
+get_precision(128, 128).
+
+set_precision(R, I) :-
+    retractall(precision(_, _)),
+    assertz(precision(R, I)).
 
 cd_type(cdcomplexn(R, I), complexn(R, I)).
 
 clpcd_domain_ops:rsgn_d(CDType, S, P, C) :-
     cd_type(CDType, Type),
     neck,
-    between(Type, 0, P, N),
+    foreseen(between(Type, 0, P, N)),
     eval(Type, exp((log(S)+(0, pi*(2*N)))/P), C).
 
 between(_, Min, _, Min).
@@ -60,5 +75,3 @@ between(Type, Min, Max, Y) :-
 cd_text(cdcomplexn(_, _), 'a multiple precison floating point number').
 
 :- include(library(cd_common)).
-
-:- initialization(set_clpcd(cdcomplexn(53,53))).
