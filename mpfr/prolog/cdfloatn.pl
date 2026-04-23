@@ -32,7 +32,10 @@
     POSSIBILITY OF SUCH DAMAGE.
 */
 
-:- module(cdfloatn, []).
+:- module(cdfloatn,
+          [ get_precision/1,
+            set_precision/1
+          ]).
 
 :- license(gpl_swipl, 'CLP(FLOATN)').
 :- use_module(library(floatn_eval)).
@@ -41,12 +44,21 @@
 :- reexport(library(clpcd)).
 :- init_expansors.
 
-clpcd_domain_ops:clpcd_module(cdfloatn(_), cdfloatn).
+:- thread_local precision/1.
+
+clpcd_domain_ops:clpcd_module(cdfloatn(A), cdfloatn) :- get_precision(A).
+
+get_precision(A) :-
+    precision(A),
+    !.
+get_precision(128).
+
+set_precision(A) :-
+    retractall(precision(_)),
+    assertz(precision(A)).
 
 cd_type(cdfloatn(P), floatn(P)).
 
 cd_text(cdfloatn(_), 'a multiple precison floating point number').
 
 :- include(library(cd_common)).
-
-:- initialization(set_clpcd(cdfloatn(128))).
