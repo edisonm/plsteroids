@@ -15,9 +15,9 @@ rtchecks/tests/rtchecks.plt
 clpcd/tests/cdr.plt
 dupcode.stest
 stchecks/tests/stchecks_unused.plt
-useless_cuts.stest
 module_loops.stest
 clpcd/tests/cdq.plt
+useless_cuts.stest
 stchecks/tests/stchecks.plt
 andorra/tests/qu_vitor.plt
 deprecated.stest
@@ -87,8 +87,8 @@ refactor/tests/subst_layout.plt
 refactor/tests/keep_comments.plt
 refactor/tests/repl_empty_list.plt
 refactor/tests/save_changes.plt
-refactor/tests/to_listb.plt
 refactor/tests/add_to_empty_file.plt
+refactor/tests/to_listb.plt
 refactor/tests/add_ini_end.plt
 refactor/tests/goal_non_loaded.plt
 refactor/tests/collapse_bindings.plt
