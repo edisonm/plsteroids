@@ -8,6 +8,10 @@ PLSTEROIDS=target/bin/plsteroids
 
 CONCURRENT=. bin/concurrent ; run_pull
 
+# prevent make doing something without a target:
+noop:
+	true
+
 include Makefile.swipl
 
 bid:
@@ -28,7 +32,7 @@ compile:
 	    pack=`basename $${i%/pack.pl}` ; \
 	    find $${pack}/prolog -type d -exec mkdir -p target/lib/{} \; ; \
 	    find $${pack}/prolog -type f -name "*.pl" -exec ln -sf `pwd`/{} target/lib/{} \; ; \
-            find $pack/prolog -type f -name "*.c" -exec ln -sf ${PWD}/{} target/lib/{} \;
+	    find $pack/prolog -type f -name "*.c" -exec ln -sf ${PWD}/{} target/lib/{} \;
 	    find $pack/prolog -type f -name "*.h" -exec ln -sf ${PWD}/{} target/lib/{} \;
 	done
 	swipl -q -s qcompile.pl -t halt
@@ -71,10 +75,11 @@ push:
 	git checkout bin/
 	git push --recurse-submodules=on-demand
 
-pull0:
+pullmain:
 	git pull --recurse-submodules
 
 pull:
+	$(MAKE) pullmain
 	git submodule foreach 'git pull'
 
 noop:
