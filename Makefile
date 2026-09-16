@@ -71,8 +71,11 @@ push:
 	git checkout bin/
 	git push --recurse-submodules=on-demand
 
-pull:
+pull0:
 	git pull --recurse-submodules
+
+pull:
+	git submodule foreach 'git pull'
 
 noop:
 
