@@ -60,7 +60,7 @@ complexn_equal(A, B) :-
 
 real_type(complexn(R, _), floatn(R)).
 
-Body :-
+head(Body) :-
     cd_prefix(Type, Pref, [R, I]),
     real_type(Type, RType),
     floatn_eval:cd_prefix(RType, RPre, _),
@@ -75,7 +75,7 @@ Body :-
     complexn_real(R, I, B, Y),
     floatn_eval:Conv.
 
-Head :-
+head(Head) :-
     complexn_desc(pf_, FL, A),
     member(F, FL),
     atom_concat(complexn_w_, F, P),
@@ -126,7 +126,7 @@ expr_pred(Expr, Pred) :-
 
 eval_2([R, I], F, C) --> [complexn_real(R, I, C, F)].
 
-Body :-
+head(Body) :-
     cd_prefix(Type, Pref, EAL),
     real_type(Type, RType),
     floatn_eval:cd_prefix(RType, RPre, EFL),
